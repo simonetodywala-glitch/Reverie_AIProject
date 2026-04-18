@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Home</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div class="app-frame">
+
+    <!-- ORB + GREETING -->
+    <div class="header-area">
+      <div class="orb"></div>
+      <div class="greeting-card">
+        <h2 id="greeting-text">Good Night Gemmy!</h2>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content page-content">
+
+      <div class="section-label">Last Night</div>
+
+      <!-- SLEEP QUALITY CARD -->
+      <div class="card">
+        <div class="card-title">Sleep Quality</div>
+        <div class="card-value" id="sleep-duration">7h 22m</div>
+        <div class="card-sub" id="sleep-times">Bedtime 11:04pm · Woke 6:26 am</div>
+      </div>
+
+      <!-- SLEEP DEBT + STREAK -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="font-size:16px;">Sleep Debt</div>
+          <div class="card-value" style="font-size:26px;" id="sleep-debt">1.5 hrs</div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="font-size:16px;">Streak</div>
+          <div class="card-value" style="font-size:26px;" id="streak">4 nights</div>
+        </div>
+      </div>
+
+      <!-- RECENT DREAMS PREVIEW -->
+      <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
+      <div id="recent-dreams">
+        <!-- Populated by JS from saved dreams -->
+        <div class="dream-card" onclick="window.location.href='pages/dreams.html'">
+          <div class="dream-date">Today · Anxious · Wonder</div>
+          <div class="dream-preview">Flying over a glass city, but kept falling through the buildings...</div>
+          <div>
+            <span class="tag tag-anxiety">anxiety</span>
+            <span class="tag tag-wonder">wonder</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link active" href="index.html">Home</a>
+        <a class="nav-link" href="pages/dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="pages/journal.html" title="Log a dream">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="pages/winddown.html">Wind Down</a>
+        <a class="nav-link" href="pages/profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/firebase.js"></script>
+  <script>
+    // TODO Week 3: load real sleep data from Firebase
+    // For now, stats are hardcoded to match wireframe
+  </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Dreams</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .filter-row { display: flex; gap: 8px; padding: 0 20px 16px; overflow-x: auto; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--surface);
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.2s, color 0.2s;
+    }
+    .filter-chip.active { background: var(--accent); color: #fff; }
+    .dream-count { font-size: 13px; color: var(--text-muted); padding: 0 20px 10px; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">📚 Dream Library</div>
+
+    <!-- FILTER CHIPS -->
+    <div class="filter-row">
+      <div class="filter-chip active">All</div>
+      <div class="filter-chip">Anxiety</div>
+      <div class="filter-chip">Wonder</div>
+      <div class="filter-chip">Joy</div>
+      <div class="filter-chip">Peaceful</div>
+      <div class="filter-chip">Fear</div>
+    </div>
+
+    <div class="main-content page-content">
+      <div class="dream-count" id="dream-count">3 dreams logged</div>
+
+      <div id="dream-list">
+        <!-- Demo entries — will be replaced by Firebase data in Week 3 -->
+        <div class="dream-card">
+          <div class="dream-date">Apr 16, 2026</div>
+          <div class="dream-preview">Flying over a glass city, but kept falling through the buildings every time I touched them...</div>
+          <div>
+            <span class="tag tag-anxiety">anxiety</span>
+            <span class="tag tag-wonder">wonder</span>
+          </div>
+        </div>
+
+        <div class="dream-card">
+          <div class="dream-date">Apr 14, 2026</div>
+          <div class="dream-preview">Swimming in a deep ocean with bioluminescent creatures. Everything was completely calm...</div>
+          <div>
+            <span class="tag tag-peaceful">peaceful</span>
+            <span class="tag tag-wonder">wonder</span>
+          </div>
+        </div>
+
+        <div class="dream-card">
+          <div class="dream-date">Apr 12, 2026</div>
+          <div class="dream-preview">Being chased through a forest by something I couldn't see. I kept tripping but never fell...</div>
+          <div>
+            <span class="tag tag-anxiety">anxiety</span>
+            <span class="tag tag-fear">fear</span>
+          </div>
+        </div>
+
+        <!-- Pattern report teaser (shows after 5 dreams) -->
+        <div class="ai-response" style="margin-top:8px;">
+          <div class="ai-label">✨ Pattern Report unlocks at 5 dreams</div>
+          <div class="ai-text" style="font-size:14px;">Log 2 more dreams to unlock your AI pattern analysis. Reverie will identify your recurring emotions, symbols, and trends.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link active" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <!-- TODO Week 3: load real dreams from Firebase and populate #dream-list -->
+</body>
+</html>

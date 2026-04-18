@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Wind Down</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .routine-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .routine-card:hover { background: var(--card-hover); transform: translateY(-2px); }
+    .routine-icon { font-size: 32px; }
+    .routine-name { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+    .routine-desc { font-size: 13px; color: var(--text-dim); }
+    .soundscape-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .sound-chip {
+      padding: 10px 18px; border-radius: 100px;
+      background: var(--surface); color: var(--text-dim);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.2s, color 0.2s;
+    }
+    .sound-chip:hover { background: var(--accent); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">🌬️ Wind Down</div>
+
+    <div class="main-content page-content">
+
+      <div class="section-label">Tonight's routine</div>
+
+      <div class="routine-card" onclick="alert('Breathing exercise coming in Week 4!')">
+        <div class="routine-icon">🫁</div>
+        <div>
+          <div class="routine-name">Breathing Exercise</div>
+          <div class="routine-desc">4-7-8 technique · 5 minutes</div>
+        </div>
+      </div>
+
+      <div class="routine-card" onclick="alert('Journaling prompts coming in Week 4!')">
+        <div class="routine-icon">📓</div>
+        <div>
+          <div class="routine-name">Reflection Journal</div>
+          <div class="routine-desc">3 guided prompts · 5 minutes</div>
+        </div>
+      </div>
+
+      <div class="routine-card" onclick="alert('Bedtime stories coming in Week 5!')">
+        <div class="routine-icon">📖</div>
+        <div>
+          <div class="routine-name">AI Bedtime Story</div>
+          <div class="routine-desc">Generated from your last dream · ElevenLabs</div>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top: 8px;">Soundscapes</div>
+      <div class="soundscape-row">
+        <div class="sound-chip">🌧️ Rain</div>
+        <div class="sound-chip">🌊 Ocean</div>
+        <div class="sound-chip">🌲 Forest</div>
+        <div class="sound-chip">🔥 Fire</div>
+        <div class="sound-chip">🌌 Space</div>
+      </div>
+      <div class="ai-response" style="margin-top:14px;">
+        <div class="ai-label">Coming in Week 5</div>
+        <div class="ai-text" style="font-size:14px; color:var(--text-muted);">ElevenLabs soundscape generation will be connected here — tap a mood and get a custom ambient audio track.</div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link active" href="winddown.html">Wind Down</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+</body>
+</html>

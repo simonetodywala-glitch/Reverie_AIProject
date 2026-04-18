@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Log a Dream</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .char-count { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 6px; }
+    .analysis-section { margin-top: 20px; }
+    .emotion-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .theme-list { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">
+      <a href="../index.html" style="color:var(--text-dim); text-decoration:none; font-size:14px;">← Back</a>
+      <div style="margin-top:6px;">🌙 Log a Dream</div>
+    </div>
+
+    <div class="main-content page-content">
+
+      <div class="section-label">What did you dream about?</div>
+      <textarea
+        id="dream-input"
+        rows="7"
+        placeholder="Describe your dream... write freely, the more detail the better. The AI will extract the emotions and themes for you."
+        maxlength="2000"
+      ></textarea>
+      <div class="char-count"><span id="char-count">0</span> / 2000</div>
+
+      <button class="btn btn-primary" id="analyze-btn" style="margin-top: 16px;" onclick="handleAnalyze()">
+        ✨ Analyze Dream
+      </button>
+
+      <!-- AI RESULT (shown after analysis) -->
+      <div id="analysis-result" style="display:none;">
+
+        <div class="ai-response analysis-section">
+          <div class="ai-label">🤖 Gemini Analysis</div>
+
+          <div class="section-label" style="margin-top:12px;">Emotions detected</div>
+          <div class="emotion-row" id="emotions-row"></div>
+
+          <div class="section-label" style="margin-top:12px;">Themes & symbols</div>
+          <div class="theme-list" id="themes-list"></div>
+
+          <div class="section-label" style="margin-top:12px;">Summary</div>
+          <div class="ai-text" id="summary-text"></div>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="saveDream()">
+          💾 Save to Dream Library
+        </button>
+        <button class="btn btn-ghost" style="margin-top:10px;" onclick="resetForm()">
+          ↩ Try Again
+        </button>
+
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="loading-state" style="display:none;">
+        <div class="spinner"></div>
+        <p style="text-align:center; color:var(--text-muted); font-size:14px;">Gemini is reading your dream...</p>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html" style="background:var(--accent-soft);">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+
+  <script>
+    // Character counter
+    const input = document.getElementById('dream-input');
+    const counter = document.getElementById('char-count');
+    input.addEventListener('input', () => { counter.textContent = input.value.length; });
+
+    // Emotion → tag class mapping
+    const emotionTags = {
+      anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
+      sadness: 'tag-anxiety', nostalgia: 'tag-wonder'
+    };
+
+    async function handleAnalyze() {
+      const text = input.value.trim();
+      if (text.length < 10) {
+        alert('Please write a bit more about your dream first!');
+        return;
+      }
+
+      // Show loading
+      document.getElementById('loading-state').style.display = 'block';
+      document.getElementById('analyze-btn').style.display = 'none';
+      document.getElementById('analysis-result').style.display = 'none';
+
+      try {
+        const result = await analyzeDream(text);
+        renderAnalysis(result);
+      } catch (err) {
+        // Fallback demo response if backend isn't running yet
+        renderAnalysis({
+          emotions: ['wonder', 'anxiety', 'excitement'],
+          themes: ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
+          summary: 'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.'
+        });
+      } finally {
+        document.getElementById('loading-state').style.display = 'none';
+      }
+    }
+
+    function renderAnalysis(data) {
+      // Emotions
+      const emotionsRow = document.getElementById('emotions-row');
+      emotionsRow.innerHTML = data.emotions.map(e => {
+        const cls = emotionTags[e.toLowerCase()] || '';
+        return `<span class="tag ${cls}">${e}</span>`;
+      }).join('');
+
+      // Themes
+      const themesList = document.getElementById('themes-list');
+      themesList.innerHTML = data.themes.map(t => `• ${t}`).join('<br>');
+
+      // Summary
+      document.getElementById('summary-text').textContent = data.summary;
+
+      document.getElementById('analysis-result').style.display = 'block';
+    }
+
+    function saveDream() {
+      // TODO Week 3: save to Firebase Firestore
+      alert('Dream saved! (Firebase integration coming in Week 3)');
+      window.location.href = 'dreams.html';
+    }
+
+    function resetForm() {
+      input.value = '';
+      counter.textContent = '0';
+      document.getElementById('analysis-result').style.display = 'none';
+      document.getElementById('analyze-btn').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

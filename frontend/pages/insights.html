@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Insights</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .chat-window {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 0;
+      min-height: 200px;
+    }
+    .msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.55; }
+    .msg-user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg-ai { background: var(--surface); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-input-row { display: flex; gap: 10px; margin-top: 8px; }
+    .chat-input-row input { flex: 1; border-radius: 100px; padding: 12px 18px; }
+    .send-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--accent); color: #fff; border: none;
+      font-size: 20px; cursor: pointer; flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .send-btn:hover { transform: scale(1.08); }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">🔮 Insights</div>
+
+    <div class="main-content page-content">
+
+      <!-- PATTERN REPORT — locked until 5 dreams -->
+      <div class="section-label">Pattern Report</div>
+      <div class="ai-response" style="margin-bottom:20px;">
+        <div class="ai-label">✨ Unlocks after 5 dreams</div>
+        <div class="ai-text" style="font-size:14px; color:var(--text-muted);">
+          Keep logging dreams. Once you have 5 entries, Reverie will identify your recurring emotions, symbols, and trends across your whole dream journal.
+        </div>
+      </div>
+
+      <!-- AI CHATBOT -->
+      <div class="section-label">Ask Reverie anything</div>
+      <div class="card" style="padding: 16px;">
+
+        <div class="chat-window" id="chat-window">
+          <div class="msg msg-ai">
+            Hey! I'm your Reverie sleep guide. Ask me anything about your dreams or sleep — I'll use your journal to personalize my answers. 🌙
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Why do I keep dreaming about water?" />
+          <button class="send-btn" onclick="sendMessage()">↑</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link active" href="insights.html">Insights</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script>
+    function addMessage(text, sender) {
+      const window_ = document.getElementById('chat-window');
+      const msg = document.createElement('div');
+      msg.className = `msg msg-${sender}`;
+      msg.textContent = text;
+      window_.appendChild(msg);
+      window_.scrollTop = window_.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      input.value = '';
+
+      // Typing indicator
+      addMessage('...', 'ai');
+
+      try {
+        // TODO Week 5: pass real userId from Firebase auth
+        const result = await sendChatMessage('demo-user', text);
+        document.querySelectorAll('.msg-ai').forEach((el, i, arr) => {
+          if (i === arr.length - 1) el.textContent = result.reply;
+        });
+      } catch (err) {
+        // Fallback demo reply
+        const lastAi = document.querySelectorAll('.msg-ai');
+        lastAi[lastAi.length - 1].textContent = "I can see you've been dreaming a lot about water lately — it often relates to emotions or situations that feel overwhelming or cleansing. Log a few more dreams and I'll give you a deeper pattern analysis!";
+      }
+    }
+
+    document.getElementById('chat-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
