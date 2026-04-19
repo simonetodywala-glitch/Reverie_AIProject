@@ -6,8 +6,33 @@
   <title>Reverie — Home</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/components.css">
+  <style>
+    /* ── STAR FIELD ── */
+    #star-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    /* hide stars in morning mode */
+    body.morning #star-canvas {
+      opacity: 0;
+    }
+
+    /* make sure app content sits above stars */
+    .app-frame {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- STAR CANVAS (night mode only) -->
+  <canvas id="star-canvas"></canvas>
+
   <div class="app-frame">
 
     <!-- ORB + GREETING -->
@@ -45,7 +70,6 @@
       <!-- RECENT DREAMS PREVIEW -->
       <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
       <div id="recent-dreams">
-        <!-- Populated by JS from saved dreams -->
         <div class="dream-card" onclick="window.location.href='pages/dreams.html'">
           <div class="dream-date">Today · Anxious · Wonder</div>
           <div class="dream-preview">Flying over a glass city, but kept falling through the buildings...</div>
@@ -76,9 +100,60 @@
   <script src="js/app.js"></script>
   <script src="js/api.js"></script>
   <script src="js/firebase.js"></script>
+
   <script>
-    // TODO Week 3: load real sleep data from Firebase
-    // For now, stats are hardcoded to match wireframe
+    // ── STAR FIELD ──
+    // Uses a canvas so stars sit behind everything cleanly
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createStars(count = 160) {
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x:       Math.random() * canvas.width,
+          y:       Math.random() * canvas.height,
+          r:       Math.random() * 1.4 + 0.3,          // radius 0.3–1.7px
+          opacity: Math.random() * 0.5 + 0.1,          // base opacity
+          speed:   Math.random() * 0.008 + 0.003,       // twinkle speed
+          phase:   Math.random() * Math.PI * 2,         // twinkle offset
+        });
+      }
+    }
+
+    function drawStars(timestamp) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      stars.forEach(s => {
+        // Twinkle: sine wave on opacity
+        const twinkle = Math.sin(timestamp * s.speed + s.phase);
+        const alpha   = s.opacity + twinkle * 0.25;
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, alpha)})`;
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    createStars();
+    requestAnimationFrame(drawStars);
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      createStars();
+    });
   </script>
+
 </body>
 </html>
