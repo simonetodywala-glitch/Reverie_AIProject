@@ -21,8 +21,8 @@
   --text-muted: #6b4f8a;
   --gold: #f0c040;
   --nav-bg: rgba(18, 0, 36, 0.92);
-  --orb-color: radial-gradient(circle at 35% 35%, #b06aff 0%, #6b21d8 45%, #2d0070 100%);
-  --orb-shadow: 0 0 80px 30px rgba(140, 60, 255, 0.4);
+  --orb-color: radial-gradient(circle at 35% 35%, #d4cce8 0%, #8b6bbf 40%, #4a2880 75%, #1e0a40 100%);
+  --orb-shadow: 0 0 60px 20px rgba(107,79,160,0.35), 0 0 120px 50px rgba(80,40,140,0.15);
   --header-bg: radial-gradient(ellipse at 50% 0%, #3b0080 0%, #0a0015 70%);
   --mode: night;
 }
@@ -43,9 +43,9 @@ body.morning {
   --text-muted: #4a7aaa;
   --gold: #e8f740;
   --nav-bg: rgba(160, 210, 245, 0.92);
-  --orb-color: radial-gradient(circle at 35% 35%, #d4cce8 0%, #8b6bbf 40%, #4a2880 75%, #1e0a40 100%);
-  --orb-shadow: 0 0 60px 20px rgba(107,79,160,0.35), 0 0 120px 50px rgba(80,40,140,0.15);
-  --header-bg: radial-gradient(ellipse at 50% -10%, #fff8d0 0%, #ffe090 10%, #87ceeb 40%, #c8eeff 70%);
+  --orb-color: radial-gradient(circle at 32% 30%, #ffffff 0%, #fff9a0 15%, #fdd835 45%, #f5a800 80%, #e07800 100%);
+  --orb-shadow: 0 0 60px 20px rgba(255, 200, 0, 0.6), 0 0 120px 60px rgba(255, 170, 0, 0.3), 0 0 200px 100px rgba(255, 140, 0, 0.12);
+  --header-bg: radial-gradient(ellipse at 50% 0%, #87ceeb 0%, #c8eeff 70%);
 }
 
 /* ── RESET & BASE ── */
