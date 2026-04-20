@@ -44,7 +44,7 @@ body.morning {
   --gold: #e8f740;
   --nav-bg: rgba(160, 210, 245, 0.92);
   --orb-color: radial-gradient(circle at 32% 30%, #ffffff 0%, #fff9a0 15%, #fdd835 45%, #f5a800 80%, #e07800 100%);
-  --orb-shadow: 0 0 60px 20px rgba(255, 200, 0, 0.6), 0 0 120px 60px rgba(255, 170, 0, 0.3), 0 0 200px 100px rgba(255, 140, 0, 0.12);
+  --orb-shadow: 0 0 60px 20px rgba(255, 255, 0, 0.563), 0 0 120px 60px rgba(255, 170, 0, 0.3), 0 0 200px 100px rgba(239, 153, 48, 0.368);
   --header-bg: radial-gradient(ellipse at 50% 0%, #87ceeb 0%, #c8eeff 70%);
 }
 
