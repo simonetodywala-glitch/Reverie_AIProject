@@ -128,19 +128,6 @@
       animation: iconFloat 5s ease-in-out infinite;
     }
 
-    /* Optional: Add a little "crater" or glow effect */
-    .moon-orb::after {
-        content: '';
-        position: absolute;
-        top: 20%;
-        left: 20%;
-        width: 25%;
-        height: 25%;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        filter: blur(5px);
-    }
-    
     /* ── FEATURE ORBS (slides 1–3) ── */
     .feature-orb {
       width: 120px;
@@ -416,8 +403,7 @@
   <div class="blob blob-bottom" id="blob-bottom"></div>
 
   <!-- SKIP -->
-  <button class="skip-btn" onclick="skipOnboarding()">Skip</button>
-
+  <button class="skip-btn" id="skip-btn" onclick="skipToSignup()">Skip</button>
 
   <!-- ════════════════════════════════════
        SLIDES
@@ -427,7 +413,7 @@
     <!-- ── SLIDE 0: Welcome ── -->
     <div class="slide active" data-index="0">
       <div class="slide-icon-wrap">
-        <div class="moon-orb"></div> 
+        <div class="moon-orb"></div>
       </div>
       <div class="slide-text">
         <div class="slide-title">Welcome to</div>
@@ -609,42 +595,37 @@
   </div><!-- /slides -->
 </div><!-- /frame -->
 
-<script>
-  // ── DATA ──
+<script type="module">
+  import { signUp } from '../js/firebase.js';
+
   const userProfile = { chronotype: null, goal: null, wakeTime: null };
 
-  // ── BLOB COLORS PER SLIDE ──
   const blobThemes = [
-    { top: 'rgba(60,20,120,0.85)',   bottom: 'rgba(40,10,90,0.7)'   }, // 0 welcome
-    { top: 'rgba(80,20,140,0.85)',   bottom: 'rgba(100,30,160,0.6)' }, // 1 dreams
-    { top: 'rgba(50,30,130,0.85)',   bottom: 'rgba(60,20,110,0.65)' }, // 2 ai
-    { top: 'rgba(70,20,130,0.85)',   bottom: 'rgba(90,30,150,0.6)'  }, // 3 ready
-    { top: 'rgba(100,40,180,0.9)',   bottom: 'rgba(60,10,120,0.5)'  }, // 4 q1
-    { top: 'rgba(80,20,160,0.9)',    bottom: 'rgba(80,30,140,0.55)' }, // 5 q2
-    { top: 'rgba(90,30,170,0.9)',    bottom: 'rgba(50,10,110,0.5)'  }, // 6 q3
-    { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' }, // 7 signup
+    { top: 'rgba(60,20,120,0.85)',  bottom: 'rgba(40,10,90,0.7)'   },
+    { top: 'rgba(80,20,140,0.85)',  bottom: 'rgba(100,30,160,0.6)' },
+    { top: 'rgba(50,30,130,0.85)',  bottom: 'rgba(60,20,110,0.65)' },
+    { top: 'rgba(70,20,130,0.85)',  bottom: 'rgba(90,30,150,0.6)'  },
+    { top: 'rgba(100,40,180,0.9)',  bottom: 'rgba(60,10,120,0.5)'  },
+    { top: 'rgba(80,20,160,0.9)',   bottom: 'rgba(80,30,140,0.55)' },
+    { top: 'rgba(90,30,170,0.9)',   bottom: 'rgba(50,10,110,0.5)'  },
+    { top: 'rgba(70,20,140,0.85)',  bottom: 'rgba(100,40,180,0.6)' },
   ];
 
-  // ── SINGLE source of truth for current slide index ──
   let current = 0;
   const slides = document.querySelectorAll('.slide');
 
-  // ── BUILD DOTS ──
-  // Only slides 0–3 have a .dots div — populate them all identically (4 dots)
   document.querySelectorAll('.dots').forEach(dotsEl => {
     for (let i = 0; i < 4; i++) {
       const d = document.createElement('div');
-      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.className = 'dot';
       dotsEl.appendChild(d);
     }
   });
 
   function updateDots(idx) {
-    // idx is the global slide index (0–3); clamp so question slides don't break dots
-    const dotIdx = Math.min(idx, 3);
     document.querySelectorAll('.dots').forEach(dotsEl => {
       dotsEl.querySelectorAll('.dot').forEach((d, i) => {
-        d.classList.toggle('active', i === dotIdx);
+        d.classList.toggle('active', i === idx);
       });
     });
   }
@@ -658,61 +639,61 @@
   }
 
   function goToSlide(next) {
-    if (next < 0 || next >= slides.length) return;
-
-    // Exit current slide
-    slides[current].classList.remove('active');
     slides[current].classList.add('exit');
-    const exitIdx = current; // capture for timeout
-    setTimeout(() => slides[exitIdx].classList.remove('exit'), 400);
-
-    // Enter next slide
+    setTimeout(() => slides[current].classList.remove('active', 'exit'), 400);
     current = next;
     slides[current].classList.add('active');
-
-    // Update dots (only meaningful for slides 0–3)
-    updateDots(current);
+    updateDots(Math.min(current, 3));
     updateBlobs(current);
-
-    // Hide skip button once past the intro slides
-    const skipBtn = document.getElementById('skip-btn');
-    if (skipBtn) {
-      skipBtn.style.opacity = current >= 4 ? '0' : '1';
-      skipBtn.style.pointerEvents = current >= 4 ? 'none' : 'all';
-    }
+    document.getElementById('skip-btn').style.opacity = current >= 4 ? '0' : '1';
+    document.getElementById('skip-btn').style.pointerEvents = current >= 4 ? 'none' : 'all';
   }
 
-  function nextSlide() {
-    if (current < slides.length - 1) goToSlide(current + 1);
-  }
-
-  // Skip button: jump straight to questions (slide 4)
-  function skipOnboarding() {
-    goToSlide(4);
-  }
-
-  function selectOption(el, key, value) {
+  // Expose functions to inline onclick handlers
+  window.nextSlide    = () => { if (current < slides.length - 1) goToSlide(current + 1); };
+  window.skipToSignup = () => goToSlide(7);
+  window.selectOption = (el, key, value) => {
     el.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     userProfile[key] = value;
-    setTimeout(nextSlide, 380);
-  }
+    setTimeout(window.nextSlide, 380);
+  };
 
-  function finishOnboarding() {
-    userProfile.wakeTime = document.getElementById('wake-time-input').value;
-    localStorage.setItem('reverie_profile', JSON.stringify(userProfile));
-    localStorage.setItem('reverie_onboarded', 'true');
-    window.location.href = '../index.html';
-  }
+  window.finishOnboarding = async () => {
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    userProfile.wakeTime = document.getElementById('wake-time-input')?.value || '07:00';
 
-  // ── INIT ──
+    if (!name || !email || !password) {
+      alert('Please fill in your name, email and password.');
+      return;
+    }
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+
+    const btn = document.querySelector('#signup-slide .next-btn');
+    btn.textContent = 'Creating account...';
+    btn.disabled = true;
+
+    try {
+      await signUp(name, email, password, userProfile);
+      window.location.href = '../index.html';
+    } catch (err) {
+      btn.textContent = 'Start Dreaming 🌙';
+      btn.disabled = false;
+      if (err.code === 'auth/email-already-in-use') {
+        alert('That email is already registered. Sign in instead.');
+      } else {
+        alert('Something went wrong: ' + err.message);
+      }
+    }
+  };
+
+  updateDots(0);
   updateBlobs(0);
-
-  // If already onboarded, skip straight to app
-  if (localStorage.getItem('reverie_onboarded') === 'true') {
-    window.location.href = '../index.html';
-  }
 </script>
-
 </body>
 </html>
