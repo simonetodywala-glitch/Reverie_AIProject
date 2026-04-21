@@ -416,7 +416,8 @@
   <div class="blob blob-bottom" id="blob-bottom"></div>
 
   <!-- SKIP -->
-  <button class="skip-btn" id="skip-btn" onclick="skipToSignup()">Skip</button>
+  <button class="skip-btn" onclick="skipOnboarding()">Skip</button>
+
 
   <!-- ════════════════════════════════════
        SLIDES
@@ -434,7 +435,7 @@
         <div class="slide-desc">Your personal sleep companion. Understand your dreams, improve your sleep — guided by AI.</div>
       </div>
       <div class="dots" id="dots"></div>
-      <button class="next-btn" onclick="nextSlide()">Next →</button>
+      <button class="next-btn" onclick="handleNext()">Next</button>
     </div>
 
     <!-- ── SLIDE 1: Dream Journal ── -->
@@ -625,8 +626,36 @@
   ];
 
   const TOTAL_DOTS = 7; // slides 0–6 show dots (not signup)
-  let current = 0;
+  let currentSlide = 0;
   const slides = document.querySelectorAll('.slide');
+
+  function handleNext() {
+    // 1. Check if we're on the last slide
+    if (currentSlide >= slides.length - 1) {
+        // SAVE: Tell the browser we're done
+        localStorage.setItem('reverie_onboarded', 'true');
+        // REDIRECT: Go to the home screen
+        window.location.href = '../index.html'; 
+        return;
+    }
+
+    // 2. Hide current slide
+    slides[currentSlide].classList.remove('active');
+    slides[currentSlide].classList.add('exit');
+
+    // 3. Move to next slide
+    currentSlide++;
+    slides[currentSlide].classList.add('active');
+    
+    // 4. Update the background colors (Step 3)
+    updateVisuals(currentSlide);
+  }
+
+  function skipOnboarding() {
+    localStorage.setItem('reverie_onboarded', 'true');
+    window.location.href = '../index.html';
+  }
+
 
   // ── BUILD DOTS ──
   // Only slides 0-3 have a .dots div — render them
