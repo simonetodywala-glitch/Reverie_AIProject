@@ -435,7 +435,7 @@
         <div class="slide-desc">Your personal sleep companion. Understand your dreams, improve your sleep — guided by AI.</div>
       </div>
       <div class="dots" id="dots"></div>
-      <button class="next-btn" onclick="handleNext()">Next</button>
+      <button class="next-btn" onclick="nextSlide()">Next →</button>
     </div>
 
     <!-- ── SLIDE 1: Dream Journal ── -->
@@ -625,69 +625,26 @@
     { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' }, // 7 signup
   ];
 
-  const TOTAL_DOTS = 7; // slides 0–6 show dots (not signup)
-  let currentSlide = 0;
+  // ── SINGLE source of truth for current slide index ──
+  let current = 0;
   const slides = document.querySelectorAll('.slide');
 
-  function handleNext() {
-    // 1. Check if we're on the last slide
-    if (currentSlide >= slides.length - 1) {
-        // SAVE: Tell the browser we're done
-        localStorage.setItem('reverie_onboarded', 'true');
-        // REDIRECT: Go to the home screen
-        window.location.href = '../index.html'; 
-        return;
-    }
-
-    // 2. Hide current slide
-    slides[currentSlide].classList.remove('active');
-    slides[currentSlide].classList.add('exit');
-
-    // 3. Move to next slide
-    currentSlide++;
-    slides[currentSlide].classList.add('active');
-    
-    // 4. Update the background colors (Step 3)
-    updateVisuals(currentSlide);
-  }
-
-  function skipOnboarding() {
-    localStorage.setItem('reverie_onboarded', 'true');
-    window.location.href = '../index.html';
-  }
-
-
   // ── BUILD DOTS ──
-  // Only slides 0-3 have a .dots div — render them
+  // Only slides 0–3 have a .dots div — populate them all identically (4 dots)
   document.querySelectorAll('.dots').forEach(dotsEl => {
     for (let i = 0; i < 4; i++) {
       const d = document.createElement('div');
-      d.className = 'dot';
+      d.className = 'dot' + (i === 0 ? ' active' : '');
       dotsEl.appendChild(d);
     }
   });
 
-  function showSlide(index) {
-    // 1. Existing logic to hide/show slides...
-    slides.forEach(slide => slide.classList.remove('active'));
-    slides[index].classList.add('active');
-
-    // 2. STEP 3: Update the background "Blob" colors
-    const colors = ['#1a1a2e', '#16213e', '#1a1c2c', '#0f172a']; 
-    document.body.style.backgroundColor = colors[index];
-    
-    // If you have a physical blob element in your HTML:
-    const blob = document.querySelector('.blob');
-    if (blob) {
-        blob.style.transform = `translate(${index * 10}%, ${index * 5}%)`;
-        blob.style.filter = `hue-rotate(${index * 45}deg)`;
-    }
-  }   
-
   function updateDots(idx) {
+    // idx is the global slide index (0–3); clamp so question slides don't break dots
+    const dotIdx = Math.min(idx, 3);
     document.querySelectorAll('.dots').forEach(dotsEl => {
       dotsEl.querySelectorAll('.dot').forEach((d, i) => {
-        d.classList.toggle('active', i === idx);
+        d.classList.toggle('active', i === dotIdx);
       });
     });
   }
@@ -701,38 +658,47 @@
   }
 
   function goToSlide(next) {
+    if (next < 0 || next >= slides.length) return;
+
+    // Exit current slide
+    slides[current].classList.remove('active');
     slides[current].classList.add('exit');
-    setTimeout(() => slides[current].classList.remove('active', 'exit'), 400);
+    const exitIdx = current; // capture for timeout
+    setTimeout(() => slides[exitIdx].classList.remove('exit'), 400);
+
+    // Enter next slide
     current = next;
     slides[current].classList.add('active');
-    updateDots(Math.min(current, 3));
+
+    // Update dots (only meaningful for slides 0–3)
+    updateDots(current);
     updateBlobs(current);
 
-    // Hide skip after intro slides
-    document.getElementById('skip-btn').style.opacity = current >= 4 ? '0' : '1';
-    document.getElementById('skip-btn').style.pointerEvents = current >= 4 ? 'none' : 'all';
+    // Hide skip button once past the intro slides
+    const skipBtn = document.getElementById('skip-btn');
+    if (skipBtn) {
+      skipBtn.style.opacity = current >= 4 ? '0' : '1';
+      skipBtn.style.pointerEvents = current >= 4 ? 'none' : 'all';
+    }
   }
 
   function nextSlide() {
     if (current < slides.length - 1) goToSlide(current + 1);
   }
 
-  function skipToSignup() {
-    goToSlide(7);
+  // Skip button: jump straight to questions (slide 4)
+  function skipOnboarding() {
+    goToSlide(4);
   }
 
   function selectOption(el, key, value) {
-    // Deselect siblings
     el.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     userProfile[key] = value;
-    // Auto-advance after short delay
     setTimeout(nextSlide, 380);
   }
 
   function finishOnboarding() {
-    // Save profile to localStorage for now
-    // TODO Week 3: save to Firebase Firestore
     userProfile.wakeTime = document.getElementById('wake-time-input').value;
     localStorage.setItem('reverie_profile', JSON.stringify(userProfile));
     localStorage.setItem('reverie_onboarded', 'true');
@@ -740,7 +706,6 @@
   }
 
   // ── INIT ──
-  updateDots(0);
   updateBlobs(0);
 
   // If already onboarded, skip straight to app
