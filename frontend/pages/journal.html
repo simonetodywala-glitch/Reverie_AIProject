@@ -11,6 +11,10 @@
     .analysis-section { margin-top: 20px; }
     .emotion-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
     .theme-list { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+    .reflection-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    .reflection-list li { font-size: 14px; color: var(--text-dim); line-height: 1.6; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .reflection-list li:last-child { border-bottom: none; }
+    .reflection-list li::before { content: "✦ "; opacity: 0.5; }
   </style>
 </head>
 <body>
@@ -50,6 +54,12 @@
 
           <div class="section-label" style="margin-top:12px;">Summary</div>
           <div class="ai-text" id="summary-text"></div>
+
+          <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
+          <div class="ai-text" id="interpretation-text" style="font-size:14px; line-height:1.7;"></div>
+
+          <div class="section-label" style="margin-top:16px;">Reflect on this</div>
+          <ul class="reflection-list" id="reflections-list"></ul>
         </div>
 
         <button class="btn btn-primary" style="margin-top:16px;" onclick="saveDream()">
@@ -117,9 +127,15 @@
         lastAnalysis = await window.analyzeDream(text);
       } catch {
         lastAnalysis = {
-          emotions: ['wonder', 'anxiety', 'excitement'],
-          themes:   ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
-          summary:  'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.'
+          emotions:       ['wonder', 'anxiety', 'excitement'],
+          themes:         ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
+          summary:        'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.',
+          interpretation: 'The imagery of flight over a fragile, glass city often surfaces when we are navigating a period of change — something that looks luminous from above but feels precarious up close. The falling may signal an awareness that the ground beneath a current situation is not as solid as it appears.',
+          reflections:    [
+            'What in your waking life feels both beautiful and unstable right now?',
+            'When you were flying, were you in control — or being carried?',
+            'What would it mean to let yourself fall and trust the landing?'
+          ]
         };
       } finally {
         document.getElementById('loading-state').style.display = 'none';
@@ -135,6 +151,23 @@
       }).join('');
       document.getElementById('themes-list').innerHTML  = data.themes.map(t => `• ${t}`).join('<br>');
       document.getElementById('summary-text').textContent = data.summary;
+
+      const interpEl = document.getElementById('interpretation-text');
+      if (data.interpretation) {
+        interpEl.textContent = data.interpretation;
+        interpEl.parentElement.style.display = '';
+      } else {
+        interpEl.parentElement.style.display = 'none';
+      }
+
+      const reflEl = document.getElementById('reflections-list');
+      if (data.reflections?.length) {
+        reflEl.innerHTML = data.reflections.map(r => `<li>${r}</li>`).join('');
+        reflEl.parentElement.style.display = '';
+      } else {
+        reflEl.parentElement.style.display = 'none';
+      }
+
       document.getElementById('analysis-result').style.display = 'block';
     }
 
@@ -145,10 +178,12 @@
       btn.disabled = true;
       try {
         await saveToFirestore(currentUser.uid, {
-          text:     input.value.trim(),
-          emotions: lastAnalysis.emotions,
-          themes:   lastAnalysis.themes,
-          summary:  lastAnalysis.summary
+          text:           input.value.trim(),
+          emotions:       lastAnalysis.emotions,
+          themes:         lastAnalysis.themes,
+          summary:        lastAnalysis.summary,
+          interpretation: lastAnalysis.interpretation || null,
+          reflections:    lastAnalysis.reflections    || []
         });
         window.location.href = 'dreams.html';
       } catch (err) {

@@ -7,7 +7,31 @@
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/components.css">
   <style>
-    .filter-row { display: flex; gap: 8px; padding: 0 20px 16px; overflow-x: auto; }
+    .filter-wrapper { position: relative; display: flex; align-items: center; padding: 0 0 16px; }
+    .filter-arrow {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-dim);
+      transition: background 0.2s, color 0.2s;
+      z-index: 1;
+      user-select: none;
+    }
+    .filter-arrow:hover { background: var(--accent-soft); color: #fff; }
+    .filter-arrow.hidden { opacity: 0; pointer-events: none; }
+    .filter-arrow-left  { margin-left: 12px; margin-right: 4px; }
+    .filter-arrow-right { margin-right: 12px; margin-left: 4px; }
+    .filter-row {
+      display: flex; gap: 8px;
+      overflow-x: auto; scroll-behavior: smooth;
+      scrollbar-width: none; flex: 1;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
     .filter-chip {
       flex-shrink: 0;
       padding: 6px 14px;
@@ -30,13 +54,17 @@
     <div class="page-header">📚 Dream Library</div>
 
     <!-- FILTER CHIPS -->
-    <div class="filter-row">
-      <div class="filter-chip active">All</div>
-      <div class="filter-chip">Anxiety</div>
-      <div class="filter-chip">Wonder</div>
-      <div class="filter-chip">Joy</div>
-      <div class="filter-chip">Peaceful</div>
-      <div class="filter-chip">Fear</div>
+    <div class="filter-wrapper">
+      <button class="filter-arrow filter-arrow-left hidden" id="filter-prev" aria-label="Scroll left">&#8249;</button>
+      <div class="filter-row" id="filter-row">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Anxiety</div>
+        <div class="filter-chip">Wonder</div>
+        <div class="filter-chip">Joy</div>
+        <div class="filter-chip">Peaceful</div>
+        <div class="filter-chip">Fear</div>
+      </div>
+      <button class="filter-arrow filter-arrow-right" id="filter-next" aria-label="Scroll right">&#8250;</button>
     </div>
 
     <div class="main-content page-content">
@@ -135,6 +163,21 @@
         renderDreams(label === 'All' ? null : label.toLowerCase());
       });
     });
+
+    const filterRow  = document.getElementById('filter-row');
+    const btnPrev    = document.getElementById('filter-prev');
+    const btnNext    = document.getElementById('filter-next');
+    const SCROLL_AMT = 120;
+
+    function updateArrows() {
+      btnPrev.classList.toggle('hidden', filterRow.scrollLeft <= 0);
+      btnNext.classList.toggle('hidden', filterRow.scrollLeft + filterRow.clientWidth >= filterRow.scrollWidth - 2);
+    }
+
+    btnPrev.addEventListener('click', () => { filterRow.scrollLeft -= SCROLL_AMT; });
+    btnNext.addEventListener('click', () => { filterRow.scrollLeft += SCROLL_AMT; });
+    filterRow.addEventListener('scroll', updateArrows, { passive: true });
+    updateArrows();
 
     requireAuth(async user => {
       allDreams = await getDreams(user.uid);

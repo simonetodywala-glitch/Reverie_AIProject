@@ -13,9 +13,11 @@ class DreamRequest(BaseModel):
 
 
 class DreamAnalysis(BaseModel):
-    emotions: List[str]     # e.g. ["wonder", "anxiety", "excitement"]
-    themes: List[str]       # e.g. ["Flying · freedom", "Glass · fragility"]
-    summary: str            # One paragraph interpretation
+    emotions: List[str]           # e.g. ["wonder", "anxiety", "excitement"]
+    themes: List[str]             # e.g. ["Flying · freedom or desire for escape"]
+    summary: str                  # 2-3 sentence warm interpretation
+    interpretation: str           # Deeper psychological/emotional undercurrent
+    reflections: List[str]        # 2-3 introspective questions tied to this dream
 
 
 class ChatRequest(BaseModel):
