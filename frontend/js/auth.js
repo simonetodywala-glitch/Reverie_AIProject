@@ -70,7 +70,7 @@ export async function signInWithGoogle() {
 // ─────────────────────────────────────────
 export async function logOut() {
   await signOut(auth);
-  window.location.href = '/frontend/pages/onboarding.html';
+  window.location.href = '/frontend/pages/onboarding.html?signin=1';
 }
 
 // ─────────────────────────────────────────
@@ -90,7 +90,10 @@ export function getCurrentUser() {
 export function requireAuth(callback) {
   onAuthStateChanged(auth, user => {
     if (!user) {
-      window.location.href = '/frontend/pages/onboarding.html?signin=1';
+      const wasOnboarded = localStorage.getItem('reverie_onboarded') === 'true';
+      window.location.href = wasOnboarded
+        ? '/frontend/pages/onboarding.html?signin=1'
+        : '/frontend/pages/onboarding.html';
     } else {
       callback(user);
     }
