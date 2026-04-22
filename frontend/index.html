@@ -82,14 +82,7 @@
       <!-- RECENT DREAMS PREVIEW -->
       <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
       <div id="recent-dreams">
-        <div class="dream-card" onclick="window.location.href='pages/dreams.html'">
-          <div class="dream-date">Today · Anxious · Wonder</div>
-          <div class="dream-preview">Flying over a glass city, but kept falling through the buildings...</div>
-          <div>
-            <span class="tag tag-anxiety">anxiety</span>
-            <span class="tag tag-wonder">wonder</span>
-          </div>
-        </div>
+        <div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Loading dreams...</div>
       </div>
 
     </div>
@@ -112,11 +105,51 @@
   <script src="js/app.js"></script>
   <script src="js/api.js"></script>
 
-  <!-- Auth guard: reveal the page only if Firebase confirms a live session.
-       If the session is gone, requireAuth redirects to the sign-in slide. -->
   <script type="module">
     import { requireAuth } from './js/auth.js';
-    requireAuth(() => { document.body.style.opacity = '1'; });
+    import { getDreams }   from './js/firebase.js';
+
+    const emotionTagMap = {
+      anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
+      sadness: 'tag-anxiety', nostalgia: 'tag-wonder', dread: 'tag-fear',
+      grief: 'tag-anxiety', awe: 'tag-wonder', longing: 'tag-wonder',
+      restlessness: 'tag-anxiety', relief: 'tag-peaceful', tenderness: 'tag-peaceful',
+      shame: 'tag-anxiety', pride: 'tag-joy', frustration: 'tag-anxiety',
+      confusion: 'tag-wonder', hope: 'tag-joy'
+    };
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    requireAuth(async user => {
+      document.body.style.opacity = '1';
+      const container = document.getElementById('recent-dreams');
+      try {
+        const dreams = await getDreams(user.uid);
+        if (!dreams.length) {
+          container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
+          return;
+        }
+        container.innerHTML = dreams.slice(0, 2).map(d => {
+          const tags = (d.emotions || []).slice(0, 3).map(e => {
+            const cls = emotionTagMap[e.toLowerCase()] || '';
+            return `<span class="tag ${cls}">${e}</span>`;
+          }).join('');
+          const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
+          return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
+            <div class="dream-date">${formatDate(d.createdAt)}</div>
+            <div class="dream-preview">${preview}</div>
+            <div>${tags}</div>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Could not load dreams.</div>`;
+      }
+    });
   </script>
 
   <script>
