@@ -796,18 +796,21 @@
     }
   });
 
-  // Redirect if already signed in and onboarded
+  // Init
+  updateBlobs(0);
+
+  // Single auth state handler — fires once when Firebase resolves the session.
+  // 1. Authenticated + onboarded → go to dashboard (no flash, no sync redirect).
+  // 2. Not authenticated + ?signin=1 (bounced here from requireAuth) → show sign-in slide.
+  // 3. Everything else → stay on slide 0 (normal onboarding flow).
+  const isSignInMode = new URLSearchParams(window.location.search).get('signin') === '1';
   onAuthStateChanged(auth, user => {
     if (user && localStorage.getItem('reverie_onboarded') === 'true') {
       window.location.href = '../index.html';
+    } else if (!user && isSignInMode) {
+      goToSlide(8);
     }
   });
-
-  // Init
-  updateBlobs(0);
-  if (localStorage.getItem('reverie_onboarded') === 'true') {
-    window.location.href = '../index.html';
-  }
 </script>
 
 </body>

@@ -90,7 +90,7 @@ export function getCurrentUser() {
 export function requireAuth(callback) {
   onAuthStateChanged(auth, user => {
     if (!user) {
-      window.location.href = '/frontend/pages/onboarding.html';
+      window.location.href = '/frontend/pages/onboarding.html?signin=1';
     } else {
       callback(user);
     }
