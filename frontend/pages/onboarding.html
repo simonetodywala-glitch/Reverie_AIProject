@@ -598,7 +598,7 @@
           <span style="font-size:18px;">G</span> Continue with Google
         </button>
         <div class="signin-link" style="margin-top: 16px;">
-          Already have an account? <span onclick="window.location.href='../index.html'">Sign in</span>
+          Already have an account? <span onclick="goToSlide(8)">Sign in</span>
         </div>
       </div>
       <div style="padding: 24px 0 0;">
@@ -606,10 +606,35 @@
       </div>
     </div>
 
+    <!-- ── SLIDE 8: Sign In ── -->
+    <div class="slide" data-index="8" id="signin-slide">
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px;">
+        <div style="margin-bottom: 28px;">
+          <div style="font-size: 32px; margin-bottom: 12px;">🌙</div>
+          <div class="q-title">Welcome back</div>
+          <div class="q-sub">Sign in to continue your sleep journey.</div>
+        </div>
+        <div class="signup-form" style="padding: 0;">
+          <input class="signup-input" type="email" placeholder="Email address" id="signin-email" />
+          <input class="signup-input" type="password" placeholder="Password" id="signin-password" />
+        </div>
+        <div class="divider-row" style="margin: 18px 0;">or</div>
+        <button class="google-btn" id="google-signin-btn-2">
+          <span style="font-size:18px;">G</span> Continue with Google
+        </button>
+        <div class="signin-link" style="margin-top: 16px;">
+          New to Reverie? <span onclick="goToSlide(7)">Create account</span>
+        </div>
+      </div>
+      <div style="padding: 24px 0 0;">
+        <button class="next-btn" onclick="handleSignIn()">Sign In →</button>
+      </div>
+    </div>
+
   </div><!-- /slides -->
 </div><!-- /frame -->
 <script type="module">
-  import { signUp, signInWithGoogle, auth } from '../js/auth.js';
+  import { signUp, logIn, signInWithGoogle, auth } from '../js/auth.js';
   import { saveUserProfile } from '../js/firebase.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -626,6 +651,7 @@
     { top: 'rgba(80,20,160,0.9)',    bottom: 'rgba(80,30,140,0.55)' },
     { top: 'rgba(90,30,170,0.9)',    bottom: 'rgba(50,10,110,0.5)'  },
     { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' },
+    { top: 'rgba(60,10,120,0.85)',   bottom: 'rgba(80,20,150,0.6)'  },
   ];
 
   let current = 0;
@@ -714,11 +740,32 @@
     }
   }
 
+  async function handleSignIn() {
+    const email    = document.getElementById('signin-email').value.trim();
+    const password = document.getElementById('signin-password').value;
+
+    if (!email || !password) {
+      alert('Please enter your email and password.');
+      return;
+    }
+
+    try {
+      await logIn(email, password);
+      localStorage.setItem('reverie_onboarded', 'true');
+      window.location.href = '../index.html';
+    } catch (error) {
+      console.error('Sign-in error:', error);
+      alert(`Sign-in failed: ${error.message}`);
+    }
+  }
+
   // Expose to HTML onclick attributes
-  window.nextSlide       = nextSlide;
-  window.skipOnboarding  = skipOnboarding;
-  window.selectOption    = selectOption;
+  window.nextSlide        = nextSlide;
+  window.skipOnboarding   = skipOnboarding;
+  window.selectOption     = selectOption;
   window.finishOnboarding = finishOnboarding;
+  window.handleSignIn     = handleSignIn;
+  window.goToSlide        = goToSlide;
 
   // Google sign-in — saves onboarding profile answers to Firestore too
   document.getElementById('google-signin-btn').addEventListener('click', async () => {
@@ -729,6 +776,18 @@
         goal:       userProfile.goal,
         wakeTime:   userProfile.wakeTime
       });
+      localStorage.setItem('reverie_onboarded', 'true');
+      window.location.href = '../index.html';
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      alert(`Google sign-in failed: ${error.message}`);
+    }
+  });
+
+  // Google sign-in from the sign-in slide (returning users)
+  document.getElementById('google-signin-btn-2').addEventListener('click', async () => {
+    try {
+      await signInWithGoogle();
       localStorage.setItem('reverie_onboarded', 'true');
       window.location.href = '../index.html';
     } catch (error) {
