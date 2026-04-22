@@ -14,6 +14,21 @@
     .result-row:last-child { border-bottom: none; }
     .result-label { font-size: 14px; color: var(--text-dim); }
     .result-value { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 800; color: var(--text); }
+    select {
+      width: 100%; background: var(--surface); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none;
+      appearance: none; transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--accent-soft); }
+    .check-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .check-row input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--accent); }
+    details > summary { list-style: none; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+    .adj-row { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .adj-row:last-child { border-bottom: none; }
+    .adj-factor { font-weight: 600; }
+    .adj-note { color: var(--text-dim); display: block; font-size: 12px; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -26,14 +41,85 @@
       <!-- SLEEP SCHEDULE CALCULATOR -->
       <div class="section-label">Sleep Schedule</div>
       <div class="card">
-        <div class="form-group">
-          <label class="form-label">Your age</label>
-          <input type="number" id="age-input" placeholder="e.g. 16" min="10" max="100" />
-        </div>
+
         <div class="form-group">
           <label class="form-label">Wake-up time</label>
           <input type="time" id="wake-input" value="07:00" />
         </div>
+        <div class="form-group">
+          <label class="form-label">Desired sleep (hours)</label>
+          <input type="number" id="desired-sleep" placeholder="e.g. 8 — leave blank to use age" min="5" max="12" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age <span style="font-weight:400;">(optional — fallback when desired hours is blank)</span></label>
+          <input type="number" id="age-input" placeholder="e.g. 22" min="10" max="100" />
+        </div>
+
+        <details style="margin-bottom:18px;">
+          <summary style="font-size:13px; color:var(--accent-soft); font-weight:700; padding:4px 0;">
+            ＋ Add more factors for a better recommendation
+          </summary>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:14px;">
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Last caffeine today</label>
+              <input type="time" id="caffeine-input" />
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Exercise timing</label>
+              <select id="exercise-input">
+                <option value="none">No exercise / not relevant</option>
+                <option value="morning">Morning (before noon)</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening (after 6 pm)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Daily naps</label>
+              <select id="nap-input">
+                <option value="none">No naps</option>
+                <option value="short">Short nap (&lt;30 min)</option>
+                <option value="long">Long nap (30+ min)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Current stress level</label>
+              <select id="stress-input">
+                <option value="1">1 — Very low</option>
+                <option value="2" selected>2 — Low</option>
+                <option value="3">3 — Moderate</option>
+                <option value="4">4 — High</option>
+                <option value="5">5 — Very high</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Screen-free time before bed</label>
+              <select id="screen-input">
+                <option value="0">No screen-free time</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+              </select>
+            </div>
+
+            <div class="check-row">
+              <input type="checkbox" id="alcohol-input" />
+              <label class="form-label" style="margin:0; cursor:pointer;" for="alcohol-input">Drink alcohol most nights</label>
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="shiftwork-input" />
+              <label class="form-label" style="margin:0; cursor:pointer;" for="shiftwork-input">Shift work or irregular schedule</label>
+            </div>
+
+          </div>
+        </details>
+
         <button class="btn btn-primary" onclick="calculateSchedule()">Calculate My Bedtime</button>
 
         <div id="schedule-result" style="display:none;">
@@ -43,15 +129,26 @@
               <span class="result-value" id="bedtime-result">—</span>
             </div>
             <div class="result-row">
+              <span class="result-label">Window</span>
+              <span class="result-value" id="bedtime-range" style="font-size:14px;">—</span>
+            </div>
+            <div class="result-row">
               <span class="result-label">Target sleep</span>
               <span class="result-value" id="hours-result">—</span>
             </div>
           </div>
+
+          <div id="adjustments-box" style="display:none; margin-top:12px; background:var(--surface); border-radius:14px; padding:16px;">
+            <div class="ai-label" style="margin-bottom:10px;">🔎 Factors considered</div>
+            <div id="adjustments-list"></div>
+          </div>
+
           <div class="ai-response" style="margin-top:12px;">
-            <div class="ai-label">💡 Gemini tip</div>
+            <div class="ai-label">💡 Tip</div>
             <div class="ai-text" id="gemini-tip" style="font-size:14px;"></div>
           </div>
         </div>
+
       </div>
 
       <!-- USER INFO -->
@@ -119,7 +216,8 @@
   <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth, logOut } from '../js/auth.js';
-    import { getUserProfile, getDreams } from '../js/firebase.js';
+    import { getUserProfile, getDreams, saveUserProfile } from '../js/firebase.js';
+    import { calculateBedtime, formatTime12h, applyDefaults } from '../js/sleepEngine.js';
 
     const chronotypeLabel = { early: 'Early bird', middle: 'In between', night: 'Night owl' };
     const goalLabel = {
@@ -128,6 +226,9 @@
       patterns: 'Find emotional patterns',
       all:      'All of the above'
     };
+
+    let currentUser        = null;
+    let currentUserProfile = null;
 
     function computeStreak(dreams) {
       if (!dreams.length) return 0;
@@ -152,55 +253,123 @@
       return streak;
     }
 
+    // Pre-fill a form element only when there is a real saved value
+    function fill(id, value) {
+      const el = document.getElementById(id);
+      if (el && value !== null && value !== undefined) el.value = value;
+    }
+
     requireAuth(async user => {
+      currentUser = user;
       const [profile, dreams] = await Promise.all([
         getUserProfile(user.uid),
         getDreams(user.uid)
       ]);
+      currentUserProfile = profile;
 
-      document.getElementById('profile-name').textContent      = user.displayName || profile?.name || '—';
-      document.getElementById('profile-email').textContent     = user.email || '—';
-      document.getElementById('profile-dreams').textContent    = dreams.length;
+      // ── Account section ──
+      document.getElementById('profile-name').textContent       = user.displayName || profile?.name || '—';
+      document.getElementById('profile-email').textContent      = user.email || '—';
+      document.getElementById('profile-dreams').textContent     = dreams.length;
       const streak = computeStreak(dreams);
-      document.getElementById('profile-streak').textContent    = streak > 0 ? `🔥 ${streak} night${streak !== 1 ? 's' : ''}` : '—';
+      document.getElementById('profile-streak').textContent     = streak > 0 ? `🔥 ${streak} night${streak !== 1 ? 's' : ''}` : '—';
       document.getElementById('profile-chronotype').textContent = chronotypeLabel[profile?.chronotype] || '—';
-      document.getElementById('profile-goal').textContent      = goalLabel[profile?.goal] || '—';
-      document.getElementById('profile-waketime').textContent  = profile?.wakeTime || '—';
+      document.getElementById('profile-goal').textContent       = goalLabel[profile?.goal] || '—';
+      document.getElementById('profile-waketime').textContent   = profile?.wakeTime || '—';
 
-      if (profile?.wakeTime) {
-        document.getElementById('wake-input').value = profile.wakeTime;
+      // ── Pre-fill sleep calculator from saved profile ──
+      fill('wake-input',     profile?.wakeTime);
+      fill('desired-sleep',  profile?.desiredSleepHours);
+      fill('caffeine-input', profile?.caffeineLastCup);
+      fill('exercise-input', profile?.exerciseTiming);
+      fill('stress-input',   profile?.stressLevel);
+      fill('screen-input',   profile?.screenCutoffMins);
+      if (profile?.alcoholNightly) document.getElementById('alcohol-input').checked  = true;
+      if (profile?.shiftWork)      document.getElementById('shiftwork-input').checked = true;
+      if (profile?.napsDaily) {
+        document.getElementById('nap-input').value = Number(profile.napDuration) > 30 ? 'long' : 'short';
       }
     });
 
     document.getElementById('signout-btn').addEventListener('click', () => logOut());
 
+    // ── Static tips (shown when backend is unavailable) ──
+    const staticTips = [
+      'Try dimming your lights 30 minutes before your target bedtime — it signals your brain that sleep is coming.',
+      'Avoid screens in the last hour before bed. Even a few minutes of blue light can delay melatonin.',
+      'A consistent bedtime, even on weekends, is the single most effective thing you can do for sleep quality.',
+      'Cool your room to 65–68 °F (18–20 °C). Core body temperature needs to drop 1–2 degrees to initiate sleep.',
+    ];
+
     window.calculateSchedule = async function () {
-      const age      = parseInt(document.getElementById('age-input').value);
       const wakeTime = document.getElementById('wake-input').value;
-      if (!age || !wakeTime) { alert('Please fill in your age and wake time.'); return; }
+      if (!wakeTime) { alert('Please set your wake-up time.'); return; }
 
-      const recommendedHours = age <= 24 ? 9 : age <= 64 ? 8 : 7;
-      const [wakeH, wakeM] = wakeTime.split(':').map(Number);
-      let bedH = wakeH - recommendedHours;
-      if (bedH < 0) bedH += 24;
-      const bedtime = `${bedH % 12 || 12}:${String(wakeM).padStart(2,'0')} ${bedH < 12 ? 'AM' : 'PM'}`;
+      const napVal = document.getElementById('nap-input').value;
 
-      document.getElementById('bedtime-result').textContent = bedtime;
-      document.getElementById('hours-result').textContent   = `${recommendedHours} hours`;
+      const profile = {
+        wakeTime,
+        age:               parseInt(document.getElementById('age-input').value)        || null,
+        desiredSleepHours: parseFloat(document.getElementById('desired-sleep').value)  || null,
+        caffeineLastCup:   document.getElementById('caffeine-input').value             || null,
+        exerciseTiming:    document.getElementById('exercise-input').value,
+        napsDaily:         napVal !== 'none',
+        napDuration:       napVal === 'long' ? 45 : 20,
+        stressLevel:       parseInt(document.getElementById('stress-input').value),
+        screenCutoffMins:  parseInt(document.getElementById('screen-input').value),
+        alcoholNightly:    document.getElementById('alcohol-input').checked,
+        shiftWork:         document.getElementById('shiftwork-input').checked,
+        chronotype:        currentUserProfile?.chronotype ?? null,
+      };
 
-      try {
-        const result = await window.getSleepSchedule(age, wakeTime);
-        document.getElementById('gemini-tip').textContent = result.tip;
-      } catch {
-        const tips = [
-          'Try dimming your lights 30 minutes before your target bedtime — it signals your brain that sleep is coming.',
-          'Avoid screens in the last hour before bed. Even a few minutes of blue light can delay melatonin.',
-          'A consistent bedtime, even on weekends, is the single most effective thing you can do for sleep quality.'
-        ];
-        document.getElementById('gemini-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
+      const result = calculateBedtime(profile);
+
+      // ── Render result ──
+      document.getElementById('bedtime-result').textContent = formatTime12h(result.bedtime);
+      document.getElementById('bedtime-range').textContent  =
+        `${formatTime12h(result.bedtimeRange.early)} – ${formatTime12h(result.bedtimeRange.late)}`;
+      document.getElementById('hours-result').textContent   = `${result.targetSleepHours} h`;
+
+      if (result.adjustments.length > 0) {
+        document.getElementById('adjustments-list').innerHTML = result.adjustments.map(a => {
+          const color = a.delta > 0 ? '#c084fc' : a.delta < 0 ? '#4ade80' : 'var(--text-dim)';
+          const arrow = a.delta > 0 ? '↑ later' : a.delta < 0 ? '↓ earlier' : '→';
+          return `<div class="adj-row">
+            <span class="adj-factor" style="color:${color};">${a.factor} <span style="font-weight:400;font-size:12px;">${arrow}</span></span>
+            <span class="adj-note">${a.note}</span>
+          </div>`;
+        }).join('');
+        document.getElementById('adjustments-box').style.display = 'block';
+      } else {
+        document.getElementById('adjustments-box').style.display = 'none';
       }
 
       document.getElementById('schedule-result').style.display = 'block';
+
+      // ── Auto-save profile fields to Firestore ──
+      if (currentUser) {
+        saveUserProfile(currentUser.uid, {
+          wakeTime:          profile.wakeTime,
+          desiredSleepHours: profile.desiredSleepHours,
+          caffeineLastCup:   profile.caffeineLastCup,
+          exerciseTiming:    profile.exerciseTiming,
+          napsDaily:         profile.napsDaily,
+          napDuration:       profile.napDuration,
+          stressLevel:       profile.stressLevel,
+          screenCutoffMins:  profile.screenCutoffMins,
+          alcoholNightly:    profile.alcoholNightly,
+          shiftWork:         profile.shiftWork,
+        }).catch(err => console.error('Profile save error:', err));
+      }
+
+      // ── Tip (Gemini if backend running, static fallback) ──
+      try {
+        const r = await window.getSleepSchedule(profile.age, profile.wakeTime);
+        document.getElementById('gemini-tip').textContent = r.tip;
+      } catch {
+        document.getElementById('gemini-tip').textContent =
+          staticTips[Math.floor(Math.random() * staticTips.length)];
+      }
     };
   </script>
 </body>
