@@ -46,6 +46,17 @@
     }
     .filter-chip.active { background: var(--accent); color: #fff; }
     .dream-count { font-size: 13px; color: var(--text-muted); padding: 0 20px 10px; }
+    .dream-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+    .dream-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .dream-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .dream-view-btn {
+      font-size: 12px; font-weight: 700; color: var(--accent-soft);
+      text-decoration: none; letter-spacing: 0.03em;
+      padding: 4px 10px; border-radius: 100px;
+      border: 1px solid rgba(155,93,229,0.3);
+      transition: background 0.2s, color 0.2s;
+    }
+    .dream-view-btn:hover { background: var(--accent-soft); color: #fff; }
   </style>
 </head>
 <body>
@@ -137,10 +148,13 @@
           return `<span class="tag ${cls}">${e}</span>`;
         }).join('');
         return `
-          <div class="dream-card">
+          <div class="dream-card" onclick="window.location.href='dream.html?id=${dream.id}'">
             <div class="dream-date">${formatDate(dream.createdAt)}</div>
             <div class="dream-preview">${preview}</div>
-            <div>${tags}</div>
+            <div class="dream-card-footer">
+              <div>${tags}</div>
+              <a class="dream-view-btn" href="dream.html?id=${dream.id}" onclick="event.stopPropagation()">View →</a>
+            </div>
           </div>`;
       }).join('');
 

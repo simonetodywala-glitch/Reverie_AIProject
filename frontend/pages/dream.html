@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reverie — Dream</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .dream-text {
+      font-size: 15px; line-height: 1.75; color: var(--text-dim);
+      background: var(--surface); border-radius: 14px;
+      padding: 16px 18px; margin-top: 8px;
+    }
+    .emotion-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .theme-item {
+      font-size: 14px; color: var(--text-dim); line-height: 1.6;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .theme-item:last-child { border-bottom: none; }
+    .reflection-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    .reflection-list li {
+      font-size: 14px; color: var(--text-dim); line-height: 1.6;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .reflection-list li:last-child { border-bottom: none; }
+    .reflection-list li::before { content: "✦ "; opacity: 0.5; }
+    .chat-teaser {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border-radius: 14px;
+      padding: 16px 18px; margin-top: 8px;
+      border: 1px dashed rgba(155,93,229,0.3);
+    }
+    .chat-teaser-icon { font-size: 24px; flex-shrink: 0; opacity: 0.6; }
+    .chat-teaser-text { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+    .chat-teaser-label { font-size: 12px; font-weight: 700; color: var(--accent-soft); margin-bottom: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+
+    <div class="page-header">
+      <a href="dreams.html" style="color:var(--text-dim); text-decoration:none; font-size:14px;">← Back</a>
+      <div id="dream-date" style="margin-top:6px;">🌙 Dream</div>
+    </div>
+
+    <div class="main-content page-content" id="dream-content">
+      <div style="text-align:center; padding:60px 0; color:var(--text-dim); font-size:14px;">Loading...</div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-group">
+        <a class="nav-link" href="../index.html">Home</a>
+        <a class="nav-link active" href="dreams.html">Dreams</a>
+      </div>
+      <a class="nav-plus" href="journal.html">+</a>
+      <div class="nav-group">
+        <a class="nav-link" href="winddown.html">Wind Down</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDream } from '../js/firebase.js';
+
+    const emotionTags = {
+      anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
+      sadness: 'tag-anxiety', nostalgia: 'tag-wonder', dread: 'tag-fear',
+      grief: 'tag-anxiety', awe: 'tag-wonder', longing: 'tag-wonder',
+      restlessness: 'tag-anxiety', relief: 'tag-peaceful', tenderness: 'tag-peaceful'
+    };
+
+    const dreamId = new URLSearchParams(window.location.search).get('id');
+
+    function formatDate(ts) {
+      const date = ts?.toDate ? ts.toDate() : new Date(ts);
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function esc(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function render(dream) {
+      document.getElementById('dream-date').textContent = `🌙 ${formatDate(dream.createdAt)}`;
+
+      const emotionsHtml = (dream.emotions || []).map(e => {
+        const cls = emotionTags[e.toLowerCase()] || '';
+        return `<span class="tag ${cls}">${esc(e)}</span>`;
+      }).join('');
+
+      const themesHtml = (dream.themes || []).map(t =>
+        `<div class="theme-item">• ${esc(t)}</div>`
+      ).join('');
+
+      let html = `
+        <div class="section-label">What you dreamed</div>
+        <div class="dream-text">${esc(dream.text || '')}</div>
+
+        <div class="ai-response" style="margin-top:16px;">
+          <div class="ai-label">🤖 Gemini Analysis</div>
+
+          <div class="section-label" style="margin-top:12px;">Emotions detected</div>
+          <div class="emotion-row">${emotionsHtml}</div>
+
+          <div class="section-label" style="margin-top:12px;">Themes &amp; symbols</div>
+          <div style="margin-top:4px;">${themesHtml || '<div class="theme-item" style="opacity:0.5;">No themes recorded</div>'}</div>
+
+          <div class="section-label" style="margin-top:16px;">Summary</div>
+          <div class="ai-text" style="margin-top:6px;">${esc(dream.summary || '')}</div>
+      `;
+
+      if (dream.interpretation) {
+        html += `
+          <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
+          <div class="ai-text" style="font-size:14px; line-height:1.7; margin-top:6px;">${esc(dream.interpretation)}</div>
+        `;
+      }
+
+      if (dream.reflections?.length) {
+        html += `
+          <div class="section-label" style="margin-top:16px;">Reflect on this</div>
+          <ul class="reflection-list">
+            ${dream.reflections.map(r => `<li>${esc(r)}</li>`).join('')}
+          </ul>
+        `;
+      }
+
+      html += `</div>`;
+
+      html += `
+        <div class="section-label" style="margin-top:20px;">Talk about it</div>
+        <div class="chat-teaser">
+          <div class="chat-teaser-icon">💬</div>
+          <div class="chat-teaser-text">
+            <div class="chat-teaser-label">Coming soon</div>
+            Ask Gemini questions about this dream — dive deeper into the symbols, get follow-up reflections, or just talk it through.
+          </div>
+        </div>
+      `;
+
+      document.getElementById('dream-content').innerHTML = html;
+    }
+
+    requireAuth(async user => {
+      if (!dreamId) {
+        document.getElementById('dream-content').innerHTML =
+          '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">No dream selected.</div>';
+        return;
+      }
+      try {
+        const dream = await getDream(user.uid, dreamId);
+        if (!dream) {
+          document.getElementById('dream-content').innerHTML =
+            '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">Dream not found.</div>';
+          return;
+        }
+        render(dream);
+      } catch (err) {
+        console.error('Failed to load dream:', err);
+        document.getElementById('dream-content').innerHTML =
+          '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">Could not load dream. Please try again.</div>';
+      }
+    });
+  </script>
+</body>
+</html>
