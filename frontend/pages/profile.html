@@ -59,15 +59,19 @@
       <div class="card">
         <div class="result-row">
           <span class="result-label">Name</span>
-          <span class="result-value">Gemmy</span>
+          <span class="result-value" id="profile-name">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Email</span>
+          <span class="result-value" id="profile-email" style="font-size:14px; word-break:break-all;">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">Dreams logged</span>
-          <span class="result-value">3</span>
+          <span class="result-value" id="profile-dreams">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">Current streak</span>
-          <span class="result-value">🔥 4 nights</span>
+          <span class="result-value" id="profile-streak">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">Plan</span>
@@ -75,11 +79,24 @@
         </div>
       </div>
 
-      <!-- Firebase Auth placeholder -->
-      <div class="ai-response" style="margin-top: 4px;">
-        <div class="ai-label">Coming in Week 3</div>
-        <div class="ai-text" style="font-size:14px; color:var(--text-muted);">Login / signup with Firebase Authentication. Your dreams and sleep data will sync across devices.</div>
+      <!-- PREFERENCES -->
+      <div class="section-label" style="margin-top:8px;">Preferences</div>
+      <div class="card">
+        <div class="result-row">
+          <span class="result-label">Sleep type</span>
+          <span class="result-value" id="profile-chronotype">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Goal</span>
+          <span class="result-value" id="profile-goal">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Wake time</span>
+          <span class="result-value" id="profile-waketime">—</span>
+        </div>
       </div>
+
+      <button class="btn" id="signout-btn" style="margin-top:8px; width:100%; background:rgba(255,255,255,0.06); color:var(--text-dim); box-shadow:none;">Sign Out</button>
 
     </div>
 
@@ -100,27 +117,79 @@
 
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
-  <script>
-    async function calculateSchedule() {
-      const age = parseInt(document.getElementById('age-input').value);
-      const wakeTime = document.getElementById('wake-input').value;
+  <script type="module">
+    import { requireAuth, logOut } from '../js/auth.js';
+    import { getUserProfile, getDreams } from '../js/firebase.js';
 
+    const chronotypeLabel = { early: 'Early bird', middle: 'In between', night: 'Night owl' };
+    const goalLabel = {
+      dreams:   'Understand my dreams',
+      sleep:    'Sleep better',
+      patterns: 'Find emotional patterns',
+      all:      'All of the above'
+    };
+
+    function computeStreak(dreams) {
+      if (!dreams.length) return 0;
+      const days = new Set(dreams.map(d => {
+        const ts = d.createdAt;
+        const date = ts?.toDate ? ts.toDate() : new Date(ts);
+        return date.toDateString();
+      }));
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const start = days.has(today.toDateString())     ? new Date(today)
+                  : days.has(yesterday.toDateString()) ? new Date(yesterday)
+                  : null;
+      if (!start) return 0;
+      let streak = 0;
+      const check = new Date(start);
+      while (days.has(check.toDateString())) {
+        streak++;
+        check.setDate(check.getDate() - 1);
+      }
+      return streak;
+    }
+
+    requireAuth(async user => {
+      const [profile, dreams] = await Promise.all([
+        getUserProfile(user.uid),
+        getDreams(user.uid)
+      ]);
+
+      document.getElementById('profile-name').textContent      = user.displayName || profile?.name || '—';
+      document.getElementById('profile-email').textContent     = user.email || '—';
+      document.getElementById('profile-dreams').textContent    = dreams.length;
+      const streak = computeStreak(dreams);
+      document.getElementById('profile-streak').textContent    = streak > 0 ? `🔥 ${streak} night${streak !== 1 ? 's' : ''}` : '—';
+      document.getElementById('profile-chronotype').textContent = chronotypeLabel[profile?.chronotype] || '—';
+      document.getElementById('profile-goal').textContent      = goalLabel[profile?.goal] || '—';
+      document.getElementById('profile-waketime').textContent  = profile?.wakeTime || '—';
+
+      if (profile?.wakeTime) {
+        document.getElementById('wake-input').value = profile.wakeTime;
+      }
+    });
+
+    document.getElementById('signout-btn').addEventListener('click', () => logOut());
+
+    window.calculateSchedule = async function () {
+      const age      = parseInt(document.getElementById('age-input').value);
+      const wakeTime = document.getElementById('wake-input').value;
       if (!age || !wakeTime) { alert('Please fill in your age and wake time.'); return; }
 
-      // Rule-based calculation (no API needed)
       const recommendedHours = age <= 24 ? 9 : age <= 64 ? 8 : 7;
-
       const [wakeH, wakeM] = wakeTime.split(':').map(Number);
       let bedH = wakeH - recommendedHours;
       if (bedH < 0) bedH += 24;
       const bedtime = `${bedH % 12 || 12}:${String(wakeM).padStart(2,'0')} ${bedH < 12 ? 'AM' : 'PM'}`;
 
       document.getElementById('bedtime-result').textContent = bedtime;
-      document.getElementById('hours-result').textContent = `${recommendedHours} hours`;
+      document.getElementById('hours-result').textContent   = `${recommendedHours} hours`;
 
-      // Try Gemini tip, fall back to static
       try {
-        const result = await getSleepSchedule(age, wakeTime);
+        const result = await window.getSleepSchedule(age, wakeTime);
         document.getElementById('gemini-tip').textContent = result.tip;
       } catch {
         const tips = [
@@ -132,7 +201,7 @@
       }
 
       document.getElementById('schedule-result').style.display = 'block';
-    }
+    };
   </script>
 </body>
 </html>
