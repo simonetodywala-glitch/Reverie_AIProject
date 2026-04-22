@@ -40,6 +40,22 @@
 
       <!-- SLEEP SCHEDULE CALCULATOR -->
       <div class="section-label">Sleep Schedule</div>
+
+      <!-- Last saved recommendation — shown once a schedule exists in Firestore -->
+      <div id="prev-schedule-card" style="display:none; margin-bottom:12px; background:var(--surface); border-radius:14px; padding:16px; border:1px solid rgba(124,58,237,0.2);">
+        <div style="font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px;">Last recommendation</div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="font-family:'Nunito',sans-serif; font-size:32px; font-weight:900; color:#fff; line-height:1;" id="prev-bedtime-display">—</div>
+            <div style="font-size:13px; color:var(--text-dim); margin-top:4px;" id="prev-range-display"></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Nunito',sans-serif; font-size:17px; font-weight:700;" id="prev-hours-display">—</div>
+            <div style="font-size:12px; color:var(--text-dim); margin-top:2px;" id="prev-date-display"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
 
         <div class="form-group">
@@ -106,6 +122,11 @@
                 <option value="90">1.5 hours</option>
                 <option value="120">2 hours</option>
               </select>
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Last meal / snack tonight</label>
+              <input type="time" id="meal-time-input" />
             </div>
 
             <div class="check-row">
@@ -216,8 +237,8 @@
   <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth, logOut } from '../js/auth.js';
-    import { getUserProfile, getDreams, saveUserProfile } from '../js/firebase.js';
-    import { calculateBedtime, formatTime12h, applyDefaults } from '../js/sleepEngine.js';
+    import { getUserProfile, getDreams, saveUserProfile, saveSleepSchedule, getLatestSleepSchedule } from '../js/firebase.js';
+    import { calculateBedtime, formatTime12h } from '../js/sleepEngine.js';
 
     const chronotypeLabel = { early: 'Early bird', middle: 'In between', night: 'Night owl' };
     const goalLabel = {
@@ -259,11 +280,23 @@
       if (el && value !== null && value !== undefined) el.value = value;
     }
 
+    function showPrevSchedule(schedule) {
+      const ts = schedule.createdAt?.toDate ? schedule.createdAt.toDate() : new Date();
+      document.getElementById('prev-bedtime-display').textContent = formatTime12h(schedule.bedtime);
+      document.getElementById('prev-range-display').textContent   =
+        `${formatTime12h(schedule.bedtimeRange?.early)} – ${formatTime12h(schedule.bedtimeRange?.late)}`;
+      document.getElementById('prev-hours-display').textContent   = `${schedule.targetSleepHours} h sleep`;
+      document.getElementById('prev-date-display').textContent    =
+        ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      document.getElementById('prev-schedule-card').style.display = 'block';
+    }
+
     requireAuth(async user => {
       currentUser = user;
-      const [profile, dreams] = await Promise.all([
+      const [profile, dreams, latestSchedule] = await Promise.all([
         getUserProfile(user.uid),
-        getDreams(user.uid)
+        getDreams(user.uid),
+        getLatestSleepSchedule(user.uid)
       ]);
       currentUserProfile = profile;
 
@@ -278,17 +311,21 @@
       document.getElementById('profile-waketime').textContent   = profile?.wakeTime || '—';
 
       // ── Pre-fill sleep calculator from saved profile ──
-      fill('wake-input',     profile?.wakeTime);
-      fill('desired-sleep',  profile?.desiredSleepHours);
-      fill('caffeine-input', profile?.caffeineLastCup);
-      fill('exercise-input', profile?.exerciseTiming);
-      fill('stress-input',   profile?.stressLevel);
-      fill('screen-input',   profile?.screenCutoffMins);
+      fill('wake-input',      profile?.wakeTime);
+      fill('desired-sleep',   profile?.desiredSleepHours);
+      fill('caffeine-input',  profile?.caffeineLastCup);
+      fill('meal-time-input', profile?.lastMealTime);
+      fill('exercise-input',  profile?.exerciseTiming);
+      fill('stress-input',    profile?.stressLevel);
+      fill('screen-input',    profile?.screenCutoffMins);
       if (profile?.alcoholNightly) document.getElementById('alcohol-input').checked  = true;
       if (profile?.shiftWork)      document.getElementById('shiftwork-input').checked = true;
       if (profile?.napsDaily) {
         document.getElementById('nap-input').value = Number(profile.napDuration) > 30 ? 'long' : 'short';
       }
+
+      // ── Show last saved schedule if one exists ──
+      if (latestSchedule) showPrevSchedule(latestSchedule);
     });
 
     document.getElementById('signout-btn').addEventListener('click', () => logOut());
@@ -312,6 +349,7 @@
         age:               parseInt(document.getElementById('age-input').value)        || null,
         desiredSleepHours: parseFloat(document.getElementById('desired-sleep').value)  || null,
         caffeineLastCup:   document.getElementById('caffeine-input').value             || null,
+        lastMealTime:      document.getElementById('meal-time-input').value            || null,
         exerciseTiming:    document.getElementById('exercise-input').value,
         napsDaily:         napVal !== 'none',
         napDuration:       napVal === 'long' ? 45 : 20,
@@ -346,12 +384,13 @@
 
       document.getElementById('schedule-result').style.display = 'block';
 
-      // ── Auto-save profile fields to Firestore ──
+      // ── Save inputs to user profile + save schedule result to Firestore ──
       if (currentUser) {
         saveUserProfile(currentUser.uid, {
           wakeTime:          profile.wakeTime,
           desiredSleepHours: profile.desiredSleepHours,
           caffeineLastCup:   profile.caffeineLastCup,
+          lastMealTime:      profile.lastMealTime,
           exerciseTiming:    profile.exerciseTiming,
           napsDaily:         profile.napsDaily,
           napDuration:       profile.napDuration,
@@ -360,6 +399,16 @@
           alcoholNightly:    profile.alcoholNightly,
           shiftWork:         profile.shiftWork,
         }).catch(err => console.error('Profile save error:', err));
+
+        saveSleepSchedule(currentUser.uid, {
+          bedtime:          result.bedtime,
+          bedtimeRange:     result.bedtimeRange,
+          targetSleepHours: result.targetSleepHours,
+          adjustments:      result.adjustments,
+          wakeTime:         profile.wakeTime,
+        }).then(() => {
+          showPrevSchedule({ ...result, createdAt: { toDate: () => new Date() } });
+        }).catch(err => console.error('Schedule save error:', err));
       }
 
       // ── Tip (Gemini if backend running, static fallback) ──

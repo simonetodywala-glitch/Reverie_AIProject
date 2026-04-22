@@ -8,18 +8,19 @@
 
 // ── Defaults applied when a profile field is missing ──
 export const SLEEP_DEFAULTS = {
-  wakeTime:         "07:00",
-  chronotype:       "middle",   // "early" | "middle" | "night"
-  desiredSleepHours: null,      // if null, falls back to age-based guideline
-  age:              null,
-  caffeineLastCup:  null,       // "HH:MM" of last caffeinated drink today, or null
-  exerciseTiming:   "none",     // "morning" | "afternoon" | "evening" | "none"
-  napsDaily:        false,
-  napDuration:      20,         // minutes
-  screenCutoffMins: 60,         // minutes of screen-free time before bed
-  stressLevel:      2,          // 1 (low) – 5 (high)
-  alcoholNightly:   false,
-  shiftWork:        false,
+  wakeTime:          "07:00",
+  chronotype:        "middle",   // "early" | "middle" | "night"
+  desiredSleepHours: null,       // if null, falls back to age-based guideline
+  age:               null,
+  caffeineLastCup:   null,       // "HH:MM" of last caffeinated drink today, or null
+  lastMealTime:      null,       // "HH:MM" of last substantial meal, or null
+  exerciseTiming:    "none",     // "morning" | "afternoon" | "evening" | "none"
+  napsDaily:         false,
+  napDuration:       20,         // minutes
+  screenCutoffMins:  60,         // minutes of screen-free time before bed
+  stressLevel:       2,          // 1 (low) – 5 (high)
+  alcoholNightly:    false,
+  shiftWork:         false,
 };
 
 // ── Helpers ──────────────────────────────
@@ -106,24 +107,34 @@ export function calculateBedtime(rawProfile) {
   }
 
   // ── 4. Caffeine ───────────────────────────
-  // Caffeine has a ~6-hour half-life. If bedtime falls within the active
-  // window, push it back until after clearance.
+  // Caffeine's half-life is 5–7 h; after 6 h ~50% is still active.
+  // Drake et al. (2013) showed caffeine taken 6 h before bed reduces total
+  // sleep by ~1 h. Tiered response:
+  //   < 4 h gap → mechanical push (significant disruption certain)
+  //   4–8 h gap → informational flag only (disruption likely but individual)
+  //   ≥ 8 h     → silent (mostly cleared for most people)
   if (p.caffeineLastCup) {
     const caffMins = timeToMinutes(p.caffeineLastCup);
     if (caffMins !== null) {
-      const clearBy = caffMins + 360;                            // 6h clearance
-      const bedNorm = ((bed % 1440) + 1440) % 1440;             // normalise for compare
-      // clearBy may exceed 1440 (e.g. coffee at 10 pm, clears at 4 am).
-      // The 600-min cap prevents false positives from wraparound arithmetic.
-      if (clearBy > bedNorm && clearBy - bedNorm < 600) {
-        const push = clearBy - bedNorm;
-        bed += push;
+      const bedNorm  = ((bed % 1440) + 1440) % 1440;
+      const hoursGap = ((bedNorm - caffMins + 1440) % 1440) / 60;
+      const gapLabel = `${Math.round(hoursGap * 10) / 10}h`;
+
+      if (hoursGap < 4) {
+        bed += 30;
         adjustments.push({
           factor: "Caffeine",
-          delta:  push,
-          note:   `Last caffeine at ${formatTime12h(p.caffeineLastCup)} — needs until ~${formatTime12h(minutesToTime(clearBy))} to clear`,
+          delta:  +30,
+          note:   `Last caffeine at ${formatTime12h(p.caffeineLastCup)} is only ${gapLabel} before bed — at least 4h needed, 8h ideal. Shifted 30 min later.`,
+        });
+      } else if (hoursGap < 8) {
+        adjustments.push({
+          factor: "Caffeine",
+          delta:  0,
+          note:   `Last caffeine at ${formatTime12h(p.caffeineLastCup)} is ${gapLabel} before bed — ~50% may still be active. For best sleep quality aim for 8+ h gap.`,
         });
       }
+      // ≥ 8 h: mostly cleared, no flag needed
     }
   }
 
@@ -167,6 +178,27 @@ export function calculateBedtime(rawProfile) {
   // Flag only — no mechanical adjustment, but worth surfacing.
   if (p.shiftWork) {
     adjustments.push({ factor: "Shift work", delta: 0, note: "Irregular schedules disrupt circadian rhythm — anchor your wake time even on days off when possible" });
+  }
+
+  // ── 11. Meal timing ──────────────────────
+  // Digestion raises core body temperature and stimulates the GI tract, both
+  // of which oppose the temperature drop sleep requires. Allow ≥ 2 h after a
+  // substantial meal (Crispim et al. 2011). Flag only — the user should shift
+  // their meal earlier, not mechanically push their bedtime later.
+  if (p.lastMealTime) {
+    const mealMins = timeToMinutes(p.lastMealTime);
+    if (mealMins !== null) {
+      const bedNorm    = ((bed % 1440) + 1440) % 1440;
+      const hoursAfter = ((bedNorm - mealMins + 1440) % 1440) / 60;
+      if (hoursAfter < 2) {
+        const label = hoursAfter < 0.5 ? "under 30 min" : `${Math.round(hoursAfter * 10) / 10}h`;
+        adjustments.push({
+          factor: "Meal timing",
+          delta:  0,
+          note:   `Last meal at ${formatTime12h(p.lastMealTime)} is only ${label} before bedtime — digestion raises core temperature and can delay sleep. Try to finish eating 2–3 h before bed.`,
+        });
+      }
+    }
   }
 
   // ── Normalise ────────────────────────────

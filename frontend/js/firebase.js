@@ -14,6 +14,7 @@ import {
   collection,
   query,
   orderBy,
+  limit,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -69,6 +70,29 @@ export async function getDreams(uid) {
 export async function getDream(uid, dreamId) {
   const snap = await getDoc(doc(db, "users", uid, "dreams", dreamId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// ─────────────────────────────────────────
+// SLEEP SCHEDULES
+// ─────────────────────────────────────────
+
+// scheduleData: { bedtime, bedtimeRange, targetSleepHours, adjustments, wakeTime }
+export async function saveSleepSchedule(uid, scheduleData) {
+  const ref = collection(db, "users", uid, "sleepSchedules");
+  const docRef = await addDoc(ref, {
+    ...scheduleData,
+    createdAt: serverTimestamp()
+  });
+  return docRef.id;
+}
+
+export async function getLatestSleepSchedule(uid) {
+  const ref  = collection(db, "users", uid, "sleepSchedules");
+  const q    = query(ref, orderBy("createdAt", "desc"), limit(1));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() };
 }
 
 // ─────────────────────────────────────────

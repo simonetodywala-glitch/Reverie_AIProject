@@ -127,16 +127,24 @@ suite("chronotype adjustments", () => {
   assert("night adjustment is recorded", night.adjustments.some(a => a.factor === "Chronotype"));
 });
 
-suite("caffeine pushes bedtime later", () => {
-  // Base: wake 07:00, 8h sleep → bedtime 23:00 (1380 min).
-  // Caffeine at 17:30 → clears at 23:30 (1410). Should push by 30 min.
-  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, caffeineLastCup: "17:30" });
-  assert("bedtime is at least 23:30", timeToMinutes(r.bedtime) >= 1410);
-  assert("caffeine adjustment is recorded", r.adjustments.some(a => a.factor === "Caffeine"));
+suite("caffeine < 4h before bed: push 30 min later", () => {
+  // Base bedtime 23:00. Coffee at 20:30 → only 2.5 h before bed → push.
+  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, caffeineLastCup: "20:30" });
+  assert("bedtime pushed to 23:30", timeToMinutes(r.bedtime) === timeToMinutes("23:30"));
+  assert("caffeine adjustment has positive delta",
+    r.adjustments.some(a => a.factor === "Caffeine" && a.delta > 0));
 });
 
-suite("no caffeine push when coffee clears before bedtime", () => {
-  // Coffee at 08:00, clears by 14:00. Bedtime 23:00 — no adjustment expected.
+suite("caffeine 4–8h before bed: informational flag, no push", () => {
+  // Coffee at 17:30 → 5.5 h before 23:00 → warn only, no bedtime change.
+  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, caffeineLastCup: "17:30" });
+  eq("bedtime unchanged at 23:00", r.bedtime, "23:00");
+  assert("caffeine flagged with delta 0",
+    r.adjustments.some(a => a.factor === "Caffeine" && a.delta === 0));
+});
+
+suite("caffeine 8h+ before bed: no flag at all", () => {
+  // Coffee at 08:00 → 15 h before 23:00 → silent.
   const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, caffeineLastCup: "08:00" });
   assert("no caffeine adjustment", !r.adjustments.some(a => a.factor === "Caffeine"));
   eq("bedtime unchanged at 23:00", r.bedtime, "23:00");
@@ -175,6 +183,26 @@ suite("combined factors accumulate correctly", () => {
   });
   const diff = timeToMinutes(full.bedtime) - timeToMinutes(base.bedtime);
   assert("combined adjustments net +40 min", diff === 40);
+});
+
+suite("meal timing flags meals within 2h of bed", () => {
+  // Base bedtime 23:00. Last meal at 22:00 → only 1 h before → flag.
+  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, lastMealTime: "22:00" });
+  assert("meal timing flag appears", r.adjustments.some(a => a.factor === "Meal timing"));
+  assert("meal flag has delta 0 (informational only)",
+    r.adjustments.find(a => a.factor === "Meal timing")?.delta === 0);
+  eq("bedtime not mechanically changed", r.bedtime, "23:00");
+});
+
+suite("meal timing ok when 2+ hours before bed", () => {
+  // Last meal at 20:30 → 2.5 h before 23:00 → no flag.
+  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, lastMealTime: "20:30" });
+  assert("no meal timing flag", !r.adjustments.some(a => a.factor === "Meal timing"));
+});
+
+suite("null lastMealTime produces no flag", () => {
+  const r = calculateBedtime({ wakeTime: "07:00", desiredSleepHours: 8, lastMealTime: null });
+  assert("no meal timing flag when field absent", !r.adjustments.some(a => a.factor === "Meal timing"));
 });
 
 // ── Summary ───────────────────────────────
