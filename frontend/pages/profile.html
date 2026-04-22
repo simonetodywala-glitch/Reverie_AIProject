@@ -413,7 +413,7 @@
 
       // ── Tip (Gemini if backend running, static fallback) ──
       try {
-        const r = await window.getSleepSchedule(profile.age, profile.wakeTime);
+        const r = await window.getSleepTip(profile, result);
         document.getElementById('gemini-tip').textContent = r.tip;
       } catch {
         document.getElementById('gemini-tip').textContent =

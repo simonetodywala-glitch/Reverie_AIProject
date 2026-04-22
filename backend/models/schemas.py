@@ -30,14 +30,22 @@ class ChatResponse(BaseModel):
 
 
 class ScheduleRequest(BaseModel):
-    age: int
-    wake_time: str          # "07:00"
+    wake_time: str                          # "07:00"
+    bedtime: str                            # already-calculated bedtime from sleepEngine
+    target_hours: float                     # e.g. 8.5
+    age: Optional[int] = None
+    caffeine_last_cup: Optional[str] = None  # "HH:MM" or null
+    last_meal_time: Optional[str] = None
+    exercise_timing: Optional[str] = "none"
+    stress_level: Optional[int] = 2
+    alcohol_nightly: Optional[bool] = False
+    shift_work: Optional[bool] = False
+    chronotype: Optional[str] = None
+    adjustments: Optional[List[str]] = []   # human-readable factor notes
 
 
 class ScheduleResponse(BaseModel):
-    bedtime: str
-    recommended_hours: int
-    tip: str                # Gemini-generated personalized advice
+    tip: str                                # Gemini-generated personalized advice
 
 
 class AudioRequest(BaseModel):

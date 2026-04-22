@@ -47,15 +47,28 @@ async function getPatternReport(userId) {
 
 // ── SLEEP SCHEDULE ──
 
-// Calculate optimal bedtime from age + wake time
-async function getSleepSchedule(age, wakeTime) {
+// Generate a personalised Gemini tip from the full sleep profile + result
+async function getSleepTip(profile, result) {
   const res = await fetch(`${BASE_URL}/schedule/calculate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ age, wake_time: wakeTime })
+    body: JSON.stringify({
+      wake_time:        profile.wakeTime,
+      bedtime:          result.bedtime,
+      target_hours:     result.targetSleepHours,
+      age:              profile.age              || null,
+      caffeine_last_cup: profile.caffeineLastCup || null,
+      last_meal_time:   profile.lastMealTime     || null,
+      exercise_timing:  profile.exerciseTiming   || 'none',
+      stress_level:     profile.stressLevel      || 2,
+      alcohol_nightly:  profile.alcoholNightly   || false,
+      shift_work:       profile.shiftWork        || false,
+      chronotype:       profile.chronotype       || null,
+      adjustments:      (result.adjustments || []).map(a => a.note),
+    })
   });
-  if (!res.ok) throw new Error('Schedule calculation failed');
-  return res.json(); // { bedtime, recommended_hours, tip }
+  if (!res.ok) throw new Error('Tip generation failed');
+  return res.json(); // { tip }
 }
 
 // ── AUDIO ──

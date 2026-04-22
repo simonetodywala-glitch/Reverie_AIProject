@@ -5,64 +5,79 @@
 
 import os
 import google.generativeai as genai
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from backend.models.schemas import ScheduleRequest, ScheduleResponse
 
 router = APIRouter()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 
-def calculate_bedtime(age: int, wake_time: str) -> tuple[int, str]:
-    """Rule-based bedtime calculation. No AI needed here."""
-    # Recommended sleep hours by age
-    if age <= 13:
-        recommended = 10
-    elif age <= 17:
-        recommended = 9
-    elif age <= 64:
-        recommended = 8
-    else:
-        recommended = 7
-
-    # Parse wake time and subtract recommended hours
-    wake_h, wake_m = map(int, wake_time.split(":"))
-    bed_h = (wake_h - recommended) % 24
-
-    # Format as readable time
-    period = "AM" if bed_h < 12 else "PM"
-    display_h = bed_h % 12 or 12
-    bedtime_str = f"{display_h}:{str(wake_m).zfill(2)} {period}"
-
-    return recommended, bedtime_str
+def _fmt(t: str | None) -> str:
+    """Convert 24-h 'HH:MM' to '10:30 PM' for the prompt, or return 'N/A'."""
+    if not t:
+        return "N/A"
+    try:
+        h, m = map(int, t.split(":"))
+        ampm = "AM" if h < 12 else "PM"
+        return f"{h % 12 or 12}:{m:02d} {ampm}"
+    except Exception:
+        return t
 
 
 @router.post("/calculate", response_model=ScheduleResponse)
 async def calculate_schedule(req: ScheduleRequest):
     """
-    Calculates optimal bedtime from age + wake time.
-    Then asks Gemini for one personalized tip.
+    Generates a personalised Gemini tip based on the full sleep profile
+    already calculated by the client-side sleep engine.
     """
-    recommended_hours, bedtime = calculate_bedtime(req.age, req.wake_time)
+    factors_text = "\n".join(f"- {note}" for note in req.adjustments) if req.adjustments else "- No special factors detected"
 
-    # Ask Gemini for a personalized tip
-    prompt = f"""
-A {req.age}-year-old needs to wake up at {req.wake_time} and should get {recommended_hours} hours of sleep.
-Their recommended bedtime is {bedtime}.
+    age_line = f"Age: {req.age}" if req.age else "Age: not provided"
+    chronotype_map = {"early": "early bird", "night": "night owl", "middle": "neutral"}
+    chronotype_line = f"Chronotype: {chronotype_map.get(req.chronotype or '', 'unknown')}"
 
-Give them ONE practical, specific tip (1-2 sentences) to help them actually fall asleep at that time.
-Be warm and direct. No generic advice like "avoid caffeine" — make it specific to their schedule.
-"""
+    extra_context = []
+    if req.caffeine_last_cup:
+        extra_context.append(f"last caffeine at {_fmt(req.caffeine_last_cup)}")
+    if req.last_meal_time:
+        extra_context.append(f"last meal at {_fmt(req.last_meal_time)}")
+    if req.exercise_timing and req.exercise_timing != "none":
+        extra_context.append(f"{req.exercise_timing} exercise today")
+    if req.stress_level and req.stress_level >= 4:
+        extra_context.append(f"high stress (level {req.stress_level}/5)")
+    if req.alcohol_nightly:
+        extra_context.append("drinks alcohol most nights")
+    if req.shift_work:
+        extra_context.append("shift worker / irregular schedule")
+
+    context_line = (", ".join(extra_context)) if extra_context else "no additional lifestyle factors noted"
+
+    prompt = f"""You are a warm, knowledgeable sleep coach writing a personalised bedtime tip for a Reverie app user.
+
+User profile:
+- {age_line}
+- {chronotype_line}
+- Wake time: {_fmt(req.wake_time)}
+- Recommended bedtime: {_fmt(req.bedtime)}
+- Target sleep: {req.target_hours} hours
+- Lifestyle: {context_line}
+
+Factors that adjusted their bedtime tonight:
+{factors_text}
+
+Write ONE concise tip (2–3 sentences max) that is:
+1. Specific to THEIR bedtime ({_fmt(req.bedtime)}) and the factors above — not generic advice
+2. Actionable tonight, not a long-term habit
+3. Warm and encouraging, not clinical
+
+Respond with only the tip text, no labels or preamble."""
 
     try:
         response = model.generate_content(prompt)
         tip = response.text.strip()
     except Exception:
-        tip = f"Try starting your wind-down routine at {bedtime.replace('PM','').replace('AM','').strip()} — dim your lights and put your phone face-down 20 minutes before your target bedtime."
+        tip = f"Tonight, start winding down at {_fmt(req.bedtime)} — dim your lights, put your phone face-down, and give yourself 20 minutes of quiet before sleep."
 
-    return ScheduleResponse(
-        bedtime=bedtime,
-        recommended_hours=recommended_hours,
-        tip=tip
-    )
+    return ScheduleResponse(tip=tip)
