@@ -4,7 +4,7 @@
 // Import this wherever you need login/signup/logout
 // ─────────────────────────────────────────
 
-import { app } from './firebase.js';
+import { app, saveUserProfile } from './firebase.js';
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -15,7 +15,6 @@ import {
   signInWithPopup,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { saveUserProfile } from './firebase.js';
 
 export const auth = getAuth(app);
 

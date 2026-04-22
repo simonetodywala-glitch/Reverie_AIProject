@@ -608,70 +608,30 @@
 
   </div><!-- /slides -->
 </div><!-- /frame -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+  import { signUp, signInWithGoogle, auth } from '../js/auth.js';
+  import { saveUserProfile } from '../js/firebase.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Your Firebase project configuration
-    // IMPORTANT: Replace "YOUR_FIREBASE_API_KEY" with your actual API key
-    const firebaseConfig = {
-      apiKey: "AIzaSyDfz7_RNNfjqIvkwA7faYDFMedBisaYDAY",
-      authDomain: "reverie-ai-caa66.firebaseapp.com",
-      projectId: "reverie-ai-caa66",
-      storageBucket: "reverie-ai-caa66.firebasestorage.app",
-      messagingSenderId: "311270900598",
-      appId: "1:311270900598:web:8390c79ac8ea411b78b057",
-      measurementId: "G-BNJ6ZQ5EB9"
-    };    
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // Make auth and other necessary functions globally accessible if your existing script needs them
-    // Or, convert your existing script to a module as well. For simplicity, we'll expose them.
-    window.auth = auth;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-    window.updateProfile = updateProfile;
-    window.GoogleAuthProvider = GoogleAuthProvider;
-    window.signInWithPopup = signInWithPopup;
-
-    // Optional: Add an auth state observer to automatically redirect signed-in users
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        // User is signed in.
-        console.log("User already signed in:", user);
-        if (localStorage.getItem('reverie_onboarded') === 'true') {
-            window.location.href = '../index.html';
-        }
-      } else {
-        // No user is signed in.
-        console.log("No user signed in.");
-      }
-    });
-  </script>
-<script>
   // ── DATA ──
   const userProfile = { chronotype: null, goal: null, wakeTime: null };
 
   // ── BLOB COLORS PER SLIDE ──
   const blobThemes = [
-    { top: 'rgba(60,20,120,0.85)',   bottom: 'rgba(40,10,90,0.7)'   }, // 0 welcome
-    { top: 'rgba(80,20,140,0.85)',   bottom: 'rgba(100,30,160,0.6)' }, // 1 dreams
-    { top: 'rgba(50,30,130,0.85)',   bottom: 'rgba(60,20,110,0.65)' }, // 2 ai
-    { top: 'rgba(70,20,130,0.85)',   bottom: 'rgba(90,30,150,0.6)'  }, // 3 ready
-    { top: 'rgba(100,40,180,0.9)',   bottom: 'rgba(60,10,120,0.5)'  }, // 4 q1
-    { top: 'rgba(80,20,160,0.9)',    bottom: 'rgba(80,30,140,0.55)' }, // 5 q2
-    { top: 'rgba(90,30,170,0.9)',    bottom: 'rgba(50,10,110,0.5)'  }, // 6 q3
-    { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' }, // 7 signup
+    { top: 'rgba(60,20,120,0.85)',   bottom: 'rgba(40,10,90,0.7)'   },
+    { top: 'rgba(80,20,140,0.85)',   bottom: 'rgba(100,30,160,0.6)' },
+    { top: 'rgba(50,30,130,0.85)',   bottom: 'rgba(60,20,110,0.65)' },
+    { top: 'rgba(70,20,130,0.85)',   bottom: 'rgba(90,30,150,0.6)'  },
+    { top: 'rgba(100,40,180,0.9)',   bottom: 'rgba(60,10,120,0.5)'  },
+    { top: 'rgba(80,20,160,0.9)',    bottom: 'rgba(80,30,140,0.55)' },
+    { top: 'rgba(90,30,170,0.9)',    bottom: 'rgba(50,10,110,0.5)'  },
+    { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' },
   ];
 
-  // ── SINGLE source of truth for current slide index ──
   let current = 0;
   const slides = document.querySelectorAll('.slide');
 
-  // ── BUILD DOTS ──
-  // Only slides 0–3 have a .dots div — populate them all identically (4 dots)
+  // Build dots for intro slides 0–3
   document.querySelectorAll('.dots').forEach(dotsEl => {
     for (let i = 0; i < 4; i++) {
       const d = document.createElement('div');
@@ -681,7 +641,6 @@
   });
 
   function updateDots(idx) {
-    // idx is the global slide index (0–3); clamp so question slides don't break dots
     const dotIdx = Math.min(idx, 3);
     document.querySelectorAll('.dots').forEach(dotsEl => {
       dotsEl.querySelectorAll('.dot').forEach((d, i) => {
@@ -700,23 +659,15 @@
 
   function goToSlide(next) {
     if (next < 0 || next >= slides.length) return;
-
-    // Exit current slide
     slides[current].classList.remove('active');
     slides[current].classList.add('exit');
-    const exitIdx = current; // capture for timeout
+    const exitIdx = current;
     setTimeout(() => slides[exitIdx].classList.remove('exit'), 400);
-
-    // Enter next slide
     current = next;
     slides[current].classList.add('active');
-
-    // Update dots (only meaningful for slides 0–3)
     updateDots(current);
     updateBlobs(current);
-
-    // Hide skip button once past the intro slides
-    const skipBtn = document.getElementById('skip-btn');
+    const skipBtn = document.querySelector('.skip-btn');
     if (skipBtn) {
       skipBtn.style.opacity = current >= 4 ? '0' : '1';
       skipBtn.style.pointerEvents = current >= 4 ? 'none' : 'all';
@@ -727,7 +678,6 @@
     if (current < slides.length - 1) goToSlide(current + 1);
   }
 
-  // Skip button: jump straight to questions (slide 4)
   function skipOnboarding() {
     goToSlide(4);
   }
@@ -740,88 +690,62 @@
   }
 
   async function finishOnboarding() {
-    // Collect user profile data (existing logic)
     userProfile.wakeTime = document.getElementById('wake-time-input').value;
-    localStorage.setItem('reverie_profile', JSON.stringify(userProfile));
-    // We will set 'reverie_onboarded' only AFTER successful Firebase sign-up
-
-    // Get values from your sign-up form fields
-    const name = document.getElementById('signup-name').value;
-    const email = document.getElementById('signup-email').value;
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
 
-    // Basic client-side validation
     if (!name || !email || !password) {
-      alert("Please fill in all fields (Name, Email, Password) to create an account.");
-      return; // Stop the function if fields are empty
+      alert('Please fill in your name, email, and password.');
+      return;
     }
 
     try {
-      // Create user with email and password using Firebase Authentication
-      // 'createUserWithEmailAndPassword' was made globally available in your <script type="module">
-      const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
-
-      // Update the user's profile with the provided name
-      // 'updateProfile' was made globally available
-      await window.updateProfile(userCredential.user, { displayName: name });
-
-      console.log("User signed up and profile updated:", userCredential.user);
-
-      // If sign-up and profile update are successful, then mark onboarding as complete
+      await signUp(name, email, password, {
+        chronotype: userProfile.chronotype,
+        goal:       userProfile.goal,
+        wakeTime:   userProfile.wakeTime
+      });
       localStorage.setItem('reverie_onboarded', 'true');
-
-      // Redirect the user to the main application page
       window.location.href = '../index.html';
-
     } catch (error) {
-      // Handle any errors during the sign-up process
-      console.error("Error signing up:", error);
-      alert(`Error creating account: ${error.message}`);
+      console.error('Sign-up error:', error);
+      alert(`Could not create account: ${error.message}`);
     }
   }
 
-      // --- Google Sign-In Logic ---
-    document.addEventListener('DOMContentLoaded', () => {
-      const googleSignInBtn = document.getElementById('google-signin-btn');
+  // Expose to HTML onclick attributes
+  window.nextSlide       = nextSlide;
+  window.skipOnboarding  = skipOnboarding;
+  window.selectOption    = selectOption;
+  window.finishOnboarding = finishOnboarding;
 
-      if (googleSignInBtn) { // Ensure the button exists before adding an event listener
-        googleSignInBtn.addEventListener('click', async () => {
-          // Create a new GoogleAuthProvider instance
-          // 'GoogleAuthProvider' was made globally available in your <script type="module">
-          const provider = new window.GoogleAuthProvider();
+  // Google sign-in — saves onboarding profile answers to Firestore too
+  document.getElementById('google-signin-btn').addEventListener('click', async () => {
+    try {
+      const user = await signInWithGoogle();
+      await saveUserProfile(user.uid, {
+        chronotype: userProfile.chronotype,
+        goal:       userProfile.goal,
+        wakeTime:   userProfile.wakeTime
+      });
+      localStorage.setItem('reverie_onboarded', 'true');
+      window.location.href = '../index.html';
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      alert(`Google sign-in failed: ${error.message}`);
+    }
+  });
 
-          try {
-            // Sign in with Google using a popup window
-            // 'signInWithPopup' was made globally available
-            const result = await window.signInWithPopup(window.auth, provider);
+  // Redirect if already signed in and onboarded
+  onAuthStateChanged(auth, user => {
+    if (user && localStorage.getItem('reverie_onboarded') === 'true') {
+      window.location.href = '../index.html';
+    }
+  });
 
-            // The signed-in user information is in result.user
-            const user = result.user;
-            console.log("Google Sign-In successful:", user);
-
-            // Mark onboarding as complete after successful Google Sign-In
-            localStorage.setItem('reverie_onboarded', 'true');
-
-            // Redirect to the main application page
-            window.location.href = '../index.html';
-
-          } catch (error) {
-            // Handle errors during Google Sign-In
-            console.error("Error during Google Sign-In:", error);
-            alert(`Error during Google Sign-In: ${error.message}`);
-
-            // You might want to handle specific error codes differently, e.g.,
-            // if (error.code === 'auth/popup-closed-by-user') { /* user closed the popup */ }
-          }
-        });
-      }
-    });
-
-  // ── INIT ──
+  // Init
   updateBlobs(0);
-
-
-  // If already onboarded, skip straight to app
   if (localStorage.getItem('reverie_onboarded') === 'true') {
     window.location.href = '../index.html';
   }
