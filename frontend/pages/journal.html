@@ -86,14 +86,19 @@
 
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { saveDream as saveToFirestore } from '../js/firebase.js';
 
-  <script>
-    // Character counter
-    const input = document.getElementById('dream-input');
+    let currentUser = null;
+    let lastAnalysis = null;
+
+    requireAuth(user => { currentUser = user; });
+
+    const input   = document.getElementById('dream-input');
     const counter = document.getElementById('char-count');
     input.addEventListener('input', () => { counter.textContent = input.value.length; });
 
-    // Emotion → tag class mapping
     const emotionTags = {
       anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
       fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
@@ -102,61 +107,69 @@
 
     async function handleAnalyze() {
       const text = input.value.trim();
-      if (text.length < 10) {
-        alert('Please write a bit more about your dream first!');
-        return;
-      }
+      if (text.length < 10) { alert('Please write a bit more about your dream first!'); return; }
 
-      // Show loading
-      document.getElementById('loading-state').style.display = 'block';
-      document.getElementById('analyze-btn').style.display = 'none';
+      document.getElementById('loading-state').style.display  = 'block';
+      document.getElementById('analyze-btn').style.display    = 'none';
       document.getElementById('analysis-result').style.display = 'none';
 
       try {
-        const result = await analyzeDream(text);
-        renderAnalysis(result);
-      } catch (err) {
-        // Fallback demo response if backend isn't running yet
-        renderAnalysis({
+        lastAnalysis = await window.analyzeDream(text);
+      } catch {
+        lastAnalysis = {
           emotions: ['wonder', 'anxiety', 'excitement'],
-          themes: ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
-          summary: 'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.'
-        });
+          themes:   ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
+          summary:  'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.'
+        };
       } finally {
         document.getElementById('loading-state').style.display = 'none';
       }
+
+      renderAnalysis(lastAnalysis);
     }
 
     function renderAnalysis(data) {
-      // Emotions
-      const emotionsRow = document.getElementById('emotions-row');
-      emotionsRow.innerHTML = data.emotions.map(e => {
+      document.getElementById('emotions-row').innerHTML = data.emotions.map(e => {
         const cls = emotionTags[e.toLowerCase()] || '';
         return `<span class="tag ${cls}">${e}</span>`;
       }).join('');
-
-      // Themes
-      const themesList = document.getElementById('themes-list');
-      themesList.innerHTML = data.themes.map(t => `• ${t}`).join('<br>');
-
-      // Summary
+      document.getElementById('themes-list').innerHTML  = data.themes.map(t => `• ${t}`).join('<br>');
       document.getElementById('summary-text').textContent = data.summary;
-
       document.getElementById('analysis-result').style.display = 'block';
     }
 
-    function saveDream() {
-      // TODO Week 3: save to Firebase Firestore
-      alert('Dream saved! (Firebase integration coming in Week 3)');
-      window.location.href = 'dreams.html';
+    async function saveDream() {
+      if (!currentUser || !lastAnalysis) return;
+      const btn = document.querySelector('#analysis-result .btn-primary');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+      try {
+        await saveToFirestore(currentUser.uid, {
+          text:     input.value.trim(),
+          emotions: lastAnalysis.emotions,
+          themes:   lastAnalysis.themes,
+          summary:  lastAnalysis.summary
+        });
+        window.location.href = 'dreams.html';
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Could not save dream. Please try again.');
+        btn.textContent = '💾 Save to Dream Library';
+        btn.disabled = false;
+      }
     }
 
     function resetForm() {
       input.value = '';
       counter.textContent = '0';
+      lastAnalysis = null;
       document.getElementById('analysis-result').style.display = 'none';
       document.getElementById('analyze-btn').style.display = 'block';
     }
+
+    window.handleAnalyze = handleAnalyze;
+    window.saveDream     = saveDream;
+    window.resetForm     = resetForm;
   </script>
 </body>
 </html>

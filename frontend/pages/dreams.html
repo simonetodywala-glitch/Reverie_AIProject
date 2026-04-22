@@ -43,39 +43,7 @@
       <div class="dream-count" id="dream-count">3 dreams logged</div>
 
       <div id="dream-list">
-        <!-- Demo entries — will be replaced by Firebase data in Week 3 -->
-        <div class="dream-card">
-          <div class="dream-date">Apr 16, 2026</div>
-          <div class="dream-preview">Flying over a glass city, but kept falling through the buildings every time I touched them...</div>
-          <div>
-            <span class="tag tag-anxiety">anxiety</span>
-            <span class="tag tag-wonder">wonder</span>
-          </div>
-        </div>
-
-        <div class="dream-card">
-          <div class="dream-date">Apr 14, 2026</div>
-          <div class="dream-preview">Swimming in a deep ocean with bioluminescent creatures. Everything was completely calm...</div>
-          <div>
-            <span class="tag tag-peaceful">peaceful</span>
-            <span class="tag tag-wonder">wonder</span>
-          </div>
-        </div>
-
-        <div class="dream-card">
-          <div class="dream-date">Apr 12, 2026</div>
-          <div class="dream-preview">Being chased through a forest by something I couldn't see. I kept tripping but never fell...</div>
-          <div>
-            <span class="tag tag-anxiety">anxiety</span>
-            <span class="tag tag-fear">fear</span>
-          </div>
-        </div>
-
-        <!-- Pattern report teaser (shows after 5 dreams) -->
-        <div class="ai-response" style="margin-top:8px;">
-          <div class="ai-label">✨ Pattern Report unlocks at 5 dreams</div>
-          <div class="ai-text" style="font-size:14px;">Log 2 more dreams to unlock your AI pattern analysis. Reverie will identify your recurring emotions, symbols, and trends.</div>
-        </div>
+        <div style="text-align:center; padding:40px 0; color:var(--text-dim); font-size:14px;">Loading dreams...</div>
       </div>
     </div>
 
@@ -96,6 +64,84 @@
 
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
-  <!-- TODO Week 3: load real dreams from Firebase and populate #dream-list -->
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDreams } from '../js/firebase.js';
+
+    const emotionTags = {
+      anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
+      sadness: 'tag-anxiety', nostalgia: 'tag-wonder'
+    };
+
+    function formatDate(ts) {
+      const date = ts?.toDate ? ts.toDate() : new Date(ts);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    let allDreams = [];
+
+    function renderDreams(filter) {
+      const list     = document.getElementById('dream-list');
+      const filtered = filter
+        ? allDreams.filter(d => d.emotions?.map(e => e.toLowerCase()).includes(filter))
+        : allDreams;
+
+      if (allDreams.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--text-dim);">
+            <div style="font-size:40px; margin-bottom:12px;">🌙</div>
+            <div style="font-size:16px; margin-bottom:8px;">No dreams logged yet</div>
+            <div style="font-size:14px;">Tap + to log your first dream</div>
+          </div>`;
+        return;
+      }
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:30px 20px; color:var(--text-dim); font-size:14px;">No ${filter} dreams found.</div>`;
+        return;
+      }
+
+      const cards = filtered.map(dream => {
+        const preview = (dream.text || '').length > 120 ? dream.text.slice(0, 120) + '...' : (dream.text || '');
+        const tags    = (dream.emotions || []).map(e => {
+          const cls = emotionTags[e.toLowerCase()] || '';
+          return `<span class="tag ${cls}">${e}</span>`;
+        }).join('');
+        return `
+          <div class="dream-card">
+            <div class="dream-date">${formatDate(dream.createdAt)}</div>
+            <div class="dream-preview">${preview}</div>
+            <div>${tags}</div>
+          </div>`;
+      }).join('');
+
+      const remaining = 5 - allDreams.length;
+      const teaser = allDreams.length < 5
+        ? `<div class="ai-response" style="margin-top:8px;">
+            <div class="ai-label">✨ Pattern Report unlocks at 5 dreams</div>
+            <div class="ai-text" style="font-size:14px;">Log ${remaining} more dream${remaining !== 1 ? 's' : ''} to unlock your AI pattern analysis.</div>
+          </div>`
+        : '';
+
+      list.innerHTML = cards + teaser;
+    }
+
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const label = chip.textContent.trim();
+        renderDreams(label === 'All' ? null : label.toLowerCase());
+      });
+    });
+
+    requireAuth(async user => {
+      allDreams = await getDreams(user.uid);
+      document.getElementById('dream-count').textContent =
+        `${allDreams.length} dream${allDreams.length !== 1 ? 's' : ''} logged`;
+      renderDreams(null);
+    });
+  </script>
 </body>
 </html>
