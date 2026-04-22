@@ -95,10 +95,10 @@
   </div>
 
   <script src="../js/app.js"></script>
-  <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     import { saveDream as saveToFirestore } from '../js/firebase.js';
+    import { GEMINI_API_KEY, GEMINI_MODEL } from '../js/config.js';
 
     let currentUser = null;
     let lastAnalysis = null;
@@ -112,8 +112,66 @@
     const emotionTags = {
       anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
       fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
-      sadness: 'tag-anxiety', nostalgia: 'tag-wonder'
+      sadness: 'tag-anxiety', nostalgia: 'tag-wonder', dread: 'tag-fear',
+      grief: 'tag-anxiety', awe: 'tag-wonder', longing: 'tag-wonder',
+      restlessness: 'tag-anxiety', relief: 'tag-peaceful', tenderness: 'tag-peaceful'
     };
+
+    async function callGemini(dreamText) {
+      const prompt = `You are a warm, psychologically-informed dream analyst for an app called Reverie. Your role is to help users understand themselves through their dreams — not to diagnose, but to gently illuminate patterns, emotions, and meanings.
+
+Analyze the dream journal entry below with depth and care. Look for:
+- The full emotional texture (not just surface feelings, but underlying currents)
+- Recurring symbols, archetypes, and narrative patterns
+- Connections between dream imagery and common psychological themes (loss, control, identity, relationships, transitions, fear, desire)
+- What the dreamer's subconscious may be processing
+
+Dream entry:
+"""
+${dreamText.slice(0, 4000)}
+"""
+
+Respond ONLY with a valid JSON object — no markdown fences, no extra text.
+
+Return this exact structure:
+{
+  "emotions": ["word1", "word2", "word3"],
+  "themes": ["Symbol or situation · what it may represent in this dream", "Symbol or situation · what it may represent"],
+  "summary": "2-3 warm sentences interpreting the dream as a whole. Weave the symbols and emotions together into a coherent narrative. Speak directly to the dreamer using 'you'.",
+  "interpretation": "1-2 paragraphs exploring the deeper psychological or emotional undercurrent. What might the dreamer be working through in waking life? Reference specific imagery from the dream to ground your interpretation. Avoid generic statements.",
+  "reflections": [
+    "An introspective question tied to a specific image or moment in this dream?",
+    "A question that connects the dream's emotional core to the dreamer's waking life?",
+    "A question that invites the dreamer to sit with an unresolved tension from the dream?"
+  ]
+}
+
+Emotion words: wonder, anxiety, joy, fear, sadness, excitement, nostalgia, peaceful, confusion, hope, longing, dread, awe, grief, frustration, tenderness, shame, pride, restlessness, relief.
+Use 2-5 emotions that genuinely fit this specific dream.
+Themes must reference actual elements from THIS dream — not generic labels.`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          })
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `Gemini error ${res.status}`);
+      }
+
+      const data = await res.json();
+      const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!raw) throw new Error('Empty response from Gemini');
+      return JSON.parse(raw);
+    }
 
     async function handleAnalyze() {
       const text = input.value.trim();
@@ -124,19 +182,13 @@
       document.getElementById('analysis-result').style.display = 'none';
 
       try {
-        lastAnalysis = await window.analyzeDream(text);
-      } catch {
-        lastAnalysis = {
-          emotions:       ['wonder', 'anxiety', 'excitement'],
-          themes:         ['Flying · freedom or desire to escape', 'Glass · fragility or transparency', 'Falling · loss of control'],
-          summary:        'This dream reflects a tension between a desire for freedom and a fear of losing stability. The glass city suggests you may be navigating a situation that feels beautiful but uncertain.',
-          interpretation: 'The imagery of flight over a fragile, glass city often surfaces when we are navigating a period of change — something that looks luminous from above but feels precarious up close. The falling may signal an awareness that the ground beneath a current situation is not as solid as it appears.',
-          reflections:    [
-            'What in your waking life feels both beautiful and unstable right now?',
-            'When you were flying, were you in control — or being carried?',
-            'What would it mean to let yourself fall and trust the landing?'
-          ]
-        };
+        lastAnalysis = await callGemini(text);
+      } catch (err) {
+        console.error('Dream analysis error:', err);
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('analyze-btn').style.display   = 'block';
+        alert('Could not analyze your dream. Please check your connection and try again.');
+        return;
       } finally {
         document.getElementById('loading-state').style.display = 'none';
       }

@@ -1,5 +1,7 @@
-# Environment variables — NEVER commit this
+# Environment variables and API keys — NEVER commit these
 .env
+backend/.env
+frontend/js/config.js
 
 # Python
 __pycache__/
