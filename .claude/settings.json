@@ -4,7 +4,11 @@
       "Bash(git push *)",
       "Bash(git reflog *)",
       "Bash(git gc *)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(python -c \"import uvicorn, fastapi, google.generativeai\")",
+      "Bash(uvicorn backend.main:app --reload --port 8000)",
+      "Bash(curl -s http://127.0.0.1:8000/)",
+      "Bash(python -c \"import dotenv; print\\('ok'\\)\")"
     ]
   }
 }
