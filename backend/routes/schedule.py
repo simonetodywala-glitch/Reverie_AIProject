@@ -1,21 +1,15 @@
-# ─────────────────────────────────────────
-# REVERIE — routes/schedule.py
-# Sleep schedule calculator (rule-based + Gemini tip)
-# ─────────────────────────────────────────
-
 import os
-import google.generativeai as genai
-from fastapi import APIRouter
+import httpx
+from fastapi import APIRouter, HTTPException
 from backend.models.schemas import ScheduleRequest, ScheduleResponse
 
 router = APIRouter()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.0-flash")
+GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
 def _fmt(t: str | None) -> str:
-    """Convert 24-h 'HH:MM' to '10:30 PM' for the prompt, or return 'N/A'."""
     if not t:
         return "N/A"
     try:
@@ -28,10 +22,6 @@ def _fmt(t: str | None) -> str:
 
 @router.post("/calculate", response_model=ScheduleResponse)
 async def calculate_schedule(req: ScheduleRequest):
-    """
-    Generates a personalised Gemini tip based on the full sleep profile
-    already calculated by the client-side sleep engine.
-    """
     factors_text = "\n".join(f"- {note}" for note in req.adjustments) if req.adjustments else "- No special factors detected"
 
     age_line = f"Age: {req.age}" if req.age else "Age: not provided"
@@ -75,8 +65,20 @@ Write ONE concise tip (2–3 sentences max) that is:
 Respond with only the tip text, no labels or preamble."""
 
     try:
-        response = model.generate_content(prompt)
-        tip = response.text.strip()
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise Exception("GROQ_API_KEY not set")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            res = await client.post(
+                GROQ_URL,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": GROQ_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.7,
+                },
+            )
+            tip = res.json()["choices"][0]["message"]["content"].strip()
     except Exception:
         tip = f"Tonight, start winding down at {_fmt(req.bedtime)} — dim your lights, put your phone face-down, and give yourself 20 minutes of quiet before sleep."
 
