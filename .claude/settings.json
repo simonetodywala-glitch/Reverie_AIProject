@@ -14,6 +14,9 @@
       "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was flying over purple mountains\"}')",
       "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was in my childhood home but the walls were made of purple velvet and I could not find my keys\"}')",
       "Bash(git -C /Users/simonetodywala/Downloads/reverie remote -v)"
+    ],
+    "additionalDirectories": [
+      "/Users/simonetodywala/Desktop"
     ]
   }
 }
