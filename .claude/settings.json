@@ -8,7 +8,9 @@
       "Bash(python -c \"import uvicorn, fastapi, google.generativeai\")",
       "Bash(uvicorn backend.main:app --reload --port 8000)",
       "Bash(curl -s http://127.0.0.1:8000/)",
-      "Bash(python -c \"import dotenv; print\\('ok'\\)\")"
+      "Bash(python -c \"import dotenv; print\\('ok'\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was flying over mountains\"}')",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
