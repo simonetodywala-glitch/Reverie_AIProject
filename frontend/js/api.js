@@ -9,13 +9,21 @@ const BASE_URL = 'http://127.0.0.1:8000';
 
 // Save a new dream entry (text) → returns AI analysis
 async function analyzeDream(dreamText) {
-  const res = await fetch(`${BASE_URL}/dreams/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: dreamText })
-  });
-  if (!res.ok) throw new Error('Failed to analyze dream');
-  return res.json(); // { emotions, themes, summary }
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}/dreams/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: dreamText })
+    });
+  } catch {
+    throw new Error('Cannot reach the Reverie backend. Make sure it is running: uvicorn backend.main:app --reload');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Backend error ${res.status}`);
+  }
+  return res.json();
 }
 
 // Get all saved dream entries for the current user
