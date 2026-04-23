@@ -14,13 +14,10 @@ function applyTheme() {
     document.body.classList.remove('morning');
   }
 
-  // Update greeting text if it exists on this page
+  // Set time-based greeting; the auth module will inject the real name
   const greetingEl = document.getElementById('greeting-text');
-  const greetingName = 'Gemmy'; // TODO: pull from Firebase user profile
   if (greetingEl) {
-    greetingEl.textContent = isMorning
-      ? `Good Morning ${greetingName}!`
-      : `Good Night ${greetingName}!`;
+    greetingEl.textContent = isMorning ? 'Good Morning!' : 'Good Night!';
   }
 }
 

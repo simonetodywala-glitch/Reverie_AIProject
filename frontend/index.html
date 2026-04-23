@@ -106,8 +106,8 @@
   <script src="js/api.js"></script>
 
   <script type="module">
-    import { requireAuth }            from './js/auth.js';
-    import { getDreams, getLatestSleepSchedule } from './js/firebase.js';
+    import { requireAuth }                                      from './js/auth.js';
+    import { getDreams, getLatestSleepSchedule, getUserProfile } from './js/firebase.js';
 
     const emotionTagMap = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
@@ -150,17 +150,7 @@
     requireAuth(async user => {
       document.body.style.opacity = '1';
 
-      // ── Real name in greeting ──
-      const firstName = user.displayName ? user.displayName.split(' ')[0] : null;
-      if (firstName) {
-        const el = document.getElementById('greeting-text');
-        if (el) {
-          const isMorning = new Date().getHours() >= 6 && new Date().getHours() < 18;
-          el.textContent = `${isMorning ? 'Good Morning' : 'Good Night'} ${firstName}!`;
-        }
-      }
-
-      const [dreams, schedule] = await Promise.all([
+      const [dreams, schedule, profile] = await Promise.all([
         getDreams(user.uid).catch(() => []),
         getLatestSleepSchedule(user.uid).catch(() => null),
       ]);
