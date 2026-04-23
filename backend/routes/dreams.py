@@ -1,47 +1,33 @@
 # ─────────────────────────────────────────
 # REVERIE — routes/dreams.py
-# Dream CRUD + Groq AI emotion/theme analysis
+# Dream CRUD + Gemini emotion/theme analysis
 # ─────────────────────────────────────────
 
 import os
 import json
-import httpx
+import google.generativeai as genai
 from fastapi import APIRouter, HTTPException
 from backend.models.schemas import DreamRequest, DreamAnalysis
 
 router = APIRouter()
 
-GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.0-flash")
+
 MAX_DREAM_CHARS = 4000
-
-
-async def _call_groq(prompt: str) -> str:
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set in backend/.env")
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        res = await client.post(
-            GROQ_URL,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": GROQ_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-                "response_format": {"type": "json_object"},
-            },
-        )
-        if res.status_code != 200:
-            detail = res.json().get("error", {}).get("message", f"Groq error {res.status_code}")
-            raise HTTPException(status_code=500, detail=detail)
-        return res.json()["choices"][0]["message"]["content"]
 
 
 @router.post("/analyze", response_model=DreamAnalysis)
 async def analyze_dream(req: DreamRequest):
+    """
+    Takes a dream description and returns a rich multi-field analysis.
+    Powered by Google Gemini 2.0 Flash.
+    """
     dream_text = req.text[:MAX_DREAM_CHARS]
 
-    prompt = f"""You are a warm, psychologically-informed dream analyst for an app called Reverie. Your role is to help users understand themselves through their dreams — not to diagnose, but to gently illuminate patterns, emotions, and meanings.
+    prompt = f"""
+You are a warm, psychologically-informed dream analyst for an app called Reverie. Your role is to help users understand themselves through their dreams — not to diagnose, but to gently illuminate patterns, emotions, and meanings.
 
 Analyze the dream journal entry below with depth and care. Look for:
 - The full emotional texture (not just surface feelings, but underlying currents)
@@ -54,7 +40,7 @@ Dream entry:
 {dream_text}
 \"\"\"
 
-Respond ONLY with a valid JSON object — no markdown fences, no extra text.
+Respond ONLY with a valid JSON object — no markdown fences, no extra text, no explanations outside the JSON.
 
 Return this exact structure:
 {{
@@ -69,22 +55,47 @@ Return this exact structure:
   ]
 }}
 
-Emotion words: wonder, anxiety, joy, fear, sadness, excitement, nostalgia, peaceful, confusion, hope, longing, dread, awe, grief, frustration, tenderness, shame, pride, restlessness, relief.
+Emotion words should capture the full range: wonder, anxiety, joy, fear, sadness, excitement, nostalgia, peaceful, confusion, hope, longing, dread, awe, grief, frustration, tenderness, shame, pride, restlessness, relief.
 Use 2-5 emotions that genuinely fit this dream.
-Themes should reference actual elements from the dream — not generic labels."""
+Themes should reference actual elements from the dream (people, places, objects, actions) — not generic labels.
+"""
 
     try:
-        raw  = await _call_groq(prompt)
+        response = model.generate_content(prompt)
+        raw = response.text.strip()
+
+        if raw.startswith("```"):
+            raw = raw.split("```", 2)[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+            raw = raw.strip()
+
         data = json.loads(raw)
         return DreamAnalysis(**data)
-    except HTTPException:
-        raise
+
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"AI returned invalid JSON: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini returned invalid JSON: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini analysis failed: {str(e)}")
 
 
 @router.get("/{user_id}")
 async def get_dreams(user_id: str):
-    return {"dreams": [], "count": 0}
+    """
+    Get all dream entries for a user.
+    TODO Week 3: Replace with real Firebase Firestore query.
+    """
+    # Placeholder response until Firebase is connected
+    return {
+        "dreams": [
+            {
+                "id": "1",
+                "date": "2026-04-16",
+                "text": "Flying over a glass city...",
+                "emotions": ["wonder", "anxiety"],
+                "themes": ["Flying · freedom", "Glass · fragility"],
+                "summary": "A dream about navigating beauty and instability."
+            }
+        ],
+        "count": 1
+    }
