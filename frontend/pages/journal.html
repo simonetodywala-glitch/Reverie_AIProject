@@ -110,11 +110,13 @@
     input.addEventListener('input', () => { counter.textContent = input.value.length; });
 
     const emotionTags = {
-      anxiety: 'tag-anxiety', wonder: 'tag-wonder', joy: 'tag-joy',
-      fear: 'tag-fear', peaceful: 'tag-peaceful', excitement: 'tag-joy',
-      sadness: 'tag-anxiety', nostalgia: 'tag-wonder', dread: 'tag-fear',
-      grief: 'tag-anxiety', awe: 'tag-wonder', longing: 'tag-wonder',
-      restlessness: 'tag-anxiety', relief: 'tag-peaceful', tenderness: 'tag-peaceful'
+      wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
+      fear: 'tag-fear', peaceful: 'tag-peaceful', sadness: 'tag-sadness',
+      excitement: 'tag-excitement', nostalgia: 'tag-nostalgia', confusion: 'tag-confusion',
+      hope: 'tag-hope', longing: 'tag-longing', dread: 'tag-dread',
+      awe: 'tag-awe', grief: 'tag-grief', frustration: 'tag-frustration',
+      tenderness: 'tag-tenderness', shame: 'tag-shame', pride: 'tag-pride',
+      restlessness: 'tag-restlessness', relief: 'tag-relief',
     };
 
     async function handleAnalyze() {
