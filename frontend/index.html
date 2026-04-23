@@ -157,7 +157,8 @@
       ]);
 
       // ── Greeting ──
-      const firstName = (user.displayName || profile?.name || '').split(' ')[0];
+      const raw = (user.displayName || profile?.name || '').split(' ')[0];
+      const firstName = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
       const greetingEl = document.getElementById('greeting-text');
       if (greetingEl && firstName) {
         const isMorning = new Date().getHours() >= 6 && new Date().getHours() < 18;
