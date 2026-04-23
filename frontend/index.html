@@ -58,31 +58,31 @@
     <!-- MAIN CONTENT -->
     <div class="main-content page-content">
 
-      <div class="section-label">Last Night</div>
+      <div class="section-label">Sleep Schedule</div>
 
-      <!-- SLEEP QUALITY CARD -->
-      <div class="card">
-        <div class="card-title">Sleep Quality</div>
-        <div class="card-value" id="sleep-duration">7h 22m</div>
-        <div class="card-sub" id="sleep-times">Bedtime 11:04pm · Woke 6:26 am</div>
+      <!-- SLEEP SCHEDULE CARD -->
+      <div class="card" id="sleep-card">
+        <div style="text-align:center; padding:4px 0; color:var(--text-muted); font-size:14px;">Loading...</div>
       </div>
 
-      <!-- SLEEP DEBT + STREAK -->
-      <div class="two-col">
+      <!-- DREAMS + STREAK -->
+      <div class="two-col" style="margin-top:12px;">
         <div class="card">
-          <div class="card-title" style="font-size:16px;">Sleep Debt</div>
-          <div class="card-value" style="font-size:26px;" id="sleep-debt">1.5 hrs</div>
+          <div class="card-title" style="font-size:16px;">Dreams</div>
+          <div class="card-value" style="font-size:26px;" id="dream-count">—</div>
+          <div class="card-sub">logged</div>
         </div>
         <div class="card">
           <div class="card-title" style="font-size:16px;">Streak</div>
-          <div class="card-value" style="font-size:26px;" id="streak">4 nights</div>
+          <div class="card-value" style="font-size:26px;" id="streak">—</div>
+          <div class="card-sub" id="streak-unit">nights</div>
         </div>
       </div>
 
       <!-- RECENT DREAMS PREVIEW -->
       <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
       <div id="recent-dreams">
-        <div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Loading dreams...</div>
+        <div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Loading...</div>
       </div>
 
     </div>
@@ -106,8 +106,8 @@
   <script src="js/api.js"></script>
 
   <script type="module">
-    import { requireAuth } from './js/auth.js';
-    import { getDreams }   from './js/firebase.js';
+    import { requireAuth }            from './js/auth.js';
+    import { getDreams, getLatestSleepSchedule } from './js/firebase.js';
 
     const emotionTagMap = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
@@ -119,36 +119,81 @@
       restlessness: 'tag-restlessness', relief: 'tag-relief',
     };
 
+    function fmt12h(t) {
+      if (!t) return '—';
+      const [h, m] = t.split(':').map(Number);
+      return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
+    }
+
     function formatDate(ts) {
       if (!ts) return '';
       const d = ts.toDate ? ts.toDate() : new Date(ts);
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    function calcStreak(dreams) {
+      if (!dreams.length) return 0;
+      const days = new Set(dreams.map(d => {
+        const date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || 0);
+        return date.toISOString().split('T')[0];
+      }));
+      let streak = 0;
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+      while (days.has(cursor.toISOString().split('T')[0])) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
     requireAuth(async user => {
       document.body.style.opacity = '1';
-      const container = document.getElementById('recent-dreams');
-      try {
-        const dreams = await getDreams(user.uid);
-        if (!dreams.length) {
-          container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
-          return;
-        }
-        container.innerHTML = dreams.slice(0, 2).map(d => {
-          const tags = (d.emotions || []).slice(0, 3).map(e => {
-            const cls = emotionTagMap[e.toLowerCase()] || '';
-            return `<span class="tag ${cls}">${e}</span>`;
-          }).join('');
-          const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
-          return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
-            <div class="dream-date">${formatDate(d.createdAt)}</div>
-            <div class="dream-preview">${preview}</div>
-            <div>${tags}</div>
+
+      const [dreams, schedule] = await Promise.all([
+        getDreams(user.uid).catch(() => []),
+        getLatestSleepSchedule(user.uid).catch(() => null),
+      ]);
+
+      // ── Sleep Schedule card ──
+      const sleepCard = document.getElementById('sleep-card');
+      if (schedule?.bedtime) {
+        sleepCard.innerHTML = `
+          <div class="card-title">Target Schedule</div>
+          <div class="card-value" id="sleep-duration">${schedule.targetSleepHours ?? '—'}h</div>
+          <div class="card-sub">Bedtime ${fmt12h(schedule.bedtime)} · Wake ${fmt12h(schedule.wakeTime)}</div>`;
+      } else {
+        sleepCard.innerHTML = `
+          <div style="text-align:center; padding:4px 0;">
+            <div style="color:var(--text-muted); font-size:14px; margin-bottom:8px;">No sleep schedule yet</div>
+            <a href="pages/profile.html" style="color:var(--accent-soft); font-size:13px; text-decoration:none;">Set one up in Profile →</a>
           </div>`;
-        }).join('');
-      } catch (e) {
-        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">Could not load dreams.</div>`;
       }
+
+      // ── Dream count + streak ──
+      document.getElementById('dream-count').textContent = dreams.length;
+      const streak = calcStreak(dreams);
+      document.getElementById('streak').textContent = streak;
+      document.getElementById('streak-unit').textContent = streak === 1 ? 'night' : 'nights';
+
+      // ── Recent dreams ──
+      const container = document.getElementById('recent-dreams');
+      if (!dreams.length) {
+        container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
+        return;
+      }
+      container.innerHTML = dreams.slice(0, 2).map(d => {
+        const tags = (d.emotions || []).slice(0, 3).map(e => {
+          const cls = emotionTagMap[e.toLowerCase()] || '';
+          return `<span class="tag ${cls}">${e}</span>`;
+        }).join('');
+        const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
+        return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
+          <div class="dream-date">${formatDate(d.createdAt)}</div>
+          <div class="dream-preview">${preview}</div>
+          <div>${tags}</div>
+        </div>`;
+      }).join('');
     });
   </script>
 

@@ -307,26 +307,26 @@ textarea::placeholder, input::placeholder { color: var(--text-muted); }
   border: 1px solid rgba(180,150,220,0.2);
 }
 
-.tag-wonder      { background: rgba(139,92,246,0.28);  color: #c4b5fd; border-color: rgba(196,181,253,0.35); }
-.tag-anxiety     { background: rgba(239,68,68,0.28);   color: #fca5a5; border-color: rgba(252,165,165,0.35); }
-.tag-joy         { background: rgba(234,179,8,0.28);   color: #fde047; border-color: rgba(253,224,71,0.35);  }
-.tag-fear        { background: rgba(190,18,60,0.28);   color: #fda4af; border-color: rgba(253,164,175,0.35); }
-.tag-peaceful    { background: rgba(20,184,166,0.28);  color: #5eead4; border-color: rgba(94,234,212,0.35);  }
-.tag-sadness     { background: rgba(59,130,246,0.28);  color: #93c5fd; border-color: rgba(147,197,253,0.35); }
-.tag-excitement  { background: rgba(249,115,22,0.28);  color: #fdba74; border-color: rgba(253,186,116,0.35); }
-.tag-nostalgia   { background: rgba(236,72,153,0.25);  color: #f9a8d4; border-color: rgba(249,168,212,0.35); }
-.tag-confusion   { background: rgba(109,40,217,0.30);  color: #a78bfa; border-color: rgba(167,139,250,0.35); }
-.tag-hope        { background: rgba(22,163,74,0.28);   color: #86efac; border-color: rgba(134,239,172,0.35); }
-.tag-longing     { background: rgba(168,85,247,0.25);  color: #d8b4fe; border-color: rgba(216,180,254,0.35); }
-.tag-dread       { background: rgba(124,3,130,0.32);   color: #e879f9; border-color: rgba(232,121,249,0.35); }
-.tag-awe         { background: rgba(6,182,212,0.28);   color: #67e8f9; border-color: rgba(103,232,249,0.35); }
-.tag-grief       { background: rgba(30,64,175,0.30);   color: #818cf8; border-color: rgba(129,140,248,0.35); }
-.tag-frustration { background: rgba(194,65,12,0.30);   color: #fb923c; border-color: rgba(251,146,60,0.35);  }
-.tag-tenderness  { background: rgba(5,150,105,0.28);   color: #6ee7b7; border-color: rgba(110,231,183,0.35); }
-.tag-shame       { background: rgba(154,52,18,0.30);   color: #fbbf24; border-color: rgba(251,191,36,0.35);  }
-.tag-pride       { background: rgba(161,98,7,0.30);    color: #fcd34d; border-color: rgba(252,211,77,0.35);  }
-.tag-restlessness{ background: rgba(220,38,38,0.25);   color: #f87171; border-color: rgba(248,113,113,0.35); }
-.tag-relief      { background: rgba(4,120,87,0.30);    color: #34d399; border-color: rgba(52,211,153,0.35);  }
+.tag-wonder      { background: #2e1060; color: #ddc8ff; border-color: #5030a0; }
+.tag-anxiety     { background: #4a1010; color: #ffb0b0; border-color: #7a2020; }
+.tag-joy         { background: #3d2600; color: #ffe066; border-color: #705000; }
+.tag-fear        { background: #3a0820; color: #ffb0c8; border-color: #6a1040; }
+.tag-peaceful    { background: #053530; color: #72ffe8; border-color: #0a6055; }
+.tag-sadness     { background: #0a1e50; color: #a8c8ff; border-color: #1a3a88; }
+.tag-excitement  { background: #3a1400; color: #ffb870; border-color: #6a2800; }
+.tag-nostalgia   { background: #400828; color: #ffb0d8; border-color: #701048; }
+.tag-confusion   { background: #1e0860; color: #c0a0ff; border-color: #3c1898; }
+.tag-hope        { background: #062810; color: #78e898; border-color: #0e4a20; }
+.tag-longing     { background: #2a0840; color: #d8a0ff; border-color: #501070; }
+.tag-dread       { background: #300050; color: #f070ff; border-color: #580888; }
+.tag-awe         { background: #003848; color: #60e8ff; border-color: #006880; }
+.tag-grief       { background: #080a3a; color: #9098ff; border-color: #181a70; }
+.tag-frustration { background: #3a1000; color: #ff9848; border-color: #682000; }
+.tag-tenderness  { background: #043030; color: #68e8c0; border-color: #0a5848; }
+.tag-shame       { background: #301000; color: #ffb840; border-color: #582800; }
+.tag-pride       { background: #2a2000; color: #ffd840; border-color: #504000; }
+.tag-restlessness{ background: #380808; color: #ff7878; border-color: #681010; }
+.tag-relief      { background: #052818; color: #48e0a0; border-color: #0a4a30; }
 
 /* ── AI RESPONSE BOX ── */
 .ai-response {
