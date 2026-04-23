@@ -150,6 +150,16 @@
     requireAuth(async user => {
       document.body.style.opacity = '1';
 
+      // ── Real name in greeting ──
+      const firstName = user.displayName ? user.displayName.split(' ')[0] : null;
+      if (firstName) {
+        const el = document.getElementById('greeting-text');
+        if (el) {
+          const isMorning = new Date().getHours() >= 6 && new Date().getHours() < 18;
+          el.textContent = `${isMorning ? 'Good Morning' : 'Good Night'} ${firstName}!`;
+        }
+      }
+
       const [dreams, schedule] = await Promise.all([
         getDreams(user.uid).catch(() => []),
         getLatestSleepSchedule(user.uid).catch(() => null),

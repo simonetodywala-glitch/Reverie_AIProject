@@ -57,6 +57,29 @@
       transition: background 0.2s, color 0.2s;
     }
     .dream-view-btn:hover { background: var(--accent-soft); color: #fff; }
+    .search-wrap {
+      position: relative;
+      margin: 0 20px 4px;
+    }
+    .search-wrap input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 14px 10px 38px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .search-wrap input::placeholder { color: var(--text-muted); }
+    .search-wrap input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; pointer-events: none;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -78,8 +101,13 @@
       <button class="filter-arrow filter-arrow-right" id="filter-next" aria-label="Scroll right">&#8250;</button>
     </div>
 
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="dream-search" placeholder="Search dreams, themes, emotions…" autocomplete="off" />
+    </div>
+
     <div class="main-content page-content">
-      <div class="dream-count" id="dream-count">3 dreams logged</div>
+      <div class="dream-count" id="dream-count"></div>
 
       <div id="dream-list">
         <div style="text-align:center; padding:40px 0; color:var(--text-dim); font-size:14px;">Loading dreams...</div>
@@ -122,13 +150,30 @@
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
-    let allDreams = [];
+    let allDreams     = [];
+    let activeFilter  = null;
+    let searchQuery   = '';
 
-    function renderDreams(filter) {
+    function getFiltered() {
+      let result = allDreams;
+      if (activeFilter) {
+        result = result.filter(d => d.emotions?.map(e => e.toLowerCase()).includes(activeFilter));
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(d =>
+          (d.text    || '').toLowerCase().includes(q) ||
+          (d.summary || '').toLowerCase().includes(q) ||
+          (d.emotions || []).some(e => e.toLowerCase().includes(q)) ||
+          (d.themes   || []).some(t => t.toLowerCase().includes(q))
+        );
+      }
+      return result;
+    }
+
+    function renderDreams() {
       const list     = document.getElementById('dream-list');
-      const filtered = filter
-        ? allDreams.filter(d => d.emotions?.map(e => e.toLowerCase()).includes(filter))
-        : allDreams;
+      const filtered = getFiltered();
 
       if (allDreams.length === 0) {
         list.innerHTML = `
@@ -170,6 +215,10 @@
           </div>`
         : '';
 
+      const count = filtered.length;
+      document.getElementById('dream-count').textContent =
+        `${count} dream${count !== 1 ? 's' : ''}${activeFilter || searchQuery ? ' found' : ' logged'}`;
+
       list.innerHTML = cards + teaser;
     }
 
@@ -178,8 +227,14 @@
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         const label = chip.textContent.trim();
-        renderDreams(label === 'All' ? null : label.toLowerCase());
+        activeFilter = label === 'All' ? null : label.toLowerCase();
+        renderDreams();
       });
+    });
+
+    document.getElementById('dream-search').addEventListener('input', e => {
+      searchQuery = e.target.value.trim();
+      renderDreams();
     });
 
     const filterRow  = document.getElementById('filter-row');
@@ -199,9 +254,7 @@
 
     requireAuth(async user => {
       allDreams = await getDreams(user.uid);
-      document.getElementById('dream-count').textContent =
-        `${allDreams.length} dream${allDreams.length !== 1 ? 's' : ''} logged`;
-      renderDreams(null);
+      renderDreams();
     });
   </script>
 </body>
