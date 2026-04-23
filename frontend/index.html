@@ -153,7 +153,16 @@
       const [dreams, schedule, profile] = await Promise.all([
         getDreams(user.uid).catch(() => []),
         getLatestSleepSchedule(user.uid).catch(() => null),
+        getUserProfile(user.uid).catch(() => null),
       ]);
+
+      // ── Greeting ──
+      const firstName = (user.displayName || profile?.name || '').split(' ')[0];
+      const greetingEl = document.getElementById('greeting-text');
+      if (greetingEl && firstName) {
+        const isMorning = new Date().getHours() >= 6 && new Date().getHours() < 18;
+        greetingEl.textContent = `${isMorning ? 'Good Morning' : 'Good Night'} ${firstName}!`;
+      }
 
       // ── Sleep Schedule card ──
       const sleepCard = document.getElementById('sleep-card');
