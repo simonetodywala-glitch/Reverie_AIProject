@@ -40,82 +40,151 @@
     }
 
     /* ── SLEEP TRACKING ── */
-    .orb {
-      cursor: pointer;
-      transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.4s ease !important;
+
+    /* Overlay that blurs + dims everything behind the header when active */
+    .sleep-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 0, 15, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 5;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.55s ease;
     }
-    .orb:active { transform: scale(0.94); }
-    .orb.orb-winddown {
-      animation: none !important;
-      transform: translateY(52px) scale(0.84);
-    }
-    .orb.orb-sleeping {
-      animation: none !important;
-      transform: scale(0.72);
-      opacity: 0.45;
+    .sleep-overlay.active {
+      opacity: 1;
+      pointer-events: all;
     }
 
+    /* Header must sit above the overlay */
+    .header-area { z-index: 10; position: relative; }
+
+    /* Orb interactions */
+    .orb {
+      cursor: pointer;
+      transition: transform 0.7s cubic-bezier(0.34, 1.35, 0.64, 1),
+                  box-shadow 0.6s ease,
+                  opacity 0.5s ease !important;
+    }
+
+    /* Ripple ring that fires on tap */
+    @keyframes orb-ripple {
+      0%   { transform: translate(-50%, -50%) scale(0.85); opacity: 0.55; }
+      100% { transform: translate(-50%, -50%) scale(2.6);  opacity: 0; }
+    }
+    .orb-ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-soft);
+      pointer-events: none;
+      z-index: 11;
+      animation: orb-ripple 0.75s ease-out forwards;
+    }
+
+    /* Orb slides down + glows brighter */
+    .orb.orb-winddown {
+      animation: none !important;
+      transform: translateY(72px) scale(0.86);
+      box-shadow: 0 0 90px 35px rgba(124,58,237,0.65),
+                  0 0 180px 90px rgba(80,40,140,0.3) !important;
+    }
+
+    /* Orb breathes slowly while sleeping */
+    @keyframes breathe {
+      0%, 100% { transform: scale(0.68); box-shadow: 0 0 28px 8px  rgba(124,58,237,0.18); }
+      50%       { transform: scale(0.75); box-shadow: 0 0 55px 22px rgba(124,58,237,0.38); }
+    }
+    .orb.orb-sleeping {
+      animation: breathe 5s ease-in-out infinite !important;
+      opacity: 0.5;
+    }
+
+    /* Greeting fades up and out */
     .greeting-card {
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
     .greeting-card.fade-out {
       opacity: 0;
-      transform: translateY(-12px);
+      transform: translateY(-14px);
       pointer-events: none;
     }
 
+    /* Frosted-glass wind-down card */
     .winddown-prompt {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
-      padding: 4px 24px 12px;
+      gap: 12px;
+      margin: 0 20px;
+      padding: 26px 26px 22px;
+      background: rgba(18, 0, 42, 0.6);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(155, 93, 229, 0.28);
+      border-radius: 26px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
       opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: translateY(18px) scale(0.97);
+      transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1);
     }
-    .winddown-prompt.open   { display: flex; }
-    .winddown-prompt.shown  { opacity: 1; transform: translateY(0); }
+    .winddown-prompt.open  { display: flex; }
+    .winddown-prompt.shown { opacity: 1; transform: translateY(0) scale(1); }
 
     .winddown-prompt .wd-title {
       font-family: 'Nunito', sans-serif;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 800;
       color: var(--text);
       text-align: center;
+      letter-spacing: -0.01em;
     }
     .winddown-prompt .wd-sub {
       font-size: 13px;
       color: var(--text-dim);
       text-align: center;
+      line-height: 1.5;
     }
     .winddown-prompt .wd-actions {
       display: flex;
       gap: 10px;
-      margin-top: 4px;
+      margin-top: 6px;
       width: 100%;
-      max-width: 280px;
     }
 
+    /* Frosted-glass sleep-active card */
     .sleep-active-banner {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 4px 24px 12px;
+      gap: 6px;
+      margin: 0 20px;
+      padding: 26px 26px 22px;
+      background: rgba(18, 0, 42, 0.6);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(155, 93, 229, 0.2);
+      border-radius: 26px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
     }
     .sleep-active-banner.open { display: flex; }
     .sleep-active-banner .sa-label {
-      font-size: 13px;
-      color: var(--text-dim);
-      letter-spacing: 0.06em;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
     .sleep-active-banner .sa-time {
       font-family: 'Nunito', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 22px;
+      font-weight: 800;
       color: var(--text);
+      margin-bottom: 4px;
     }
   </style>
 </head>
@@ -125,6 +194,9 @@
   <canvas id="star-canvas"></canvas>
 
   <div class="app-frame">
+
+    <!-- BLUR OVERLAY (active during wind-down / sleeping) -->
+    <div id="sleep-overlay" class="sleep-overlay" onclick="cancelWinddown()"></div>
 
     <!-- ORB + GREETING -->
     <div class="header-area">
@@ -308,38 +380,54 @@
     // ── SLEEP TRACKING ──
     let winddownOpen = false;
 
+    function spawnRipple() {
+      const header = document.querySelector('.header-area');
+      const r = document.createElement('div');
+      r.className = 'orb-ripple';
+      header.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    }
+
     function handleOrbClick() {
       if (localStorage.getItem('reverie_sleep_start')) return;
       if (winddownOpen) { cancelWinddown(); return; }
-      showWinddown();
+      spawnRipple();
+      // Small delay so the ripple fires before the orb moves
+      setTimeout(showWinddown, 80);
     }
 
     function showWinddown() {
       winddownOpen = true;
+      document.getElementById('sleep-overlay').classList.add('active');
       document.getElementById('greeting-card').classList.add('fade-out');
       document.getElementById('orb').classList.add('orb-winddown');
       const prompt = document.getElementById('winddown-prompt');
       prompt.classList.add('open');
+      // Double rAF ensures display:flex is applied before transition fires
       requestAnimationFrame(() => requestAnimationFrame(() => prompt.classList.add('shown')));
     }
 
     function cancelWinddown() {
+      if (!winddownOpen) return;
       winddownOpen = false;
+      document.getElementById('sleep-overlay').classList.remove('active');
       const prompt = document.getElementById('winddown-prompt');
       prompt.classList.remove('shown');
       document.getElementById('orb').classList.remove('orb-winddown');
       setTimeout(() => {
         prompt.classList.remove('open');
         document.getElementById('greeting-card').classList.remove('fade-out');
-      }, 300);
+      }, 320);
     }
 
     function startSleep() {
       const now = new Date();
       localStorage.setItem('reverie_sleep_start', now.toISOString());
-      document.getElementById('winddown-prompt').classList.remove('open', 'shown');
-      applySleepingState(now);
+      const prompt = document.getElementById('winddown-prompt');
+      prompt.classList.remove('shown');
+      setTimeout(() => prompt.classList.remove('open'), 300);
       winddownOpen = false;
+      applySleepingState(now);
     }
 
     function applySleepingState(startTime) {
@@ -347,6 +435,10 @@
       orb.classList.remove('orb-winddown');
       orb.classList.add('orb-sleeping');
       document.getElementById('greeting-card').classList.add('fade-out');
+      document.getElementById('sleep-overlay').classList.remove('active');
+      // Dim the stars while sleeping
+      const canvas = document.getElementById('star-canvas');
+      if (canvas) canvas.style.opacity = '0.2';
       const timeStr = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
       document.getElementById('sleep-since-time').textContent = timeStr;
       document.getElementById('sleep-active-banner').classList.add('open');
@@ -361,31 +453,28 @@
       const hours    = Math.floor(totalMin / 60);
       const mins     = totalMin % 60;
       localStorage.removeItem('reverie_sleep_start');
-
-      // Store duration for the journal/insights page to use
       localStorage.setItem('reverie_last_sleep', JSON.stringify({
         start: raw, end: end.toISOString(), hours, mins
       }));
 
-      // Reset UI
       const orb = document.getElementById('orb');
       orb.classList.remove('orb-sleeping');
-      document.getElementById('sleep-active-banner').classList.remove('open');
-      document.getElementById('greeting-card').classList.remove('fade-out');
+      const canvas = document.getElementById('star-canvas');
+      if (canvas) canvas.style.opacity = '';
 
-      // Show summary briefly, then prompt to journal
       const banner = document.getElementById('sleep-active-banner');
       banner.innerHTML = `
         <div class="sa-label">You slept</div>
         <div class="sa-time">${hours}h ${mins}m</div>
-        <button class="btn btn-primary" style="margin-top:4px; min-width:180px;"
-          onclick="document.getElementById('sleep-active-banner').classList.remove('open'); window.location.href='pages/journal.html'">
+        <button class="btn btn-primary" style="margin-top:8px; min-width:200px;"
+          onclick="document.getElementById('sleep-active-banner').classList.remove('open');
+                   document.getElementById('greeting-card').classList.remove('fade-out');
+                   window.location.href='pages/journal.html'">
           Log a dream 🌙
         </button>`;
-      banner.classList.add('open');
     }
 
-    // On load: restore sleeping state if session is active
+    // Restore sleeping state on load
     (function () {
       const raw = localStorage.getItem('reverie_sleep_start');
       if (raw) applySleepingState(new Date(raw));
