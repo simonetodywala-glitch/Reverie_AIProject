@@ -76,6 +76,15 @@ export async function updateDream(uid, dreamId, data) {
   await setDoc(doc(db, "users", uid, "dreams", dreamId), data, { merge: true });
 }
 
+export async function saveChatHistory(uid, dreamId, history) {
+  await setDoc(doc(db, "users", uid, "dreams", dreamId), { chatHistory: history }, { merge: true });
+}
+
+export async function getChatHistory(uid, dreamId) {
+  const snap = await getDoc(doc(db, "users", uid, "dreams", dreamId));
+  return snap.exists() ? (snap.data().chatHistory || []) : [];
+}
+
 // ─────────────────────────────────────────
 // SLEEP SCHEDULES
 // ─────────────────────────────────────────

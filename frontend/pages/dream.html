@@ -204,7 +204,7 @@
   <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
-    import { getDream, updateDream, getUserProfile } from '../js/firebase.js';
+    import { getDream, updateDream, getUserProfile, saveChatHistory, getChatHistory } from '../js/firebase.js';
 
     const emotionTags = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
@@ -380,13 +380,21 @@
     let chatHistory = [];
     let chatOpen    = false;
 
-    function toggleChat() {
+    async function toggleChat() {
       chatOpen = !chatOpen;
       document.getElementById('chat-panel').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
-      if (chatOpen && chatHistory.length === 0) {
-        appendMessage('ai', "Hi! I'm here to help you explore this dream. What stood out to you most?");
+
+      if (chatOpen && chatHistory.length === 0 && currentUser && dreamId) {
+        const saved = await getChatHistory(currentUser.uid, dreamId).catch(() => []);
+        if (saved.length > 0) {
+          chatHistory = saved;
+          saved.forEach(m => appendMessage(m.role === 'assistant' ? 'ai' : 'user', m.content));
+        } else {
+          appendMessage('ai', "Hi! I'm here to help you explore this dream. What stood out to you most?");
+        }
       }
+
       if (chatOpen) setTimeout(() => document.getElementById('chat-input').focus(), 320);
     }
 
@@ -440,6 +448,9 @@
         hideTyping();
         appendMessage('ai', reply);
         chatHistory.push({ role: 'assistant', content: reply });
+        if (currentUser && dreamId) {
+          saveChatHistory(currentUser.uid, dreamId, chatHistory).catch(() => {});
+        }
       } catch {
         hideTyping();
         appendMessage('ai', "Sorry, I couldn't connect right now. Try again in a moment.");
