@@ -72,6 +72,10 @@ export async function getDream(uid, dreamId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
+export async function updateDream(uid, dreamId, data) {
+  await setDoc(doc(db, "users", uid, "dreams", dreamId), data, { merge: true });
+}
+
 // ─────────────────────────────────────────
 // SLEEP SCHEDULES
 // ─────────────────────────────────────────

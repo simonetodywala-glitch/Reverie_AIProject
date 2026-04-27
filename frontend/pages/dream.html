@@ -34,6 +34,31 @@
     .chat-teaser-icon { font-size: 24px; flex-shrink: 0; opacity: 0.6; }
     .chat-teaser-text { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
     .chat-teaser-label { font-size: 12px; font-weight: 700; color: var(--accent-soft); margin-bottom: 2px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .reanalyze-panel {
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 20px;
+    }
+    .reanalyze-context {
+      width: 100%; font-size: 14px; margin-top: 8px;
+    }
+    .connection-box {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px; padding: 14px 16px;
+      font-size: 14px; color: var(--text-dim); line-height: 1.65;
+    }
+    .mind-note-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px;
+      font-size: 13px; color: var(--text-muted); line-height: 1.6; font-style: italic;
+    }
+    .saved-badge {
+      display: inline-block; font-size: 12px; color: #6fcf97;
+      margin-left: 8px; opacity: 0; transition: opacity 0.4s;
+    }
+    .saved-badge.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -67,7 +92,7 @@
   <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
-    import { getDream } from '../js/firebase.js';
+    import { getDream, updateDream, getUserProfile } from '../js/firebase.js';
 
     const emotionTags = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
@@ -80,6 +105,9 @@
     };
 
     const dreamId = new URLSearchParams(window.location.search).get('id');
+    let currentUser  = null;
+    let currentDream = null;
+    let userProfile  = null;
 
     function formatDate(ts) {
       const date = ts?.toDate ? ts.toDate() : new Date(ts);
@@ -90,9 +118,7 @@
       return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function render(dream) {
-      document.getElementById('dream-date').textContent = `🌙 ${formatDate(dream.createdAt)}`;
-
+    function analysisHtml(dream) {
       const emotionsHtml = (dream.emotions || []).map(e => {
         const cls = emotionTags[e.toLowerCase()] || '';
         return `<span class="tag ${cls}">${esc(e)}</span>`;
@@ -102,48 +128,81 @@
         `<div class="theme-item">• ${esc(t)}</div>`
       ).join('');
 
-      let html = `
-        <div class="section-label">What you dreamed</div>
-        <div class="dream-text">${esc(dream.text || '')}</div>
+      let h = `
+        <div id="analysis-block">
+          <div class="ai-response" style="margin-top:16px;">
+            <div class="ai-label">🤖 Analysis</div>
 
-        <div class="ai-response" style="margin-top:16px;">
-          <div class="ai-label">🤖 Gemini Analysis</div>
+            <div class="section-label" style="margin-top:12px;">Emotions detected</div>
+            <div class="emotion-row">${emotionsHtml}</div>
 
-          <div class="section-label" style="margin-top:12px;">Emotions detected</div>
-          <div class="emotion-row">${emotionsHtml}</div>
+            <div class="section-label" style="margin-top:12px;">Themes &amp; symbols</div>
+            <div style="margin-top:4px;">${themesHtml || '<div class="theme-item" style="opacity:0.5;">No themes recorded</div>'}</div>
 
-          <div class="section-label" style="margin-top:12px;">Themes &amp; symbols</div>
-          <div style="margin-top:4px;">${themesHtml || '<div class="theme-item" style="opacity:0.5;">No themes recorded</div>'}</div>
-
-          <div class="section-label" style="margin-top:16px;">Summary</div>
-          <div class="ai-text" style="margin-top:6px;">${esc(dream.summary || '')}</div>
-      `;
+            <div class="section-label" style="margin-top:16px;">Summary</div>
+            <div class="ai-text" style="margin-top:6px;">${esc(dream.summary || '')}</div>`;
 
       if (dream.interpretation) {
-        html += `
-          <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
-          <div class="ai-text" style="font-size:14px; line-height:1.7; margin-top:6px;">${esc(dream.interpretation)}</div>
-        `;
+        h += `
+            <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
+            <div class="ai-text" style="font-size:14px; line-height:1.7; margin-top:6px;">${esc(dream.interpretation)}</div>`;
+      }
+
+      if (dream.waking_connections) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Waking life connection</div>
+            <div class="connection-box">${esc(dream.waking_connections)}</div>`;
+      }
+
+      if (dream.mind_note) {
+        h += `
+            <div class="section-label" style="margin-top:16px;">Your mind's processing style</div>
+            <div class="mind-note-box">${esc(dream.mind_note)}</div>`;
       }
 
       if (dream.reflections?.length) {
-        html += `
-          <div class="section-label" style="margin-top:16px;">Reflect on this</div>
-          <ul class="reflection-list">
-            ${dream.reflections.map(r => `<li>${esc(r)}</li>`).join('')}
-          </ul>
-        `;
+        h += `
+            <div class="section-label" style="margin-top:16px;">Reflect on this</div>
+            <ul class="reflection-list">
+              ${dream.reflections.map(r => `<li>${esc(r)}</li>`).join('')}
+            </ul>`;
       }
 
-      html += `</div>`;
+      h += `</div></div>`;
+      return h;
+    }
 
-      html += `
-        <div class="section-label" style="margin-top:20px;">Talk about it</div>
-        <div class="chat-teaser">
-          <div class="chat-teaser-icon">💬</div>
-          <div class="chat-teaser-text">
-            <div class="chat-teaser-label">Coming soon</div>
-            Ask Gemini questions about this dream — dive deeper into the symbols, get follow-up reflections, or just talk it through.
+    function render(dream) {
+      document.getElementById('dream-date').textContent = `🌙 ${formatDate(dream.createdAt)}`;
+
+      const html = `
+        <div class="section-label">What you dreamed</div>
+        <div class="dream-text">${esc(dream.text || '')}</div>
+
+        ${analysisHtml(dream)}
+
+        <div class="reanalyze-panel">
+          <div class="section-label">Re-analyze this dream</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
+            Add today's context or updated information to get a fresh perspective.
+          </div>
+          <textarea
+            id="reanalyze-context"
+            class="reanalyze-context"
+            rows="2"
+            placeholder="What's on your mind now? Any new stressors or reflections since you had this dream… (optional)"
+            maxlength="400"
+          ></textarea>
+          <button class="btn btn-ghost" style="margin-top:10px; width:100%;" onclick="runReanalyze()">
+            🔄 Re-analyze
+          </button>
+          <div id="reanalyze-loading" style="display:none; text-align:center; padding:16px 0;">
+            <div class="spinner"></div>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Analyzing…</p>
+          </div>
+          <div id="save-row" style="display:none; margin-top:10px; display:none; align-items:center; gap:10px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="saveReanalysis()">💾 Save updated analysis</button>
+            <span class="saved-badge" id="saved-badge">✓ Saved</span>
           </div>
         </div>
       `;
@@ -151,7 +210,64 @@
       document.getElementById('dream-content').innerHTML = html;
     }
 
+    async function runReanalyze() {
+      const context = document.getElementById('reanalyze-context').value.trim();
+      document.getElementById('reanalyze-loading').style.display = 'block';
+      document.querySelector('.reanalyze-panel .btn-ghost').style.display = 'none';
+      document.getElementById('save-row').style.display = 'none';
+
+      try {
+        const fresh = await analyzeDream(currentDream.text, {
+          wakingContext: context || null,
+          eyeDominance:  userProfile?.eyeDominance || null,
+          handedness:    userProfile?.handedness   || null,
+        });
+        currentDream = { ...currentDream, ...fresh };
+        document.getElementById('analysis-block').outerHTML = analysisHtml(currentDream);
+        document.getElementById('save-row').style.display = 'flex';
+      } catch (err) {
+        alert('Re-analysis failed. Please check your connection and try again.');
+        console.error(err);
+      } finally {
+        document.getElementById('reanalyze-loading').style.display = 'none';
+        document.querySelector('.reanalyze-panel .btn-ghost').style.display = 'block';
+      }
+    }
+
+    async function saveReanalysis() {
+      if (!currentUser || !dreamId) return;
+      const btn = document.querySelector('#save-row .btn-primary');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await updateDream(currentUser.uid, dreamId, {
+          emotions:          currentDream.emotions,
+          themes:            currentDream.themes,
+          summary:           currentDream.summary,
+          interpretation:    currentDream.interpretation,
+          reflections:       currentDream.reflections,
+          waking_connections: currentDream.waking_connections || null,
+          mind_note:         currentDream.mind_note || null,
+        });
+        const badge = document.getElementById('saved-badge');
+        badge.classList.add('show');
+        btn.textContent = '💾 Save updated analysis';
+        btn.disabled = false;
+        setTimeout(() => badge.classList.remove('show'), 2500);
+      } catch (err) {
+        alert('Could not save. Please try again.');
+        btn.textContent = '💾 Save updated analysis';
+        btn.disabled = false;
+      }
+    }
+
+    window.runReanalyze   = runReanalyze;
+    window.saveReanalysis = saveReanalysis;
+
     requireAuth(async user => {
+      currentUser = user;
+      userProfile = await getUserProfile(user.uid).catch(() => null);
+
       if (!dreamId) {
         document.getElementById('dream-content').innerHTML =
           '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">No dream selected.</div>';
@@ -164,6 +280,7 @@
             '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">Dream not found.</div>';
           return;
         }
+        currentDream = dream;
         render(dream);
       } catch (err) {
         console.error('Failed to load dream:', err);
