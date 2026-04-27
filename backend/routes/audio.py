@@ -1,12 +1,13 @@
 import os
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from backend.models.schemas import AudioRequest, AudioResponse
 
 router = APIRouter()
 
-GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_URL          = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_WHISPER_URL  = "https://api.groq.com/openai/v1/audio/transcriptions"
+GROQ_MODEL        = "llama-3.3-70b-versatile"
 
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
@@ -43,6 +44,28 @@ async def generate_story(req: AudioRequest):
         return AudioResponse(audio_url=f"STORY_TEXT:{story_text}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    audio_data = await file.read()
+    filename = file.filename or "dream.webm"
+    content_type = file.content_type or "audio/webm"
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            GROQ_WHISPER_URL,
+            headers={"Authorization": f"Bearer {api_key}"},
+            files={"file": (filename, audio_data, content_type)},
+            data={"model": "whisper-large-v3"},
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Whisper error {res.status_code}: {res.text}")
+        return {"text": res.json().get("text", "")}
 
 
 @router.get("/soundscape/{mood}")

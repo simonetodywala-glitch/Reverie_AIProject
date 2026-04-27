@@ -15,6 +15,75 @@
     .reflection-list li { font-size: 14px; color: var(--text-dim); line-height: 1.6; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .reflection-list li:last-child { border-bottom: none; }
     .reflection-list li::before { content: "✦ "; opacity: 0.5; }
+
+    .input-mode-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: var(--surface);
+      color: var(--text-dim);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(124,58,237,0.15);
+    }
+
+    .mic-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 32px 0 24px;
+    }
+    .mic-area.visible { display: flex; }
+
+    .mic-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 32px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-btn:hover { background: var(--accent); }
+    .mic-btn.recording {
+      background: #c0392b;
+      animation: mic-pulse 1.2s ease-in-out infinite;
+    }
+    .mic-btn.transcribing {
+      background: var(--surface-2);
+      opacity: 0.6;
+      cursor: default;
+    }
+    @keyframes mic-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.5); }
+      50%       { box-shadow: 0 0 0 16px rgba(192,57,43,0); }
+    }
+
+    .mic-status {
+      font-size: 14px;
+      color: var(--text-dim);
+      text-align: center;
+      min-height: 20px;
+    }
+    .mic-status.recording { color: #e74c3c; }
   </style>
 </head>
 <body>
@@ -28,13 +97,28 @@
     <div class="main-content page-content">
 
       <div class="section-label">What did you dream about?</div>
-      <textarea
-        id="dream-input"
-        rows="7"
-        placeholder="Describe your dream... write freely, the more detail the better. The AI will extract the emotions and themes for you."
-        maxlength="2000"
-      ></textarea>
-      <div class="char-count"><span id="char-count">0</span> / 2000</div>
+
+      <div class="input-mode-row">
+        <button class="mode-btn active" id="mode-type" onclick="switchMode('type')">✍️ Write</button>
+        <button class="mode-btn" id="mode-speak" onclick="switchMode('speak')">🎙️ Speak</button>
+      </div>
+
+      <!-- TYPE MODE -->
+      <div id="type-area">
+        <textarea
+          id="dream-input"
+          rows="7"
+          placeholder="Describe your dream... write freely, the more detail the better. The AI will extract the emotions and themes for you."
+          maxlength="2000"
+        ></textarea>
+        <div class="char-count"><span id="char-count">0</span> / 2000</div>
+      </div>
+
+      <!-- SPEAK MODE -->
+      <div class="mic-area" id="speak-area">
+        <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">🎤</button>
+        <div class="mic-status" id="mic-status">Tap to record your dream</div>
+      </div>
 
       <button class="btn btn-primary" id="analyze-btn" style="margin-top: 16px;" onclick="handleAnalyze()">
         ✨ Analyze Dream
@@ -108,6 +192,76 @@
     const input   = document.getElementById('dream-input');
     const counter = document.getElementById('char-count');
     input.addEventListener('input', () => { counter.textContent = input.value.length; });
+
+    // ── VOICE RECORDING ──
+    let mediaRecorder = null;
+    let audioChunks   = [];
+    let isRecording   = false;
+
+    function switchMode(mode) {
+      const typeArea  = document.getElementById('type-area');
+      const speakArea = document.getElementById('speak-area');
+      document.getElementById('mode-type').classList.toggle('active', mode === 'type');
+      document.getElementById('mode-speak').classList.toggle('active', mode === 'speak');
+      typeArea.style.display  = mode === 'type'  ? 'block' : 'none';
+      speakArea.classList.toggle('visible', mode === 'speak');
+      if (mode === 'type' && isRecording) stopRecording();
+    }
+
+    async function toggleRecording() {
+      if (isRecording) { stopRecording(); return; }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks  = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = handleRecordingStop;
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('mic-btn').classList.add('recording');
+        document.getElementById('mic-btn').textContent = '⏹️';
+        const statusEl = document.getElementById('mic-status');
+        statusEl.textContent = 'Recording... tap to stop';
+        statusEl.classList.add('recording');
+      } catch {
+        alert('Microphone access denied. Please allow microphone permissions and try again.');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      mediaRecorder?.stream?.getTracks().forEach(t => t.stop());
+      isRecording = false;
+    }
+
+    async function handleRecordingStop() {
+      const micBtn   = document.getElementById('mic-btn');
+      const statusEl = document.getElementById('mic-status');
+      micBtn.classList.remove('recording');
+      micBtn.classList.add('transcribing');
+      micBtn.textContent = '⏳';
+      statusEl.textContent = 'Transcribing...';
+      statusEl.classList.remove('recording');
+
+      try {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const { text } = await transcribeAudio(blob);
+        input.value = text;
+        counter.textContent = text.length;
+        switchMode('type');
+        statusEl.textContent = 'Tap to record your dream';
+      } catch (err) {
+        statusEl.textContent = 'Transcription failed. Try again.';
+        console.error(err);
+      } finally {
+        micBtn.classList.remove('transcribing');
+        micBtn.textContent = '🎤';
+      }
+    }
+
+    window.switchMode     = switchMode;
+    window.toggleRecording = toggleRecording;
 
     const emotionTags = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',

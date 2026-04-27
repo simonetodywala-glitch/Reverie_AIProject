@@ -83,6 +83,24 @@ async function getSleepTip(profile, result) {
 
 // ── AUDIO ──
 
+// Transcribe an audio blob using Groq Whisper → returns { text }
+async function transcribeAudio(audioBlob) {
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'dream.webm');
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}/audio/transcribe`, { method: 'POST', body: formData });
+  } catch {
+    throw new Error('Cannot reach the Reverie backend.');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Transcription error ${res.status}`);
+  }
+  return res.json();
+}
+
+
 // Generate a bedtime story from dream text (returns audio URL)
 async function generateBedtimeStory(dreamText) {
   const res = await fetch(`${BASE_URL}/audio/story`, {
