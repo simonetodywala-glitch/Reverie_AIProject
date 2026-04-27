@@ -38,6 +38,85 @@
       position: relative;
       z-index: 1;
     }
+
+    /* ── SLEEP TRACKING ── */
+    .orb {
+      cursor: pointer;
+      transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.4s ease !important;
+    }
+    .orb:active { transform: scale(0.94); }
+    .orb.orb-winddown {
+      animation: none !important;
+      transform: translateY(52px) scale(0.84);
+    }
+    .orb.orb-sleeping {
+      animation: none !important;
+      transform: scale(0.72);
+      opacity: 0.45;
+    }
+
+    .greeting-card {
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .greeting-card.fade-out {
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+    }
+
+    .winddown-prompt {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 24px 12px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .winddown-prompt.open   { display: flex; }
+    .winddown-prompt.shown  { opacity: 1; transform: translateY(0); }
+
+    .winddown-prompt .wd-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      text-align: center;
+    }
+    .winddown-prompt .wd-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .winddown-prompt .wd-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .sleep-active-banner {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 24px 12px;
+    }
+    .sleep-active-banner.open { display: flex; }
+    .sleep-active-banner .sa-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .sleep-active-banner .sa-time {
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
@@ -49,9 +128,27 @@
 
     <!-- ORB + GREETING -->
     <div class="header-area">
-      <div class="orb"></div>
-      <div class="greeting-card">
-        <h2 id="greeting-text">Good Night Gemmy!</h2>
+      <div class="orb" id="orb" onclick="handleOrbClick()"></div>
+
+      <div class="greeting-card" id="greeting-card">
+        <h2 id="greeting-text">Good Night!</h2>
+      </div>
+
+      <!-- WIND-DOWN PROMPT (shown when orb tapped) -->
+      <div class="winddown-prompt" id="winddown-prompt">
+        <div class="wd-title">Ready to wind down?</div>
+        <div class="wd-sub">Reverie will track how long you sleep.</div>
+        <div class="wd-actions">
+          <button class="btn btn-primary" style="flex:1;" onclick="startSleep()">Yes, let's go</button>
+          <button class="btn btn-ghost" style="width:44px;" onclick="cancelWinddown()">✕</button>
+        </div>
+      </div>
+
+      <!-- SLEEPING STATE (shown when session is active) -->
+      <div class="sleep-active-banner" id="sleep-active-banner">
+        <div class="sa-label">Sleeping since</div>
+        <div class="sa-time" id="sleep-since-time">—</div>
+        <button class="btn btn-primary" style="margin-top:4px; min-width:180px;" onclick="logWakeUp()">I'm awake ☀️</button>
       </div>
     </div>
 
@@ -205,6 +302,94 @@
         </div>`;
       }).join('');
     });
+  </script>
+
+  <script>
+    // ── SLEEP TRACKING ──
+    let winddownOpen = false;
+
+    function handleOrbClick() {
+      if (localStorage.getItem('reverie_sleep_start')) return;
+      if (winddownOpen) { cancelWinddown(); return; }
+      showWinddown();
+    }
+
+    function showWinddown() {
+      winddownOpen = true;
+      document.getElementById('greeting-card').classList.add('fade-out');
+      document.getElementById('orb').classList.add('orb-winddown');
+      const prompt = document.getElementById('winddown-prompt');
+      prompt.classList.add('open');
+      requestAnimationFrame(() => requestAnimationFrame(() => prompt.classList.add('shown')));
+    }
+
+    function cancelWinddown() {
+      winddownOpen = false;
+      const prompt = document.getElementById('winddown-prompt');
+      prompt.classList.remove('shown');
+      document.getElementById('orb').classList.remove('orb-winddown');
+      setTimeout(() => {
+        prompt.classList.remove('open');
+        document.getElementById('greeting-card').classList.remove('fade-out');
+      }, 300);
+    }
+
+    function startSleep() {
+      const now = new Date();
+      localStorage.setItem('reverie_sleep_start', now.toISOString());
+      document.getElementById('winddown-prompt').classList.remove('open', 'shown');
+      applySleepingState(now);
+      winddownOpen = false;
+    }
+
+    function applySleepingState(startTime) {
+      const orb = document.getElementById('orb');
+      orb.classList.remove('orb-winddown');
+      orb.classList.add('orb-sleeping');
+      document.getElementById('greeting-card').classList.add('fade-out');
+      const timeStr = startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      document.getElementById('sleep-since-time').textContent = timeStr;
+      document.getElementById('sleep-active-banner').classList.add('open');
+    }
+
+    function logWakeUp() {
+      const raw = localStorage.getItem('reverie_sleep_start');
+      if (!raw) return;
+      const start    = new Date(raw);
+      const end      = new Date();
+      const totalMin = Math.round((end - start) / 60000);
+      const hours    = Math.floor(totalMin / 60);
+      const mins     = totalMin % 60;
+      localStorage.removeItem('reverie_sleep_start');
+
+      // Store duration for the journal/insights page to use
+      localStorage.setItem('reverie_last_sleep', JSON.stringify({
+        start: raw, end: end.toISOString(), hours, mins
+      }));
+
+      // Reset UI
+      const orb = document.getElementById('orb');
+      orb.classList.remove('orb-sleeping');
+      document.getElementById('sleep-active-banner').classList.remove('open');
+      document.getElementById('greeting-card').classList.remove('fade-out');
+
+      // Show summary briefly, then prompt to journal
+      const banner = document.getElementById('sleep-active-banner');
+      banner.innerHTML = `
+        <div class="sa-label">You slept</div>
+        <div class="sa-time">${hours}h ${mins}m</div>
+        <button class="btn btn-primary" style="margin-top:4px; min-width:180px;"
+          onclick="document.getElementById('sleep-active-banner').classList.remove('open'); window.location.href='pages/journal.html'">
+          Log a dream 🌙
+        </button>`;
+      banner.classList.add('open');
+    }
+
+    // On load: restore sleeping state if session is active
+    (function () {
+      const raw = localStorage.getItem('reverie_sleep_start');
+      if (raw) applySleepingState(new Date(raw));
+    })();
   </script>
 
   <script>

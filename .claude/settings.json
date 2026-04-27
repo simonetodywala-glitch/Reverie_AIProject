@@ -16,7 +16,9 @@
       "Bash(git -C /Users/simonetodywala/Downloads/reverie remote -v)",
       "WebSearch",
       "WebFetch(domain:medium.com)",
-      "Bash(grep -E \"\\\\.\\(html|js|py\\)$\")"
+      "Bash(grep -E \"\\\\.\\(html|js|py\\)$\")",
+      "Bash(git pull *)",
+      "Bash(git stash *)"
     ],
     "additionalDirectories": [
       "/Users/simonetodywala/Desktop"
