@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root, ::backdrop{
+    --font: "Inter", sans-serif;
+
+    --font-size: 1rem;
+    --font-size-large: 1.5rem;
+    --font-size-xlarge: 2rem;
+
+    --padding-outer: 16px;
+    --padding-text: 16px;
+
+    --padding-inner: 12px;
+    --padding-line: 4px;
+
+    --top-height: 196px;
+    --top-text-height: 60px;
+    --bottom-height: 64px;
+
+    --pill-max-width: 352px;
+    --app-max-width: calc(var(--pill-max-width) * 2 + var(--padding-outer) * 3);
+}
+
+body{
+    font-family: var(--font);
+    font-size: var(--font-size);
+
+    line-height: 1.5;
+
+    background-color: var(--background);
+    color: var(--onBackground);
+}
+
+.app {
+    max-width: var(--app-max-width);
+    margin: 0 auto;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--background);
+    overflow-y: auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-size: var(--font-size-xlarge);
+    font-weight: bold;
+}
