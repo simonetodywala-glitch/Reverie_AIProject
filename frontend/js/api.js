@@ -43,11 +43,16 @@ async function getDreams(userId) {
 // ── INSIGHTS ──
 
 // Send a chat message to the AI chatbot (with user's dream history as context)
-async function sendChatMessage(userId, message) {
+async function sendChatMessage(userId, message, dreamContext = null, history = []) {
   const res = await fetch(`${BASE_URL}/analysis/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, message })
+    body: JSON.stringify({
+      user_id:       userId,
+      message,
+      dream_context: dreamContext,
+      history,
+    })
   });
   if (!res.ok) throw new Error('Chat failed');
   return res.json(); // { reply }

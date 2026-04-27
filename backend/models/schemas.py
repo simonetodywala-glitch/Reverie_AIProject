@@ -25,9 +25,16 @@ class DreamAnalysis(BaseModel):
     mind_note: Optional[str] = None           # insight based on cognitive profile
 
 
+class ChatMessage(BaseModel):
+    role: str     # "user" or "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
     user_id: str
     message: str
+    dream_context: Optional[str] = None
+    history: Optional[List[ChatMessage]] = []
 
 
 class ChatResponse(BaseModel):

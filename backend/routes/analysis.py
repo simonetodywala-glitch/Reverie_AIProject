@@ -9,7 +9,7 @@ GROQ_URL   = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
-async def _call_groq(prompt: str) -> str:
+async def _call_groq_messages(messages: list) -> str:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
@@ -17,11 +17,7 @@ async def _call_groq(prompt: str) -> str:
         res = await client.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": GROQ_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-            },
+            json={"model": GROQ_MODEL, "messages": messages, "temperature": 0.7},
         )
         if res.status_code != 200:
             detail = res.json().get("error", {}).get("message", f"Groq error {res.status_code}")
@@ -31,24 +27,23 @@ async def _call_groq(prompt: str) -> str:
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    dream_context = """
-    User's recent dreams:
-    - Apr 16: Flying over a glass city, kept falling through buildings. Emotions: wonder, anxiety.
-    - Apr 14: Swimming in a bioluminescent ocean. Emotions: peaceful, wonder.
-    - Apr 12: Being chased through a forest. Emotions: anxiety, fear.
-    """
+    if req.dream_context:
+        system = f"""You are Reverie, a warm and curious dream companion. The user is exploring a specific dream with you.
 
-    prompt = f"""You are Reverie, a warm and insightful AI sleep and dream companion.
-You have access to this user's dream journal:
+Dream they're exploring:
+{req.dream_context}
 
-{dream_context}
+Your role: help them go deeper — unpack symbols, sit with emotions, find connections to their waking life. Be warm and specific to this dream. Never clinical. Never invent details they haven't shared. Keep responses to 2-4 sentences unless they ask for more depth."""
+    else:
+        system = """You are Reverie, a warm and insightful AI dream companion. Help the user explore and understand their dreams. Be warm, curious, and specific. Never clinical. 2-4 sentences per reply."""
 
-The user asks: "{req.message}"
+    messages = [
+        {"role": "system", "content": system},
+        *[{"role": m.role, "content": m.content} for m in (req.history or [])],
+        {"role": "user", "content": req.message},
+    ]
 
-Respond in 2-3 sentences. Be warm, personal, and reference their specific dreams when relevant.
-Don't be clinical. Don't make up information not in their journal."""
-
-    reply = await _call_groq(prompt)
+    reply = await _call_groq_messages(messages)
     return ChatResponse(reply=reply)
 
 
