@@ -58,9 +58,13 @@ async function sendChatMessage(userId, message, dreamContext = null, history = [
   return res.json(); // { reply }
 }
 
-// Get dream pattern report (requires 5+ dreams)
-async function getPatternReport(userId) {
-  const res = await fetch(`${BASE_URL}/analysis/patterns/${userId}`);
+// Get dream pattern report — pass compressed dream array (emotions, themes, summary, date)
+async function getPatternReport(dreams) {
+  const res = await fetch(`${BASE_URL}/analysis/patterns`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dreams })
+  });
   if (!res.ok) throw new Error('Failed to get pattern report');
   return res.json();
 }

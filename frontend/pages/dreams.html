@@ -80,6 +80,49 @@
       font-size: 14px; pointer-events: none;
       color: var(--text-muted);
     }
+
+    .pattern-card {
+      margin: 0 0 16px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(155,93,229,0.06));
+      border: 1px solid rgba(155,93,229,0.25);
+      border-radius: 18px; padding: 18px 18px 16px;
+    }
+    .pattern-card-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+    }
+    .pattern-card-title {
+      font-family: 'Nunito', sans-serif; font-weight: 800;
+      font-size: 15px; color: var(--text);
+    }
+    .pattern-pill {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--accent-soft); background: rgba(155,93,229,0.15);
+      padding: 3px 9px; border-radius: 100px;
+    }
+    .pattern-narrative {
+      font-size: 14px; color: var(--text-dim); line-height: 1.65; margin: 10px 0 12px;
+    }
+    .pattern-insight {
+      font-size: 13px; color: var(--text-muted); font-style: italic; line-height: 1.6;
+      border-left: 2px solid rgba(155,93,229,0.4); padding-left: 12px; margin-bottom: 12px;
+    }
+    .pattern-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .pattern-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .pattern-chip-item {
+      font-size: 12.5px; padding: 4px 11px; border-radius: 100px;
+      background: rgba(255,255,255,0.06); color: var(--text-dim);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .pattern-reflections { list-style: none; padding: 0; margin: 0; }
+    .pattern-reflections li {
+      font-size: 13px; color: var(--text-dim); line-height: 1.6;
+      padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .pattern-reflections li:last-child { border-bottom: none; }
+    .pattern-reflections li::before { content: "✦ "; opacity: 0.4; }
   </style>
 </head>
 <body>
@@ -107,6 +150,8 @@
     </div>
 
     <div class="main-content page-content">
+      <div id="pattern-banner"></div>
+
       <div class="dream-count" id="dream-count"></div>
 
       <div id="dream-list">
@@ -207,19 +252,12 @@
           </div>`;
       }).join('');
 
-      const remaining = 5 - allDreams.length;
-      const teaser = allDreams.length < 5
-        ? `<div class="ai-response" style="margin-top:8px;">
-            <div class="ai-label">✨ Pattern Report unlocks at 5 dreams</div>
-            <div class="ai-text" style="font-size:14px;">Log ${remaining} more dream${remaining !== 1 ? 's' : ''} to unlock your AI pattern analysis.</div>
-          </div>`
-        : '';
-
       const count = filtered.length;
       document.getElementById('dream-count').textContent =
         `${count} dream${count !== 1 ? 's' : ''}${activeFilter || searchQuery ? ' found' : ' logged'}`;
 
-      list.innerHTML = cards + teaser;
+      list.innerHTML = cards;
+      renderPatternBanner();
     }
 
     document.querySelectorAll('.filter-chip').forEach(chip => {
@@ -251,6 +289,103 @@
     btnNext.addEventListener('click', () => { filterRow.scrollLeft += SCROLL_AMT; });
     filterRow.addEventListener('scroll', updateArrows, { passive: true });
     updateArrows();
+
+    const PATTERN_MIN = 5;
+    let patternGenerated = false;
+
+    function renderPatternBanner() {
+      const banner = document.getElementById('pattern-banner');
+      if (!banner) return;
+
+      if (allDreams.length < PATTERN_MIN) {
+        const remaining = PATTERN_MIN - allDreams.length;
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header">
+              <div class="pattern-card-title">✨ Pattern Report</div>
+              <div class="pattern-pill">${allDreams.length} / ${PATTERN_MIN}</div>
+            </div>
+            <div class="pattern-narrative" style="margin-bottom:0;">
+              Log ${remaining} more dream${remaining !== 1 ? 's' : ''} to unlock your AI pattern report — a deep look at what your subconscious keeps returning to.
+            </div>
+          </div>`;
+        return;
+      }
+
+      if (!patternGenerated) {
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header">
+              <div class="pattern-card-title">✨ Pattern Report</div>
+              <div class="pattern-pill">${allDreams.length} dreams</div>
+            </div>
+            <div class="pattern-narrative" style="margin-bottom:12px;">
+              Reverie can now analyse patterns across all your dreams — recurring emotions, symbols, and what your subconscious keeps returning to.
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="generatePatternReport()">Generate My Pattern Report</button>
+          </div>`;
+      }
+    }
+
+    async function generatePatternReport() {
+      const banner = document.getElementById('pattern-banner');
+      banner.innerHTML = `
+        <div class="pattern-card" style="text-align:center; padding:28px 18px;">
+          <div class="spinner" style="margin:0 auto 12px;"></div>
+          <div style="font-size:13px; color:var(--text-muted);">Analysing your dreams…</div>
+        </div>`;
+
+      try {
+        const compressed = allDreams.map(d => ({
+          date:     formatDate(d.createdAt),
+          emotions: d.emotions || [],
+          themes:   d.themes   || [],
+          summary:  d.summary  || '',
+        }));
+
+        const report = await getPatternReport(compressed);
+        patternGenerated = true;
+        renderReport(report);
+      } catch (err) {
+        banner.innerHTML = `
+          <div class="pattern-card">
+            <div class="pattern-card-header"><div class="pattern-card-title">✨ Pattern Report</div></div>
+            <div class="pattern-narrative" style="color:var(--text-muted); margin-bottom:10px;">Couldn't generate report. Please try again.</div>
+            <button class="btn btn-ghost" style="width:100%;" onclick="generatePatternReport()">Retry</button>
+          </div>`;
+      }
+    }
+
+    function renderReport(report) {
+      const banner = document.getElementById('pattern-banner');
+      const emotionsHtml  = (report.top_emotions  || []).map(e => `<span class="pattern-chip-item">${e}</span>`).join('');
+      const themesHtml    = (report.recurring_themes || []).map(t => `<span class="pattern-chip-item">${t}</span>`).join('');
+      const reflectHtml   = (report.reflections    || []).map(r => `<li>${r}</li>`).join('');
+
+      banner.innerHTML = `
+        <div class="pattern-card">
+          <div class="pattern-card-header">
+            <div class="pattern-card-title">✨ Pattern Report</div>
+            <button style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:2px 6px;" onclick="resetPatternReport()">Refresh</button>
+          </div>
+          <div class="pattern-narrative">${report.narrative}</div>
+          <div class="pattern-insight">${report.insight}</div>
+          <div class="pattern-section-label">Top emotions</div>
+          <div class="pattern-chips">${emotionsHtml}</div>
+          <div class="pattern-section-label">Recurring themes</div>
+          <div class="pattern-chips" style="margin-bottom:14px;">${themesHtml}</div>
+          <div class="pattern-section-label">Reflect on this</div>
+          <ul class="pattern-reflections">${reflectHtml}</ul>
+        </div>`;
+    }
+
+    function resetPatternReport() {
+      patternGenerated = false;
+      renderPatternBanner();
+    }
+
+    window.generatePatternReport = generatePatternReport;
+    window.resetPatternReport    = resetPatternReport;
 
     requireAuth(async user => {
       allDreams = await getDreams(user.uid);

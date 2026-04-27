@@ -66,3 +66,22 @@ class AudioRequest(BaseModel):
 
 class AudioResponse(BaseModel):
     audio_url: str
+
+
+class PatternDream(BaseModel):
+    date: Optional[str] = None
+    emotions: List[str]
+    themes: List[str]
+    summary: str
+
+
+class PatternRequest(BaseModel):
+    dreams: List[PatternDream]
+
+
+class PatternReport(BaseModel):
+    top_emotions: List[str]
+    recurring_themes: List[str]
+    narrative: str
+    insight: str
+    reflections: List[str]
