@@ -10,13 +10,18 @@ const BASE_URL = (window.location.hostname === 'localhost' || window.location.ho
 // ── DREAMS ──
 
 // Save a new dream entry (text) → returns AI analysis
-async function analyzeDream(dreamText) {
+async function analyzeDream(dreamText, { wakingContext, eyeDominance, handedness } = {}) {
   let res;
   try {
     res = await fetch(`${BASE_URL}/dreams/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: dreamText })
+      body: JSON.stringify({
+        text: dreamText,
+        waking_context:  wakingContext  || null,
+        eye_dominance:   eyeDominance   || null,
+        handedness:      handedness     || null,
+      })
     });
   } catch {
     throw new Error('Cannot reach the Reverie backend. Make sure it is running: uvicorn backend.main:app --reload');

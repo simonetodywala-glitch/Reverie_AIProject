@@ -15,6 +15,26 @@
     .reflection-list li { font-size: 14px; color: var(--text-dim); line-height: 1.6; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .reflection-list li:last-child { border-bottom: none; }
     .reflection-list li::before { content: "✦ "; opacity: 0.5; }
+    .context-input { font-size: 14px; }
+    .connection-box {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+    .mind-note-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-style: italic;
+    }
 
     .input-mode-row {
       display: flex;
@@ -120,6 +140,15 @@
         <div class="mic-status" id="mic-status">Tap to record your dream</div>
       </div>
 
+      <div class="section-label" style="margin-top: 18px;">What's on your mind today? <span style="font-weight:400; opacity:0.5;">(optional)</span></div>
+      <textarea
+        id="waking-context"
+        class="context-input"
+        rows="2"
+        placeholder="Any stress, big events, emotions, or things weighing on you… Reverie will look for connections."
+        maxlength="400"
+      ></textarea>
+
       <button class="btn btn-primary" id="analyze-btn" style="margin-top: 16px;" onclick="handleAnalyze()">
         ✨ Analyze Dream
       </button>
@@ -141,6 +170,16 @@
 
           <div class="section-label" style="margin-top:16px;">Deeper interpretation</div>
           <div class="ai-text" id="interpretation-text" style="font-size:14px; line-height:1.7;"></div>
+
+          <div id="waking-connections-section" style="display:none;">
+            <div class="section-label" style="margin-top:16px;">Waking life connection</div>
+            <div class="connection-box" id="waking-connections-text"></div>
+          </div>
+
+          <div id="mind-note-section" style="display:none;">
+            <div class="section-label" style="margin-top:16px;">Your mind's processing style</div>
+            <div class="mind-note-box" id="mind-note-text"></div>
+          </div>
 
           <div class="section-label" style="margin-top:16px;">Reflect on this</div>
           <ul class="reflection-list" id="reflections-list"></ul>
@@ -182,12 +221,16 @@
   <script src="../js/api.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
-    import { saveDream as saveToFirestore } from '../js/firebase.js';
+    import { saveDream as saveToFirestore, getUserProfile } from '../js/firebase.js';
 
     let currentUser = null;
     let lastAnalysis = null;
+    let userProfile  = null;
 
-    requireAuth(user => { currentUser = user; });
+    requireAuth(async user => {
+      currentUser = user;
+      userProfile = await getUserProfile(user.uid).catch(() => null);
+    });
 
     const input   = document.getElementById('dream-input');
     const counter = document.getElementById('char-count');
@@ -282,7 +325,11 @@
       document.getElementById('analysis-result').style.display = 'none';
 
       try {
-        lastAnalysis = await analyzeDream(text);
+        lastAnalysis = await analyzeDream(text, {
+          wakingContext: document.getElementById('waking-context').value.trim() || null,
+          eyeDominance:  userProfile?.eyeDominance  || null,
+          handedness:    userProfile?.handedness    || null,
+        });
       } catch (err) {
         console.error('Dream analysis error:', err);
         document.getElementById('loading-state').style.display = 'none';
@@ -318,6 +365,22 @@
         reflEl.parentElement.style.display = '';
       } else {
         reflEl.parentElement.style.display = 'none';
+      }
+
+      const wcSection = document.getElementById('waking-connections-section');
+      if (data.waking_connections) {
+        document.getElementById('waking-connections-text').textContent = data.waking_connections;
+        wcSection.style.display = '';
+      } else {
+        wcSection.style.display = 'none';
+      }
+
+      const mnSection = document.getElementById('mind-note-section');
+      if (data.mind_note) {
+        document.getElementById('mind-note-text').textContent = data.mind_note;
+        mnSection.style.display = '';
+      } else {
+        mnSection.style.display = 'none';
       }
 
       document.getElementById('analysis-result').style.display = 'block';

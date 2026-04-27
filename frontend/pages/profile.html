@@ -29,6 +29,25 @@
     .adj-row:last-child { border-bottom: none; }
     .adj-factor { font-weight: 600; }
     .adj-note { color: var(--text-dim); display: block; font-size: 12px; margin-top: 2px; }
+
+    .eye-test-steps {
+      font-size: 13px; color: var(--text-dim); line-height: 1.7;
+      background: var(--surface); border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .eye-test-steps strong { color: var(--text); }
+    .dom-btn-row { display: flex; gap: 8px; }
+    .dom-btn {
+      flex: 1; padding: 12px 8px; border-radius: 14px; border: 1.5px solid rgba(255,255,255,0.1);
+      background: var(--surface); color: var(--text-dim); font-size: 14px;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .dom-btn.selected { border-color: var(--accent); background: rgba(124,58,237,0.15); color: var(--text); }
+    .cross-badge {
+      margin-top: 10px; padding: 10px 14px; border-radius: 12px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25);
+      font-size: 13px; color: var(--text-dim); line-height: 1.55; display: none;
+    }
   </style>
 </head>
 <body>
@@ -37,6 +56,37 @@
     <div class="page-header">👤 Profile</div>
 
     <div class="main-content page-content">
+
+      <!-- MIND PROFILE -->
+      <div class="section-label">Mind Profile</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:13px; color:var(--text-dim); margin-bottom:14px; line-height:1.55;">
+          Reverie uses this to personalise dream analysis — connecting your brain's natural processing style to your dream imagery.
+        </div>
+
+        <div class="form-label">Handedness</div>
+        <div class="dom-btn-row" style="margin-bottom:16px;">
+          <button class="dom-btn" id="hand-right" onclick="setHandedness('right')">Right</button>
+          <button class="dom-btn" id="hand-left"  onclick="setHandedness('left')">Left</button>
+          <button class="dom-btn" id="hand-ambi"  onclick="setHandedness('ambidextrous')">Both</button>
+        </div>
+
+        <div class="form-label">Dominant Eye</div>
+        <div class="eye-test-steps">
+          <strong>Quick test:</strong> Make a small triangle with both hands and hold it at arm's length.
+          Focus on any object through the triangle. Now close your <em>left</em> eye — if the object stays centered, you're <strong>right-eye dominant</strong>.
+          If it jumps away, you're <strong>left-eye dominant</strong>.
+        </div>
+        <div class="dom-btn-row">
+          <button class="dom-btn" id="eye-left"   onclick="setEyeDominance('left')">Left Eye</button>
+          <button class="dom-btn" id="eye-right"  onclick="setEyeDominance('right')">Right Eye</button>
+          <button class="dom-btn" id="eye-unsure" onclick="setEyeDominance('unsure')">Not sure</button>
+        </div>
+        <div class="cross-badge" id="cross-badge">
+          ✦ You're <strong>cross-dominant</strong> — your dominant eye and hand are on opposite sides.
+          Research links this to more flexible communication between brain hemispheres, and often more vivid or unconventional dreams.
+        </div>
+      </div>
 
       <!-- SLEEP SCHEDULE CALCULATOR -->
       <div class="section-label">Sleep Schedule</div>
@@ -250,6 +300,50 @@
 
     let currentUser        = null;
     let currentUserProfile = null;
+    let pendingHandedness  = null;
+    let pendingEyeDom      = null;
+
+    function setHandedness(val) {
+      pendingHandedness = val;
+      ['right','left','ambi'].forEach(k =>
+        document.getElementById(`hand-${k}`).classList.toggle('selected', k === val || (val === 'ambidextrous' && k === 'ambi'))
+      );
+      checkCrossDominance();
+      saveMindProfile();
+    }
+
+    function setEyeDominance(val) {
+      pendingEyeDom = val;
+      ['left','right','unsure'].forEach(k =>
+        document.getElementById(`eye-${k}`).classList.toggle('selected', k === val)
+      );
+      checkCrossDominance();
+      saveMindProfile();
+    }
+
+    function checkCrossDominance() {
+      const badge = document.getElementById('cross-badge');
+      const cross = pendingHandedness && pendingEyeDom && pendingEyeDom !== 'unsure' &&
+        ((pendingHandedness === 'right' && pendingEyeDom === 'left') ||
+         (pendingHandedness === 'left'  && pendingEyeDom === 'right'));
+      badge.style.display = cross ? 'block' : 'none';
+    }
+
+    async function saveMindProfile() {
+      if (!currentUser) return;
+      await saveUserProfile(currentUser.uid, {
+        handedness:   pendingHandedness,
+        eyeDominance: pendingEyeDom,
+      });
+    }
+
+    function restoreMindProfile(profile) {
+      if (profile?.handedness)   setHandedness(profile.handedness);
+      if (profile?.eyeDominance) setEyeDominance(profile.eyeDominance);
+    }
+
+    window.setHandedness   = setHandedness;
+    window.setEyeDominance = setEyeDominance;
 
     function computeStreak(dreams) {
       if (!dreams.length) return 0;
@@ -326,6 +420,9 @@
 
       // ── Show last saved schedule if one exists ──
       if (latestSchedule) showPrevSchedule(latestSchedule);
+
+      // ── Restore Mind Profile ──
+      restoreMindProfile(profile);
     });
 
     document.getElementById('signout-btn').addEventListener('click', () => logOut());

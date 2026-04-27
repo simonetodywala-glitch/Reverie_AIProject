@@ -8,16 +8,21 @@ from typing import List, Optional
 
 
 class DreamRequest(BaseModel):
-    text: str               # The dream description typed by the user
+    text: str
     user_id: Optional[str] = "demo-user"
+    waking_context: Optional[str] = None   # what's on the user's mind today
+    eye_dominance: Optional[str] = None    # "left", "right", or "unsure"
+    handedness: Optional[str] = None       # "right", "left", or "ambidextrous"
 
 
 class DreamAnalysis(BaseModel):
-    emotions: List[str]           # e.g. ["wonder", "anxiety", "excitement"]
-    themes: List[str]             # e.g. ["Flying · freedom or desire for escape"]
-    summary: str                  # 2-3 sentence warm interpretation
-    interpretation: str           # Deeper psychological/emotional undercurrent
-    reflections: List[str]        # 2-3 introspective questions tied to this dream
+    emotions: List[str]
+    themes: List[str]
+    summary: str
+    interpretation: str
+    reflections: List[str]
+    waking_connections: Optional[str] = None  # dream ↔ waking life link
+    mind_note: Optional[str] = None           # insight based on cognitive profile
 
 
 class ChatRequest(BaseModel):
