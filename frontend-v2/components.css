@@ -27,7 +27,10 @@ body{
 
     line-height: 1.5;
 
-    background-color: var(--background);
+    max-width: 100vw;
+    max-height: 100vh;
+
+    background-color: var(--tertiaryContainer);
     color: var(--onBackground);
 }
 
@@ -41,7 +44,18 @@ body{
     overflow-y: auto;
 }
 
+.head {
+    height: 256px;
+    background: var(--surface);
+}
+
 h1, h2, h3, h4, h5, h6 {
     font-size: var(--font-size-xlarge);
     font-weight: bold;
+}
+
+.onBackgroundText {
+    font-size: var(--font-size);
+    font-weight: bold;
+    padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer))
 }
