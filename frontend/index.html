@@ -122,6 +122,22 @@
     }
     .wdm-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
 
+    /* ── MORNING MODAL OVERRIDE ── */
+    body.morning .winddown-modal {
+      background: rgba(255, 243, 210, 0.97);
+    }
+    body.morning .wdm-moon {
+      box-shadow: 0 0 90px 35px rgba(255,200,50,0.75),
+                  0 0 180px 90px rgba(255,160,0,0.3);
+    }
+    body.morning .wdm-card {
+      background: rgba(255, 252, 240, 0.98);
+      border-color: rgba(255,175,40,0.45);
+      box-shadow: 0 16px 56px rgba(180,100,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    body.morning .wdm-title { color: #2d1500; }
+    body.morning .wdm-sub   { color: #7a4a00; }
+
     /* Sleeping banner in header */
     .sleep-active-banner {
       display: none; flex-direction: column;
@@ -343,6 +359,14 @@
     function handleOrbClick() {
       if (localStorage.getItem('reverie_sleep_start')) return;
       spawnRipple();
+      const isMorning = document.body.classList.contains('morning');
+      document.querySelector('.wdm-title').textContent = isMorning ? 'Good morning! ☀️' : 'Ready to wind down?';
+      document.querySelector('.wdm-sub').textContent   = isMorning
+        ? 'Log last night\'s dream before it fades.'
+        : 'Reverie will track how long you sleep tonight.';
+      const confirmBtn = document.querySelector('.wdm-actions .btn-primary');
+      confirmBtn.textContent  = isMorning ? 'Log a dream' : 'Yes, let\'s go';
+      confirmBtn.onclick      = isMorning ? () => window.location.href = 'pages/journal.html' : startSleep;
       setTimeout(() => document.getElementById('winddown-modal').classList.add('active'), 80);
     }
 
