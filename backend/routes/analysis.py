@@ -1,8 +1,9 @@
 import os
 import json
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.models.schemas import ChatRequest, ChatResponse, PatternRequest, PatternReport
+from backend.auth import verify_token
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ async def _call_groq_messages(messages: list) -> str:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, _=Depends(verify_token)):
     if req.dream_context:
         system = f"""You are Reverie, a warm and curious dream companion. The user is exploring a specific dream with you.
 
@@ -70,7 +71,7 @@ async def _call_groq_json(prompt: str) -> str:
 
 
 @router.post("/patterns", response_model=PatternReport)
-async def get_patterns(req: PatternRequest):
+async def get_patterns(req: PatternRequest, _=Depends(verify_token)):
     if len(req.dreams) < 3:
         raise HTTPException(status_code=400, detail="Need at least 3 dreams for pattern analysis")
 

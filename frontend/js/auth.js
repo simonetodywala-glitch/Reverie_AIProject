@@ -95,6 +95,7 @@ export function requireAuth(callback) {
         ? '/frontend/pages/onboarding.html?signin=1'
         : '/frontend/pages/onboarding.html';
     } else {
+      if (window._setReverieUser) window._setReverieUser(user);
       callback(user);
     }
   });

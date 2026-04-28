@@ -1,7 +1,8 @@
 import os
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.models.schemas import ScheduleRequest, ScheduleResponse
+from backend.auth import verify_token
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ def _fmt(t: str | None) -> str:
 
 
 @router.post("/calculate", response_model=ScheduleResponse)
-async def calculate_schedule(req: ScheduleRequest):
+async def calculate_schedule(req: ScheduleRequest, _=Depends(verify_token)):
     factors_text = "\n".join(f"- {note}" for note in req.adjustments) if req.adjustments else "- No special factors detected"
 
     age_line = f"Age: {req.age}" if req.age else "Age: not provided"

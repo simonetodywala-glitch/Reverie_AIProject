@@ -1,7 +1,8 @@
 import os
 import httpx
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from backend.models.schemas import AudioRequest, AudioResponse
+from backend.auth import verify_token
 
 router = APIRouter()
 
@@ -38,7 +39,7 @@ Dream: "{dream_text}"
 
 
 @router.post("/story", response_model=AudioResponse)
-async def generate_story(req: AudioRequest):
+async def generate_story(req: AudioRequest, _=Depends(verify_token)):
     try:
         story_text = await dream_to_story(req.dream_text)
         return AudioResponse(audio_url=f"STORY_TEXT:{story_text}")
@@ -47,7 +48,7 @@ async def generate_story(req: AudioRequest):
 
 
 @router.post("/transcribe")
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(file: UploadFile = File(...), _=Depends(verify_token)):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")

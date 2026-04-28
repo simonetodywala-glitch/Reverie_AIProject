@@ -6,8 +6,9 @@
 import os
 import json
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from backend.models.schemas import DreamRequest, DreamAnalysis
+from backend.auth import verify_token
 
 router = APIRouter()
 
@@ -66,7 +67,7 @@ def _build_user_context(req: DreamRequest) -> tuple[str, str]:
 
 
 @router.post("/analyze", response_model=DreamAnalysis)
-async def analyze_dream(req: DreamRequest):
+async def analyze_dream(req: DreamRequest, _=Depends(verify_token)):
     dream_text = req.text[:MAX_DREAM_CHARS]
     profile_block, waking_block = _build_user_context(req)
 
