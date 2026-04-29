@@ -1,7 +1,8 @@
 import os
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
-from backend.models.schemas import AudioRequest, AudioResponse
+from fastapi.responses import StreamingResponse
+from backend.models.schemas import AudioRequest, AudioResponse, SoundscapeRequest
 from backend.auth import verify_token
 
 router = APIRouter()
@@ -69,10 +70,60 @@ async def transcribe_audio(file: UploadFile = File(...), _=Depends(verify_token)
         return {"text": res.json().get("text", "")}
 
 
-@router.get("/soundscape/{mood}")
-async def get_soundscape(mood: str):
-    return {
-        "mood": mood,
-        "audio_url": None,
-        "message": "ElevenLabs soundscape generation coming soon"
-    }
+EMOTION_SOUNDS = {
+    "anxiety":     "tense atmospheric hum, low unsettling tones, still and uneasy",
+    "fear":        "dark ambient drone, low rumbling, distant hollow echoes",
+    "wonder":      "ethereal floating pads, soft crystalline tones, vast and spacious",
+    "peaceful":    "gentle rain on leaves, soft wind, distant water, calm and still",
+    "joy":         "warm bright ambient tones, light breeze, soft natural textures",
+    "sadness":     "melancholic slow pads, quiet and still, soft distant rain",
+    "excitement":  "rising ambient energy, open air, subtle pulse and movement",
+    "nostalgia":   "warm hazy ambient, soft vintage texture, gentle distant tone",
+    "confusion":   "layered shifting tones, overlapping soft textures, slowly drifting",
+    "awe":         "vast expansive soundscape, deep reverb, celestial resonance",
+    "dread":       "slow building ominous drone, deep bass, cold still air",
+    "longing":     "haunting open space, soft resonance, quiet and searching",
+    "grief":       "quiet, heavy ambient, very slow movement, deep stillness",
+    "hope":        "gentle rising tones, warm pads, soft light texture",
+    "tenderness":  "soft warm ambient, intimate and close, gentle and quiet",
+    "restlessness":"shifting layered tones, subtle unease, never quite settling",
+    "relief":      "slow exhale of sound, warmth returning, open and soft",
+    "awe":         "vast reverberant space, deep and slow, celestial and open",
+    "pride":       "full warm tones, grounded and steady, quietly expansive",
+    "shame":       "withdrawn ambient, quiet and inward, low and soft",
+}
+
+
+def _build_soundscape_prompt(emotions: list, themes: list) -> str:
+    descriptors = [EMOTION_SOUNDS[e.lower()] for e in emotions[:3] if e.lower() in EMOTION_SOUNDS]
+    if not descriptors:
+        descriptors = ["dreamlike ambient atmosphere, soft and immersive"]
+    prompt = f"Ambient dreamscape soundscape: {'; '.join(descriptors)}. Atmospheric, immersive, seamlessly loopable, no sudden changes, no melody, pure texture."
+    return prompt
+
+
+@router.post("/soundscape")
+async def generate_soundscape(req: SoundscapeRequest, _=Depends(verify_token)):
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY not set")
+
+    prompt = _build_soundscape_prompt(req.emotions, req.themes)
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            "https://api.elevenlabs.io/v1/sound-generation",
+            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            json={"text": prompt, "duration_seconds": 22, "prompt_influence": 0.4},
+        )
+        if res.status_code != 200:
+            detail = res.json().get("detail", {})
+            raise HTTPException(status_code=500, detail=f"ElevenLabs error: {detail}")
+
+        audio_bytes = res.content
+
+    return StreamingResponse(
+        iter([audio_bytes]),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=soundscape.mp3"}
+    )

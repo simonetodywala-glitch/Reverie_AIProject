@@ -121,8 +121,13 @@ async function generateBedtimeStory(dreamText) {
   return res.json();
 }
 
-async function getSoundscape(mood) {
-  const res = await fetch(`${BASE_URL}/audio/soundscape/${mood}`);
-  if (!res.ok) throw new Error('Soundscape failed');
-  return res.json();
+async function getSoundscape(emotions, themes = []) {
+  const res = await fetch(`${BASE_URL}/audio/soundscape`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+    body: JSON.stringify({ emotions, themes })
+  });
+  if (!res.ok) throw new Error('Soundscape generation failed');
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }

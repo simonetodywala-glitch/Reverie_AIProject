@@ -68,6 +68,11 @@ class AudioResponse(BaseModel):
     audio_url: str
 
 
+class SoundscapeRequest(BaseModel):
+    emotions: List[str]
+    themes: List[str] = []
+
+
 class PatternDream(BaseModel):
     date: Optional[str] = None
     emotions: List[str]
