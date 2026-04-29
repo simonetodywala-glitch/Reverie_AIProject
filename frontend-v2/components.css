@@ -1,5 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
+@property --glow-size {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 48px;
+}
+
 :root, ::backdrop{
     --font: "Inter", sans-serif;
 
@@ -17,15 +23,17 @@
     --top-text-height: 60px;
     --bottom-height: 64px;
 
+    --moon-size: 128px;
+
     --pill-max-width: 352px;
-    --app-max-width: calc(var(--pill-max-width) * 2 + var(--padding-outer) * 3);
+    --app-max-width: calc(var(--pill-max-width) + var(--padding-outer) * 2);
 }
 
 body{
     font-family: var(--font);
     font-size: var(--font-size);
 
-    line-height: 1.5;
+    line-height: 1.2;
 
     max-width: 100vw;
     max-height: 100vh;
@@ -41,12 +49,54 @@ body{
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow-y: auto;
+    overflow-y: scroll;
+}
+
+.moon {
+    justify-self: center;
+    width: var(--moon-size);
+    height: var(--moon-size);
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 20%, var(--onContainer), var(--container), var(--background));
+    box-shadow:
+        0 0 calc(var(--glow-size) * 1.0) calc(var(--glow-size) * 1.0) oklch(from var(--container) l c h / 0.1),
+        0 0 calc(var(--glow-size) / 2.0) calc(var(--glow-size) / 2.0) oklch(from var(--container) l c h / 0.2),
+        0 0 calc(var(--glow-size) / 4.0) calc(var(--glow-size) / 4.0) oklch(from var(--container) l c h / 0.4),
+        0 0 calc(var(--glow-size) / 8.0) calc(var(--glow-size) / 8.0) oklch(from var(--container) l c h / 0.4);
+    animation:
+        moon-enter 1s cubic-bezier(.7,.7,.3,1) forwards,
+        moon-pulse 3s ease-in-out 1s infinite alternate;
+}
+
+@keyframes moon-enter{
+    from {
+        opacity: 1;
+        transform: translateY(-100px) scale(2);
+        --glow-size: 128px;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes moon-pulse {
+    from { --glow-size: 48px; transform: translateY(0px) translateX(0) scale(1)}
+    50%  { --glow-size: 96px; transform: translateY(-8px) translateX(0) scale(1.05)}
+    to   { --glow-size: 48px; transform: translateY(0px) translateX(0) scale(1)}
 }
 
 .head {
     height: 256px;
-    background: var(--surface);
+    background: linear-gradient(var(--surface) 50%, var(--background));
+    display: grid;
+    grid-template-rows: 1fr var(--top-text-height);
+    align-items: center;
+    overflow-y: hidden;
+}
+
+.titletext {
+    height: 60px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -57,5 +107,5 @@ h1, h2, h3, h4, h5, h6 {
 .onBackgroundText {
     font-size: var(--font-size);
     font-weight: bold;
-    padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer))
+    padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer) * 2)
 }
