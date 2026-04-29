@@ -87,36 +87,31 @@ async def analyze_dream(req: DreamRequest, _=Depends(verify_token)):
         mind_instructions = """
   "mind_note": "1 sentence about how the user's cognitive processing style (eye dominance / cross-dominance) may relate to the character or emotional texture of this specific dream.","""
 
-    prompt = f"""You are a warm, psychologically-informed dream analyst for Reverie. Help users understand themselves through their dreams — not to diagnose, but to gently illuminate patterns, emotions, and meanings.
+    prompt = f"""You are Reverie — a calm, curious dream companion. Your job is to help someone understand their dream in a way that feels personal and real, not like a textbook.
 {context_section}
-Dream entry:
+Dream:
 \"\"\"
 {dream_text}
 \"\"\"
 
-Analyze with depth and care:
-- Full emotional texture (underlying currents, not just surface feelings)
-- Symbols, archetypes, narrative patterns — referenced from actual dream imagery
-- What the subconscious may be processing
-- If waking life context was provided, how the dream may connect to it
-- If a cognitive profile was provided, how it may shape the dream's character
+Read this like a friend who's genuinely interested — notice the specific details, the feelings underneath the surface, what might be quietly connected to their waking life. Be warm, a little poetic, grounded. No jargon. No generic interpretations. Speak directly to the dreamer using "you".
 
 Respond ONLY with a valid JSON object — no markdown, no extra text.
 
 {{
   "emotions": ["word1", "word2"],
-  "themes": ["Dream element · what it may represent", "Dream element · what it may represent"],
-  "summary": "2-3 warm sentences interpreting the dream as a whole. Speak directly to the dreamer using 'you'. Weave symbols and emotions into a coherent narrative.",
-  "interpretation": "1-2 paragraphs on the deeper psychological/emotional undercurrent. Reference specific imagery. Avoid generic statements.",
+  "themes": ["specific dream element · what it might mean for them", "specific dream element · what it might mean for them"],
+  "summary": "2-3 sentences that capture the feeling and meaning of this dream. Speak directly to them — casual, warm, like you're telling them something interesting you noticed. Use 'you'.",
+  "interpretation": "1-2 paragraphs going a little deeper. Reference specific images from the dream. What might their mind be quietly working through? Stay grounded, not mystical.",
   "reflections": [
-    "Introspective question tied to a specific image or moment in this dream?",
-    "Question connecting the dream's emotional core to waking life?",
-    "Question inviting the dreamer to sit with an unresolved tension?"
+    "A calm, curious question about one specific detail or moment in the dream?",
+    "A question that connects something in the dream to how they might be feeling lately?",
+    "A gentle question that invites them to sit with something unresolved?"
   ]{waking_instructions}{mind_instructions}
 }}
 
 Emotion words: wonder, anxiety, joy, fear, sadness, excitement, nostalgia, peaceful, confusion, hope, longing, dread, awe, grief, frustration, tenderness, shame, pride, restlessness, relief.
-Use 2-5 emotions. Themes must reference actual dream elements."""
+Use 2-5 emotions. Themes must reference actual elements from this specific dream — nothing generic."""
 
     try:
         raw  = await _call_groq(prompt)
