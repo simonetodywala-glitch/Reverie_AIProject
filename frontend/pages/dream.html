@@ -60,6 +60,47 @@
     }
     .saved-badge.show { opacity: 1; }
 
+    /* ── SOUNDSCAPE ── */
+    .soundscape-panel {
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 20px;
+    }
+    .soundscape-player {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border-radius: 16px;
+      padding: 14px 16px; margin-top: 10px;
+    }
+    .soundscape-play-btn {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border: none; color: #fff; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+    }
+    .soundscape-play-btn:active { transform: scale(0.92); }
+    .soundscape-info { flex: 1; min-width: 0; }
+    .soundscape-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .soundscape-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .soundscape-bars  {
+      display: flex; align-items: center; gap: 2px; height: 24px; flex-shrink: 0;
+    }
+    .soundscape-bar {
+      width: 3px; border-radius: 2px;
+      background: var(--accent-soft); opacity: 0.4;
+    }
+    .soundscape-bars.playing .soundscape-bar { opacity: 0.85; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation: sbar 0.9s ease-in-out infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation: sbar 0.9s ease-in-out 0.15s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation: sbar 0.9s ease-in-out 0.3s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation: sbar 0.9s ease-in-out 0.45s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation: sbar 0.9s ease-in-out 0.6s infinite; }
+    @keyframes sbar {
+      0%,100% { height: 6px; }
+      50%      { height: 20px; }
+    }
+
     /* ── FLOATING CHAT ── */
     .chat-fab {
       position: fixed;
@@ -317,6 +358,36 @@
             <span class="saved-badge" id="saved-badge">✓ Saved</span>
           </div>
         </div>
+
+        <div class="soundscape-panel">
+          <div class="section-label">Dream Soundscape</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">
+            Generate an ambient soundscape matched to this dream's mood.
+          </div>
+          <button class="btn btn-ghost" style="width:100%;" id="soundscape-btn" onclick="generateSoundscape()">
+            🎧 Generate Soundscape
+          </button>
+          <div id="soundscape-loading" style="display:none; text-align:center; padding:16px 0;">
+            <div class="spinner"></div>
+            <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Generating your soundscape…</p>
+          </div>
+          <div id="soundscape-player" style="display:none;">
+            <div class="soundscape-player">
+              <button class="soundscape-play-btn" id="play-btn" onclick="toggleSoundscape()">▶</button>
+              <div class="soundscape-info">
+                <div class="soundscape-title">Dream Soundscape</div>
+                <div class="soundscape-sub" id="soundscape-sub">Tap to play · Loops automatically</div>
+              </div>
+              <div class="soundscape-bars" id="soundscape-bars">
+                <div class="soundscape-bar" style="height:10px;"></div>
+                <div class="soundscape-bar" style="height:16px;"></div>
+                <div class="soundscape-bar" style="height:8px;"></div>
+                <div class="soundscape-bar" style="height:14px;"></div>
+                <div class="soundscape-bar" style="height:6px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       `;
 
       document.getElementById('dream-content').innerHTML = html;
@@ -375,6 +446,57 @@
 
     window.runReanalyze   = runReanalyze;
     window.saveReanalysis = saveReanalysis;
+
+    // ── SOUNDSCAPE ──
+    let soundscapeAudio = null;
+    let soundscapePlaying = false;
+
+    async function generateSoundscape() {
+      const btn = document.getElementById('soundscape-btn');
+      const loading = document.getElementById('soundscape-loading');
+      btn.style.display = 'none';
+      loading.style.display = 'block';
+
+      try {
+        const url = await getSoundscape(currentDream.emotions || [], currentDream.themes || []);
+        soundscapeAudio = new Audio(url);
+        soundscapeAudio.loop = true;
+        soundscapeAudio.volume = 0.7;
+
+        loading.style.display = 'none';
+        document.getElementById('soundscape-player').style.display = 'block';
+
+        soundscapeAudio.play();
+        soundscapePlaying = true;
+        document.getElementById('play-btn').textContent = '⏸';
+        document.getElementById('soundscape-bars').classList.add('playing');
+        document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
+      } catch {
+        loading.style.display = 'none';
+        btn.style.display = 'block';
+        btn.textContent = '⚠ Failed — tap to retry';
+      }
+    }
+
+    function toggleSoundscape() {
+      if (!soundscapeAudio) return;
+      if (soundscapePlaying) {
+        soundscapeAudio.pause();
+        soundscapePlaying = false;
+        document.getElementById('play-btn').textContent = '▶';
+        document.getElementById('soundscape-bars').classList.remove('playing');
+        document.getElementById('soundscape-sub').textContent = 'Paused';
+      } else {
+        soundscapeAudio.play();
+        soundscapePlaying = true;
+        document.getElementById('play-btn').textContent = '⏸';
+        document.getElementById('soundscape-bars').classList.add('playing');
+        document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
+      }
+    }
+
+    window.generateSoundscape = generateSoundscape;
+    window.toggleSoundscape   = toggleSoundscape;
 
     // ── CHAT ──
     let chatHistory = [];

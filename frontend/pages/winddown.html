@@ -8,50 +8,156 @@
   <link rel="stylesheet" href="../css/components.css">
   <style>
     .routine-card {
-      background: var(--card);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 14px;
-      cursor: pointer;
+      background: var(--card); border-radius: 20px; padding: 20px;
+      margin-bottom: 14px; cursor: pointer;
       border: 1px solid rgba(255,255,255,0.05);
       transition: background 0.2s, transform 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      display: flex; align-items: center; gap: 16px;
     }
     .routine-card:hover { background: var(--card-hover); transform: translateY(-2px); }
-    .routine-icon { font-size: 32px; }
+    .routine-icon { font-size: 32px; flex-shrink: 0; }
     .routine-name { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
     .routine-desc { font-size: 13px; color: var(--text-dim); }
-    .soundscape-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .sound-chip {
-      padding: 10px 18px; border-radius: 100px;
+
+    /* ── MOOD CHIPS ── */
+    .mood-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .mood-chip {
+      padding: 9px 16px; border-radius: 100px;
       background: var(--surface); color: var(--text-dim);
-      font-size: 14px; font-weight: 600; cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.06);
-      transition: background 0.2s, color 0.2s;
+      font-size: 13.5px; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
     }
-    .sound-chip:hover { background: var(--accent); color: #fff; }
+    .mood-chip:hover  { background: rgba(124,58,237,0.18); color: var(--text); }
+    .mood-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .mood-chip:active { transform: scale(0.95); }
+
+    /* ── RECOMMENDATION CARD ── */
+    .rec-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.14), rgba(155,93,229,0.07));
+      border: 1px solid rgba(155,93,229,0.28); border-radius: 18px;
+      padding: 16px 18px; margin-top: 8px; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 14px; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .rec-card:hover { background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.12)); transform: translateY(-1px); }
+    .rec-card.active { border-color: var(--accent); }
+    .rec-emoji { font-size: 32px; flex-shrink: 0; }
+    .rec-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 3px; }
+    .rec-title { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); }
+    .rec-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── PLAYER ── */
+    .soundscape-player {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border-radius: 16px;
+      padding: 14px 16px; margin-top: 12px;
+    }
+    .soundscape-play-btn {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      border: none; color: #fff; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+    }
+    .soundscape-play-btn:active { transform: scale(0.92); }
+    .soundscape-info { flex: 1; min-width: 0; }
+    .soundscape-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .soundscape-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .soundscape-bars  { display: flex; align-items: center; gap: 2px; height: 24px; flex-shrink: 0; }
+    .soundscape-bar   { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.4; }
+    .soundscape-bars.playing .soundscape-bar { opacity: 0.85; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation: sbar 0.9s ease-in-out infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation: sbar 0.9s ease-in-out 0.15s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation: sbar 0.9s ease-in-out 0.3s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation: sbar 0.9s ease-in-out 0.45s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation: sbar 0.9s ease-in-out 0.6s infinite; }
+    @keyframes sbar { 0%,100% { height: 5px; } 50% { height: 20px; } }
+
+    .player-loading {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; font-size: 13px; color: var(--text-muted);
+    }
+
+    /* ── BREATHING ── */
+    .breath-modal {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(4,0,14,0.96);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 28px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .breath-modal.open { opacity: 1; pointer-events: all; }
+    .breath-circle {
+      width: 140px; height: 140px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(155,93,229,0.6), rgba(124,58,237,0.2));
+      border: 2px solid rgba(155,93,229,0.4);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 4s ease-in-out;
+    }
+    .breath-circle.inhale  { transform: scale(1.6); }
+    .breath-circle.exhale  { transform: scale(1.0); }
+    .breath-label { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
+    .breath-count { font-size: 48px; font-weight: 300; color: var(--accent-soft); font-family: 'Nunito', sans-serif; }
+    .breath-sub   { font-size: 14px; color: var(--text-muted); }
   </style>
 </head>
 <body>
-  <div class="app-frame">
 
+  <!-- BREATHING MODAL -->
+  <div class="breath-modal" id="breath-modal">
+    <div class="breath-circle" id="breath-circle"></div>
+    <div class="breath-label" id="breath-label">Get ready</div>
+    <div class="breath-count" id="breath-count"></div>
+    <div class="breath-sub" id="breath-sub">4-7-8 breathing · 4 cycles</div>
+    <button class="btn btn-ghost" style="min-width:140px;" onclick="stopBreathing()">Stop</button>
+  </div>
+
+  <div class="app-frame">
     <div class="page-header">🌬️ Wind Down</div>
 
     <div class="main-content page-content">
 
-      <div class="section-label">Tonight's routine</div>
+      <!-- ── SOUNDSCAPE SECTION ── -->
+      <div class="section-label">Soundscape</div>
 
-      <div class="routine-card" onclick="alert('Breathing exercise coming in Week 4!')">
-        <div class="routine-icon">🫁</div>
-        <div>
-          <div class="routine-name">Breathing Exercise</div>
-          <div class="routine-desc">4-7-8 technique · 5 minutes</div>
+      <div id="rec-section" style="display:none;">
+        <div class="rec-card" id="rec-card">
+          <div class="rec-emoji" id="rec-emoji">🌌</div>
+          <div>
+            <div class="rec-label">Recommended for you</div>
+            <div class="rec-title" id="rec-title">Space</div>
+            <div class="rec-sub" id="rec-sub">Based on your last dream</div>
+          </div>
         </div>
       </div>
 
-      <div class="routine-card" onclick="alert('Journaling prompts coming in Week 4!')">
+      <div class="mood-grid" id="mood-grid">
+        <div class="mood-chip" data-mood="rain">🌧️ Rain</div>
+        <div class="mood-chip" data-mood="ocean">🌊 Ocean</div>
+        <div class="mood-chip" data-mood="forest">🌲 Forest</div>
+        <div class="mood-chip" data-mood="fire">🔥 Fire</div>
+        <div class="mood-chip" data-mood="space">🌌 Space</div>
+        <div class="mood-chip" data-mood="storm">⛈️ Storm</div>
+        <div class="mood-chip" data-mood="cafe">☕ Café</div>
+      </div>
+
+      <div id="player-wrap"></div>
+
+      <!-- ── TONIGHT'S ROUTINE ── -->
+      <div class="section-label" style="margin-top:24px;">Tonight's routine</div>
+
+      <div class="routine-card" onclick="startBreathing()">
+        <div class="routine-icon">🫁</div>
+        <div>
+          <div class="routine-name">Breathing Exercise</div>
+          <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
+        </div>
+      </div>
+
+      <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
         <div class="routine-icon">📓</div>
         <div>
           <div class="routine-name">Reflection Journal</div>
@@ -59,7 +165,7 @@
         </div>
       </div>
 
-      <div class="routine-card" onclick="alert('Bedtime stories coming in Week 5!')">
+      <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
         <div class="routine-icon">📖</div>
         <div>
           <div class="routine-name">AI Bedtime Story</div>
@@ -67,22 +173,8 @@
         </div>
       </div>
 
-      <div class="section-label" style="margin-top: 8px;">Soundscapes</div>
-      <div class="soundscape-row">
-        <div class="sound-chip">🌧️ Rain</div>
-        <div class="sound-chip">🌊 Ocean</div>
-        <div class="sound-chip">🌲 Forest</div>
-        <div class="sound-chip">🔥 Fire</div>
-        <div class="sound-chip">🌌 Space</div>
-      </div>
-      <div class="ai-response" style="margin-top:14px;">
-        <div class="ai-label">Coming in Week 5</div>
-        <div class="ai-text" style="font-size:14px; color:var(--text-muted);">ElevenLabs soundscape generation will be connected here — tap a mood and get a custom ambient audio track.</div>
-      </div>
-
     </div>
 
-    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
       <div class="nav-group">
         <a class="nav-link" href="../index.html">Home</a>
@@ -94,9 +186,226 @@
         <a class="nav-link" href="profile.html">Profile</a>
       </div>
     </nav>
-
   </div>
 
   <script src="../js/app.js"></script>
+  <script src="../js/api.js"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    import { getDreams }   from '../js/firebase.js';
+
+    const MOODS = {
+      rain:   { emoji: '🌧️', label: 'Rain',   emotions: ['sadness','grief','peaceful','anxiety'] },
+      ocean:  { emoji: '🌊', label: 'Ocean',  emotions: ['longing','hope','excitement','joy'] },
+      forest: { emoji: '🌲', label: 'Forest', emotions: ['peaceful','tenderness','hope','relief'] },
+      fire:   { emoji: '🔥', label: 'Fire',   emotions: ['dread','fear','restlessness','pride'] },
+      space:  { emoji: '🌌', label: 'Space',  emotions: ['awe','wonder','confusion','nostalgia'] },
+      storm:  { emoji: '⛈️', label: 'Storm',  emotions: ['anxiety','frustration','fear','restlessness'] },
+      cafe:   { emoji: '☕', label: 'Café',   emotions: ['nostalgia','tenderness','joy','longing'] },
+    };
+
+    const MOOD_PROMPTS = {
+      rain:   'steady gentle rainfall on leaves and pavement, soft rain ambience, water droplets, peaceful and still',
+      ocean:  'ocean waves rolling onto a beach, rhythmic surf, distant seagulls, open water breathing',
+      forest: 'forest ambience, birds chirping softly, wind through tall trees, leaves rustling, morning light',
+      fire:   'warm crackling fireplace, wood popping, cozy indoor fire, embers settling, warm and close',
+      space:  'deep space ambience, vast cosmic drone, weightless and ethereal, distant stars, infinite silence',
+      storm:  'distant rolling thunder, rain on windows, occasional lightning crack, safe inside during a storm',
+      cafe:   'quiet coffee shop, gentle background murmur, espresso machine, soft jazz, warm and unhurried',
+    };
+
+    function recommendMood(emotions) {
+      const scores = {};
+      for (const [mood, data] of Object.entries(MOODS)) {
+        scores[mood] = emotions.filter(e => data.emotions.includes(e.toLowerCase())).length;
+      }
+      return Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+    }
+
+    let currentAudio   = null;
+    let isPlaying      = false;
+    let currentMood    = null;
+    let audioCache     = {};
+
+    function setActiveChip(mood) {
+      document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
+      const chip = document.querySelector(`.mood-chip[data-mood="${mood}"]`);
+      if (chip) chip.classList.add('active');
+      const recCard = document.getElementById('rec-card');
+      if (recCard) recCard.classList.toggle('active', recCard.dataset.mood === mood);
+    }
+
+    function showPlayer(mood, playing) {
+      const wrap = document.getElementById('player-wrap');
+      const m = MOODS[mood];
+      wrap.innerHTML = `
+        <div class="soundscape-player">
+          <button class="soundscape-play-btn" id="play-btn" onclick="togglePlay()">
+            ${playing ? '⏸' : '▶'}
+          </button>
+          <div class="soundscape-info">
+            <div class="soundscape-title">${m.emoji} ${m.label} Soundscape</div>
+            <div class="soundscape-sub" id="player-sub">${playing ? 'Now playing · Looping' : 'Tap to play'}</div>
+          </div>
+          <div class="soundscape-bars ${playing ? 'playing' : ''}" id="soundscape-bars">
+            <div class="soundscape-bar" style="height:10px;"></div>
+            <div class="soundscape-bar" style="height:16px;"></div>
+            <div class="soundscape-bar" style="height:8px;"></div>
+            <div class="soundscape-bar" style="height:14px;"></div>
+            <div class="soundscape-bar" style="height:6px;"></div>
+          </div>
+        </div>`;
+    }
+
+    function showLoading(mood) {
+      const m = MOODS[mood];
+      document.getElementById('player-wrap').innerHTML = `
+        <div class="player-loading">
+          <div class="spinner"></div>
+          Generating ${m.label} soundscape…
+        </div>`;
+    }
+
+    async function selectMood(mood) {
+      if (currentMood === mood && currentAudio) {
+        togglePlay();
+        return;
+      }
+
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; isPlaying = false; }
+      currentMood = mood;
+      setActiveChip(mood);
+
+      if (audioCache[mood]) {
+        currentAudio = new Audio(audioCache[mood]);
+        currentAudio.loop = true;
+        currentAudio.volume = 0.75;
+        currentAudio.play();
+        isPlaying = true;
+        showPlayer(mood, true);
+        return;
+      }
+
+      showLoading(mood);
+
+      try {
+        const emotions = MOODS[mood].emotions;
+        const url = await getSoundscape(emotions, [MOOD_PROMPTS[mood]]);
+        audioCache[mood] = url;
+        currentAudio = new Audio(url);
+        currentAudio.loop = true;
+        currentAudio.volume = 0.75;
+        currentAudio.play();
+        isPlaying = true;
+        showPlayer(mood, true);
+      } catch (err) {
+        document.getElementById('player-wrap').innerHTML = `
+          <div class="player-loading" style="color:var(--text-muted);">
+            Could not generate soundscape. Check your connection and try again.
+          </div>`;
+        setActiveChip(null);
+      }
+    }
+
+    function togglePlay() {
+      if (!currentAudio) return;
+      if (isPlaying) {
+        currentAudio.pause();
+        isPlaying = false;
+        document.getElementById('play-btn').textContent = '▶';
+        document.getElementById('soundscape-bars').classList.remove('playing');
+        document.getElementById('player-sub').textContent = 'Paused';
+      } else {
+        currentAudio.play();
+        isPlaying = true;
+        document.getElementById('play-btn').textContent = '⏸';
+        document.getElementById('soundscape-bars').classList.add('playing');
+        document.getElementById('player-sub').textContent = 'Now playing · Looping';
+      }
+    }
+
+    window.selectMood  = selectMood;
+    window.togglePlay  = togglePlay;
+
+    document.querySelectorAll('.mood-chip').forEach(chip => {
+      chip.addEventListener('click', () => selectMood(chip.dataset.mood));
+    });
+
+    requireAuth(async user => {
+      const dreams = await getDreams(user.uid).catch(() => []);
+      if (!dreams.length) return;
+
+      const latest  = dreams[0];
+      const emotions = latest.emotions || [];
+      if (!emotions.length) return;
+
+      const rec  = recommendMood(emotions);
+      const m    = MOODS[rec];
+
+      const recSection = document.getElementById('rec-section');
+      const recCard    = document.getElementById('rec-card');
+      document.getElementById('rec-emoji').textContent = m.emoji;
+      document.getElementById('rec-title').textContent = `${m.label} Soundscape`;
+      document.getElementById('rec-sub').textContent   = `Based on your last dream's mood`;
+      recCard.dataset.mood = rec;
+      recCard.onclick      = () => selectMood(rec);
+      recSection.style.display = 'block';
+    });
+  </script>
+
+  <script>
+    // ── BREATHING EXERCISE ──
+    let breathTimer = null;
+
+    const PHASES = [
+      { label: 'Inhale',  duration: 4, class: 'inhale' },
+      { label: 'Hold',    duration: 7, class: 'inhale' },
+      { label: 'Exhale',  duration: 8, class: 'exhale' },
+    ];
+
+    function startBreathing() {
+      document.getElementById('breath-modal').classList.add('open');
+      document.getElementById('breath-label').textContent = 'Get ready';
+      document.getElementById('breath-count').textContent = '';
+      let cycle = 0, phaseIdx = 0, countdown = 0;
+      const circle  = document.getElementById('breath-circle');
+      const label   = document.getElementById('breath-label');
+      const count   = document.getElementById('breath-count');
+      const sub     = document.getElementById('breath-sub');
+
+      function nextPhase() {
+        if (cycle >= 4) { stopBreathing(); return; }
+        const phase = PHASES[phaseIdx];
+        label.textContent = phase.label;
+        countdown = phase.duration;
+        count.textContent = countdown;
+        circle.className = 'breath-circle ' + phase.class;
+        sub.textContent  = `Cycle ${cycle + 1} of 4`;
+
+        breathTimer = setInterval(() => {
+          countdown--;
+          count.textContent = countdown;
+          if (countdown <= 0) {
+            clearInterval(breathTimer);
+            phaseIdx++;
+            if (phaseIdx >= PHASES.length) { phaseIdx = 0; cycle++; }
+            setTimeout(nextPhase, 300);
+          }
+        }, 1000);
+      }
+
+      setTimeout(nextPhase, 800);
+    }
+
+    function stopBreathing() {
+      clearInterval(breathTimer);
+      document.getElementById('breath-modal').classList.remove('open');
+      document.getElementById('breath-circle').className = 'breath-circle';
+    }
+
+    window.startBreathing = startBreathing;
+    window.stopBreathing  = stopBreathing;
+  </script>
+
 </body>
 </html>
