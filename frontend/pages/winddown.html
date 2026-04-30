@@ -190,6 +190,7 @@
 
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/soundscapes.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     import { getDreams }   from '../js/firebase.js';
@@ -204,28 +205,9 @@
       cafe:   { emoji: '☕', label: 'Café',   emotions: ['nostalgia','tenderness','joy','longing'] },
     };
 
-    const MOOD_PROMPTS = {
-      rain:   'steady gentle rainfall on leaves and pavement, soft rain ambience, water droplets, peaceful and still',
-      ocean:  'ocean waves rolling onto a beach, rhythmic surf, distant seagulls, open water breathing',
-      forest: 'forest ambience, birds chirping softly, wind through tall trees, leaves rustling, morning light',
-      fire:   'warm crackling fireplace, wood popping, cozy indoor fire, embers settling, warm and close',
-      space:  'deep space ambience, vast cosmic drone, weightless and ethereal, distant stars, infinite silence',
-      storm:  'distant rolling thunder, rain on windows, occasional lightning crack, safe inside during a storm',
-      cafe:   'quiet coffee shop, gentle background murmur, espresso machine, soft jazz, warm and unhurried',
-    };
 
-    function recommendMood(emotions) {
-      const scores = {};
-      for (const [mood, data] of Object.entries(MOODS)) {
-        scores[mood] = emotions.filter(e => data.emotions.includes(e.toLowerCase())).length;
-      }
-      return Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
-    }
-
-    let currentAudio   = null;
-    let isPlaying      = false;
-    let currentMood    = null;
-    let audioCache     = {};
+    let isPlaying   = false;
+    let currentMood = null;
 
     function setActiveChip(mood) {
       document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
@@ -266,57 +248,31 @@
         </div>`;
     }
 
-    async function selectMood(mood) {
-      if (currentMood === mood && currentAudio) {
+    function selectMood(mood) {
+      if (currentMood === mood && SoundscapePlayer.isPlaying()) {
         togglePlay();
         return;
       }
 
-      if (currentAudio) { currentAudio.pause(); currentAudio = null; isPlaying = false; }
+      if (currentMood && currentMood !== mood) SoundscapePlayer.stop();
       currentMood = mood;
       setActiveChip(mood);
 
-      if (audioCache[mood]) {
-        currentAudio = new Audio(audioCache[mood]);
-        currentAudio.loop = true;
-        currentAudio.volume = 0.75;
-        currentAudio.play();
-        isPlaying = true;
-        showPlayer(mood, true);
-        return;
-      }
-
-      showLoading(mood);
-
-      try {
-        const emotions = MOODS[mood].emotions;
-        const url = await getSoundscape(emotions, [MOOD_PROMPTS[mood]]);
-        audioCache[mood] = url;
-        currentAudio = new Audio(url);
-        currentAudio.loop = true;
-        currentAudio.volume = 0.75;
-        currentAudio.play();
-        isPlaying = true;
-        showPlayer(mood, true);
-      } catch (err) {
-        document.getElementById('player-wrap').innerHTML = `
-          <div class="player-loading" style="color:var(--text-muted);">
-            Could not generate soundscape. Check your connection and try again.
-          </div>`;
-        setActiveChip(null);
-      }
+      SoundscapePlayer.play(mood);
+      isPlaying = true;
+      showPlayer(mood, true);
     }
 
     function togglePlay() {
-      if (!currentAudio) return;
+      if (!currentMood) return;
       if (isPlaying) {
-        currentAudio.pause();
+        SoundscapePlayer.pause();
         isPlaying = false;
         document.getElementById('play-btn').textContent = '▶';
         document.getElementById('soundscape-bars').classList.remove('playing');
         document.getElementById('player-sub').textContent = 'Paused';
       } else {
-        currentAudio.play();
+        SoundscapePlayer.resume();
         isPlaying = true;
         document.getElementById('play-btn').textContent = '⏸';
         document.getElementById('soundscape-bars').classList.add('playing');
@@ -339,7 +295,7 @@
       const emotions = latest.emotions || [];
       if (!emotions.length) return;
 
-      const rec  = recommendMood(emotions);
+      const rec  = SoundscapePlayer.emotionsToMood(emotions);
       const m    = MOODS[rec];
 
       const recSection = document.getElementById('rec-section');

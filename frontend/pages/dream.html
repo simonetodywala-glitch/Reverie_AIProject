@@ -243,6 +243,7 @@
 
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/soundscapes.js"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     import { getDream, updateDream, getUserProfile, saveChatHistory, getChatHistory } from '../js/firebase.js';
@@ -365,12 +366,8 @@
             Generate an ambient soundscape matched to this dream's mood.
           </div>
           <button class="btn btn-ghost" style="width:100%;" id="soundscape-btn" onclick="generateSoundscape()">
-            🎧 Generate Soundscape
+            🎧 Play Soundscape
           </button>
-          <div id="soundscape-loading" style="display:none; text-align:center; padding:16px 0;">
-            <div class="spinner"></div>
-            <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Generating your soundscape…</p>
-          </div>
           <div id="soundscape-player" style="display:none;">
             <div class="soundscape-player">
               <button class="soundscape-play-btn" id="play-btn" onclick="toggleSoundscape()">▶</button>
@@ -448,47 +445,25 @@
     window.saveReanalysis = saveReanalysis;
 
     // ── SOUNDSCAPE ──
-    let soundscapeAudio = null;
-    let soundscapePlaying = false;
+    function generateSoundscape() {
+      const mood = SoundscapePlayer.emotionsToMood(currentDream.emotions || []);
+      SoundscapePlayer.play(mood);
 
-    async function generateSoundscape() {
-      const btn = document.getElementById('soundscape-btn');
-      const loading = document.getElementById('soundscape-loading');
-      btn.style.display = 'none';
-      loading.style.display = 'block';
-
-      try {
-        const url = await getSoundscape(currentDream.emotions || [], currentDream.themes || []);
-        soundscapeAudio = new Audio(url);
-        soundscapeAudio.loop = true;
-        soundscapeAudio.volume = 0.7;
-
-        loading.style.display = 'none';
-        document.getElementById('soundscape-player').style.display = 'block';
-
-        soundscapeAudio.play();
-        soundscapePlaying = true;
-        document.getElementById('play-btn').textContent = '⏸';
-        document.getElementById('soundscape-bars').classList.add('playing');
-        document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
-      } catch {
-        loading.style.display = 'none';
-        btn.style.display = 'block';
-        btn.textContent = '⚠ Failed — tap to retry';
-      }
+      document.getElementById('soundscape-btn').style.display = 'none';
+      document.getElementById('soundscape-player').style.display = 'block';
+      document.getElementById('play-btn').textContent = '⏸';
+      document.getElementById('soundscape-bars').classList.add('playing');
+      document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
     }
 
     function toggleSoundscape() {
-      if (!soundscapeAudio) return;
-      if (soundscapePlaying) {
-        soundscapeAudio.pause();
-        soundscapePlaying = false;
+      if (SoundscapePlayer.isPlaying()) {
+        SoundscapePlayer.pause();
         document.getElementById('play-btn').textContent = '▶';
         document.getElementById('soundscape-bars').classList.remove('playing');
         document.getElementById('soundscape-sub').textContent = 'Paused';
       } else {
-        soundscapeAudio.play();
-        soundscapePlaying = true;
+        SoundscapePlayer.resume();
         document.getElementById('play-btn').textContent = '⏸';
         document.getElementById('soundscape-bars').classList.add('playing');
         document.getElementById('soundscape-sub').textContent = 'Now playing · Looping';
