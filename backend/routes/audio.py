@@ -2,7 +2,11 @@ import os
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from fastapi.responses import StreamingResponse
-from backend.models.schemas import AudioRequest, AudioResponse, SoundscapeRequest
+import json
+from backend.models.schemas import (
+    AudioRequest, AudioResponse, SoundscapeRequest,
+    SoundscapeMenuRequest, SoundscapeMenuResponse,
+)
 from backend.auth import verify_token
 
 router = APIRouter()
@@ -102,6 +106,88 @@ def _build_soundscape_prompt(emotions: list, themes: list) -> str:
     return prompt
 
 
+@router.post("/soundscape-menu", response_model=SoundscapeMenuResponse)
+async def get_soundscape_menu(req: SoundscapeMenuRequest, _=Depends(verify_token)):
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    if req.custom_prompt:
+        prompt = f"""Generate one ambient sleep soundscape for this description: "{req.custom_prompt}"
+
+Return JSON with this exact structure:
+{{
+  "soundscapes": [
+    {{
+      "name": "poetic 2-4 word name (specific, not generic)",
+      "description": "one atmospheric sentence capturing the feeling",
+      "emoji": "single relevant emoji",
+      "base": "one of: rain, ocean, forest, fire, space, storm, cafe",
+      "params": {{
+        "filter_freq": <200-8000, controls brightness>,
+        "lfo_rate": <0.03-0.5, controls movement speed>,
+        "lfo_depth": <0.05-0.35, controls variation>,
+        "gain": <0.15-0.75>
+      }}
+    }}
+  ]
+}}"""
+    else:
+        emotions_str = ", ".join(req.emotions[:5]) if req.emotions else "calm, reflective"
+        themes_str = ", ".join(req.themes[:3]) if req.themes else "rest"
+        prompt = f"""Generate 6 ambient sleep soundscapes for someone whose dream had these emotions: {emotions_str}, and themes: {themes_str}.
+
+Rules:
+- Names must be poetic and specific — think ambient album titles, not generic labels
+- Descriptions are one sentence, sensory, atmospheric
+- Vary the base types across the 6
+- Params should reflect the name's character (dark = low filter_freq, bright = high)
+
+Return JSON:
+{{
+  "soundscapes": [
+    {{
+      "name": "poetic 2-4 word title",
+      "description": "one atmospheric sentence",
+      "emoji": "single emoji",
+      "base": "rain|ocean|forest|fire|space|storm|cafe",
+      "params": {{
+        "filter_freq": <200-8000>,
+        "lfo_rate": <0.03-0.5>,
+        "lfo_depth": <0.05-0.35>,
+        "gain": <0.15-0.75>
+      }}
+    }}
+  ]
+}}"""
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        res = await client.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.9,
+                "response_format": {"type": "json_object"},
+            },
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq error {res.status_code}")
+        data = json.loads(res.json()["choices"][0]["message"]["content"])
+
+    soundscapes = data.get("soundscapes", [])
+    if not soundscapes:
+        raise HTTPException(status_code=500, detail="No soundscapes returned")
+
+    return SoundscapeMenuResponse(soundscapes=[
+        {"name": s.get("name",""), "description": s.get("description",""),
+         "emoji": s.get("emoji","🎵"), "base": s.get("base","rain"),
+         "params": s.get("params",{})}
+        for s in soundscapes
+    ])
+
+
 @router.post("/soundscape")
 async def generate_soundscape(req: SoundscapeRequest, _=Depends(verify_token)):
     api_key = os.getenv("ELEVENLABS_API_KEY")
@@ -117,8 +203,12 @@ async def generate_soundscape(req: SoundscapeRequest, _=Depends(verify_token)):
             json={"text": prompt, "duration_seconds": 22, "prompt_influence": 0.4},
         )
         if res.status_code != 200:
-            detail = res.json().get("detail", {})
-            raise HTTPException(status_code=500, detail=f"ElevenLabs error: {detail}")
+            print(f"ElevenLabs {res.status_code}: {res.text}")
+            try:
+                detail = res.json()
+            except Exception:
+                detail = res.text
+            raise HTTPException(status_code=500, detail=f"ElevenLabs error {res.status_code}: {detail}")
 
         audio_bytes = res.content
 

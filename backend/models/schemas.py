@@ -90,3 +90,21 @@ class PatternReport(BaseModel):
     narrative: str
     insight: str
     reflections: List[str]
+
+
+class SoundscapeMenuRequest(BaseModel):
+    emotions: List[str] = []
+    themes: List[str] = []
+    custom_prompt: Optional[str] = None
+
+
+class SoundscapeItem(BaseModel):
+    name: str
+    description: str
+    emoji: str
+    base: str
+    params: dict = {}
+
+
+class SoundscapeMenuResponse(BaseModel):
+    soundscapes: List[SoundscapeItem]

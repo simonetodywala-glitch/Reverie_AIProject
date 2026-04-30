@@ -18,7 +18,8 @@
       "WebFetch(domain:medium.com)",
       "Bash(grep -E \"\\\\.\\(html|js|py\\)$\")",
       "Bash(git pull *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(firebase deploy *)"
     ],
     "additionalDirectories": [
       "/Users/simonetodywala/Desktop"

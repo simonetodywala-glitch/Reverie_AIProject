@@ -86,54 +86,57 @@ const SoundscapePlayer = (() => {
   }
 
   const GENERATORS = {
-    rain(ac, dest) {
+    rain(ac, dest, p = {}) {
       const s = mkSrc(ac, brownBuf(ac));
-      const hp = mkFilter(ac, 'highpass', 600);
+      const hp = mkFilter(ac, 'highpass', p.filter_freq || 600);
       const lp = mkFilter(ac, 'lowpass', 10000);
-      const g = mkGain(ac, 0.55);
+      const g = mkGain(ac, p.gain || 0.55);
+      const wave = mkLFO(ac, p.lfo_rate || 0.05, p.lfo_depth || 0.08);
+      wave.gain.connect(g.gain);
       pipe([s, hp, lp, g], dest);
-      s.start();
-      return [s, hp, lp, g];
+      s.start(); wave.osc.start();
+      return [s, hp, lp, g, wave.osc, wave.gain];
     },
 
-    ocean(ac, dest) {
+    ocean(ac, dest, p = {}) {
       const s = mkSrc(ac, pinkBuf(ac));
-      const lp = mkFilter(ac, 'lowpass', 700);
-      const g = mkGain(ac, 0.5);
-      const wave = mkLFO(ac, 0.07, 0.22);
+      const lp = mkFilter(ac, 'lowpass', p.filter_freq || 700);
+      const g = mkGain(ac, p.gain || 0.5);
+      const wave = mkLFO(ac, p.lfo_rate || 0.07, p.lfo_depth || 0.22);
       wave.gain.connect(g.gain);
       pipe([s, lp, g], dest);
       s.start(); wave.osc.start();
       return [s, lp, g, wave.osc, wave.gain];
     },
 
-    forest(ac, dest) {
+    forest(ac, dest, p = {}) {
       const s = mkSrc(ac, whiteBuf(ac));
-      const bp = mkFilter(ac, 'bandpass', 1800, 0.6);
+      const bp = mkFilter(ac, 'bandpass', p.filter_freq || 1800, 0.6);
       const lp = mkFilter(ac, 'lowpass', 5000);
-      const g = mkGain(ac, 0.28);
-      const wind = mkLFO(ac, 0.12, 0.1);
+      const g = mkGain(ac, p.gain || 0.28);
+      const wind = mkLFO(ac, p.lfo_rate || 0.12, p.lfo_depth || 0.1);
       wind.gain.connect(g.gain);
       pipe([s, bp, lp, g], dest);
       s.start(); wind.osc.start();
       return [s, bp, lp, g, wind.osc, wind.gain];
     },
 
-    fire(ac, dest) {
+    fire(ac, dest, p = {}) {
       const s = mkSrc(ac, brownBuf(ac));
       const hp = mkFilter(ac, 'highpass', 60);
-      const lp = mkFilter(ac, 'lowpass', 500);
-      const g = mkGain(ac, 0.65);
-      const flicker = mkLFO(ac, 0.25, 0.12);
+      const lp = mkFilter(ac, 'lowpass', p.filter_freq || 500);
+      const g = mkGain(ac, p.gain || 0.65);
+      const flicker = mkLFO(ac, p.lfo_rate || 0.25, p.lfo_depth || 0.12);
       flicker.gain.connect(g.gain);
       pipe([s, hp, lp, g], dest);
       s.start(); flicker.osc.start();
       return [s, hp, lp, g, flicker.osc, flicker.gain];
     },
 
-    space(ac, dest) {
-      const freqs = [55, 82.5, 110, 55.4, 82.9];
-      const g = mkGain(ac, 0.13);
+    space(ac, dest, p = {}) {
+      const base = p.filter_freq ? p.filter_freq / 2 : 55;
+      const freqs = [base, base*1.5, base*2, base*1.007, base*1.507];
+      const g = mkGain(ac, p.gain || 0.13);
       const oscs = freqs.map(f => {
         const o = ac.createOscillator();
         o.type = 'sine'; o.frequency.value = f;
@@ -148,13 +151,13 @@ const SoundscapePlayer = (() => {
       return [...oscs, g, ns, nlp, ng];
     },
 
-    storm(ac, dest) {
+    storm(ac, dest, p = {}) {
       const s1 = mkSrc(ac, brownBuf(ac));
       const s2 = mkSrc(ac, brownBuf(ac));
-      const lp = mkFilter(ac, 'lowpass', 300);
-      const g1 = mkGain(ac, 0.75);
-      const g2 = mkGain(ac, 0.45);
-      const surge = mkLFO(ac, 0.04, 0.28);
+      const lp = mkFilter(ac, 'lowpass', p.filter_freq || 300);
+      const g1 = mkGain(ac, p.gain || 0.75);
+      const g2 = mkGain(ac, (p.gain || 0.75) * 0.6);
+      const surge = mkLFO(ac, p.lfo_rate || 0.04, p.lfo_depth || 0.28);
       surge.gain.connect(g1.gain);
       pipe([s1, g1], dest);
       pipe([s2, lp, g2], dest);
@@ -162,12 +165,12 @@ const SoundscapePlayer = (() => {
       return [s1, s2, lp, g1, g2, surge.osc, surge.gain];
     },
 
-    cafe(ac, dest) {
+    cafe(ac, dest, p = {}) {
       const s = mkSrc(ac, whiteBuf(ac));
-      const bp1 = mkFilter(ac, 'bandpass', 500, 0.4);
-      const bp2 = mkFilter(ac, 'bandpass', 1400, 0.6);
-      const g = mkGain(ac, 0.18);
-      const murmur = mkLFO(ac, 0.35, 0.06);
+      const bp1 = mkFilter(ac, 'bandpass', p.filter_freq || 500, 0.4);
+      const bp2 = mkFilter(ac, 'bandpass', (p.filter_freq || 500) * 2.8, 0.6);
+      const g = mkGain(ac, p.gain || 0.18);
+      const murmur = mkLFO(ac, p.lfo_rate || 0.35, p.lfo_depth || 0.06);
       murmur.gain.connect(g.gain);
       s.connect(bp1); s.connect(bp2);
       bp1.connect(g); bp2.connect(g); g.connect(dest);
@@ -176,7 +179,6 @@ const SoundscapePlayer = (() => {
     },
   };
 
-  // Maps dream emotions to the best matching soundscape mood
   const EMOTION_MOOD_MAP = {
     rain:   ['sadness','grief','peaceful','anxiety','relief'],
     ocean:  ['longing','hope','excitement','joy','wonder'],
@@ -190,13 +192,13 @@ const SoundscapePlayer = (() => {
   return {
     current: null,
 
-    play(mood) {
+    play(mood, params = {}) {
       this.stop();
       const ac = getCtx();
       _master = mkGain(ac, 0);
       _master.connect(ac.destination);
       _master.gain.setTargetAtTime(1, ac.currentTime, 0.8);
-      _nodes = (GENERATORS[mood] || GENERATORS.rain)(ac, _master);
+      _nodes = (GENERATORS[mood] || GENERATORS.rain)(ac, _master, params);
       _playing = true;
       _current = mood;
       this.current = mood;

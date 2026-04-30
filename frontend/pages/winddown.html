@@ -19,33 +19,60 @@
     .routine-name { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
     .routine-desc { font-size: 13px; color: var(--text-dim); }
 
-    /* ── MOOD CHIPS ── */
-    .mood-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .mood-chip {
-      padding: 9px 16px; border-radius: 100px;
-      background: var(--surface); color: var(--text-dim);
-      font-size: 13.5px; font-weight: 600; cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.07);
-      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+    /* ── SOUNDSCAPE CARDS ── */
+    .sc-loading { display: flex; align-items: center; gap: 10px; padding: 18px 0; font-size: 13px; color: var(--text-muted); }
+    .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .sc-card {
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px; padding: 16px 14px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      position: relative;
     }
-    .mood-chip:hover  { background: rgba(124,58,237,0.18); color: var(--text); }
-    .mood-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .mood-chip:active { transform: scale(0.95); }
+    .sc-card:hover  { background: var(--card); transform: translateY(-2px); }
+    .sc-card:active { transform: scale(0.97); }
+    .sc-card.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(155,93,229,0.06));
+    }
+    .sc-card-emoji { font-size: 26px; margin-bottom: 9px; display: block; }
+    .sc-card-name  { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 5px; line-height: 1.25; }
+    .sc-card-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+    .sc-card.active .sc-card-name { color: var(--accent-soft); }
+    .sc-playing-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      position: absolute; top: 12px; right: 12px;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
 
-    /* ── RECOMMENDATION CARD ── */
-    .rec-card {
-      background: linear-gradient(135deg, rgba(124,58,237,0.14), rgba(155,93,229,0.07));
-      border: 1px solid rgba(155,93,229,0.28); border-radius: 18px;
-      padding: 16px 18px; margin-top: 8px; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 14px; cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
+    /* ── CUSTOM INPUT ── */
+    .sc-divider {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em;
+      text-transform: uppercase; margin: 16px 0 12px;
     }
-    .rec-card:hover { background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.12)); transform: translateY(-1px); }
-    .rec-card.active { border-color: var(--accent); }
-    .rec-emoji { font-size: 32px; flex-shrink: 0; }
-    .rec-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 3px; }
-    .rec-title { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); }
-    .rec-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .sc-divider::before, .sc-divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07);
+    }
+    .sc-input-row { display: flex; gap: 8px; }
+    .sc-input {
+      flex: 1; font-size: 13px; padding: 11px 14px; border-radius: 12px;
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text); outline: none;
+      transition: border-color 0.2s;
+    }
+    .sc-input:focus { border-color: rgba(124,58,237,0.4); }
+    .sc-input::placeholder { color: var(--text-muted); }
+    .sc-gen-btn {
+      padding: 0 16px; border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 18px; font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.4);
+      display: flex; align-items: center; justify-content: center; min-width: 46px;
+    }
+    .sc-gen-btn:active { transform: scale(0.93); }
+    .sc-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ── PLAYER ── */
     .soundscape-player {
@@ -123,25 +150,21 @@
       <!-- ── SOUNDSCAPE SECTION ── -->
       <div class="section-label">Soundscape</div>
 
-      <div id="rec-section" style="display:none;">
-        <div class="rec-card" id="rec-card">
-          <div class="rec-emoji" id="rec-emoji">🌌</div>
-          <div>
-            <div class="rec-label">Recommended for you</div>
-            <div class="rec-title" id="rec-title">Space</div>
-            <div class="rec-sub" id="rec-sub">Based on your last dream</div>
-          </div>
-        </div>
+      <div id="sc-loading" class="sc-loading">
+        <div class="spinner"></div>
+        Curating tonight's soundscapes…
       </div>
 
-      <div class="mood-grid" id="mood-grid">
-        <div class="mood-chip" data-mood="rain">🌧️ Rain</div>
-        <div class="mood-chip" data-mood="ocean">🌊 Ocean</div>
-        <div class="mood-chip" data-mood="forest">🌲 Forest</div>
-        <div class="mood-chip" data-mood="fire">🔥 Fire</div>
-        <div class="mood-chip" data-mood="space">🌌 Space</div>
-        <div class="mood-chip" data-mood="storm">⛈️ Storm</div>
-        <div class="mood-chip" data-mood="cafe">☕ Café</div>
+      <div id="sc-grid" class="sc-grid" style="display:none;"></div>
+
+      <div id="sc-custom" style="display:none;">
+        <div class="sc-divider">or describe your own</div>
+        <div class="sc-input-row">
+          <input class="sc-input" id="sc-input" type="text"
+            placeholder="a warm cabin with rain outside…"
+            onkeydown="if(event.key==='Enter') generateCustomSoundscape()">
+          <button class="sc-gen-btn" id="sc-gen-btn" onclick="generateCustomSoundscape()">→</button>
+        </div>
       </div>
 
       <div id="player-wrap"></div>
