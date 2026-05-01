@@ -218,39 +218,19 @@
     import { requireAuth } from '../js/auth.js';
     import { getDreams }   from '../js/firebase.js';
 
-    const MOODS = {
-      rain:   { emoji: '🌧️', label: 'Rain',   emotions: ['sadness','grief','peaceful','anxiety'] },
-      ocean:  { emoji: '🌊', label: 'Ocean',  emotions: ['longing','hope','excitement','joy'] },
-      forest: { emoji: '🌲', label: 'Forest', emotions: ['peaceful','tenderness','hope','relief'] },
-      fire:   { emoji: '🔥', label: 'Fire',   emotions: ['dread','fear','restlessness','pride'] },
-      space:  { emoji: '🌌', label: 'Space',  emotions: ['awe','wonder','confusion','nostalgia'] },
-      storm:  { emoji: '⛈️', label: 'Storm',  emotions: ['anxiety','frustration','fear','restlessness'] },
-      cafe:   { emoji: '☕', label: 'Café',   emotions: ['nostalgia','tenderness','joy','longing'] },
-    };
+    let currentCard  = null;   // { name, base, params }
+    let isPlaying    = false;
 
-
-    let isPlaying   = false;
-    let currentMood = null;
-
-    function setActiveChip(mood) {
-      document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
-      const chip = document.querySelector(`.mood-chip[data-mood="${mood}"]`);
-      if (chip) chip.classList.add('active');
-      const recCard = document.getElementById('rec-card');
-      if (recCard) recCard.classList.toggle('active', recCard.dataset.mood === mood);
-    }
-
-    function showPlayer(mood, playing) {
-      const wrap = document.getElementById('player-wrap');
-      const m = MOODS[mood];
-      wrap.innerHTML = `
-        <div class="soundscape-player">
+    // ── PLAYER ──────────────────────────────────────────────────
+    function showPlayer(card, playing) {
+      document.getElementById('player-wrap').innerHTML = `
+        <div class="soundscape-player" style="margin-top:14px;">
           <button class="soundscape-play-btn" id="play-btn" onclick="togglePlay()">
             ${playing ? '⏸' : '▶'}
           </button>
           <div class="soundscape-info">
-            <div class="soundscape-title">${m.emoji} ${m.label} Soundscape</div>
-            <div class="soundscape-sub" id="player-sub">${playing ? 'Now playing · Looping' : 'Tap to play'}</div>
+            <div class="soundscape-title">${card.emoji} ${card.name}</div>
+            <div class="soundscape-sub" id="player-sub">${playing ? 'Now playing · Looping' : 'Paused'}</div>
           </div>
           <div class="soundscape-bars ${playing ? 'playing' : ''}" id="soundscape-bars">
             <div class="soundscape-bar" style="height:10px;"></div>
@@ -262,73 +242,141 @@
         </div>`;
     }
 
-    function showLoading(mood) {
-      const m = MOODS[mood];
-      document.getElementById('player-wrap').innerHTML = `
-        <div class="player-loading">
-          <div class="spinner"></div>
-          Generating ${m.label} soundscape…
-        </div>`;
-    }
-
-    function selectMood(mood) {
-      if (currentMood === mood && SoundscapePlayer.isPlaying()) {
-        togglePlay();
+    function playCard(card) {
+      if (currentCard?.name === card.name && SoundscapePlayer.isPlaying()) {
+        SoundscapePlayer.pause();
+        isPlaying = false;
+        setCardActive(card.name, false);
+        document.getElementById('play-btn')?.textContent && (document.getElementById('play-btn').textContent = '▶');
+        document.getElementById('soundscape-bars')?.classList.remove('playing');
+        document.getElementById('player-sub') && (document.getElementById('player-sub').textContent = 'Paused');
         return;
       }
-
-      if (currentMood && currentMood !== mood) SoundscapePlayer.stop();
-      currentMood = mood;
-      setActiveChip(mood);
-
-      SoundscapePlayer.play(mood);
+      SoundscapePlayer.stop();
+      currentCard = card;
+      SoundscapePlayer.play(card.base, card.params || {});
       isPlaying = true;
-      showPlayer(mood, true);
+      setCardActive(card.name, true);
+      showPlayer(card, true);
     }
 
     function togglePlay() {
-      if (!currentMood) return;
+      if (!currentCard) return;
       if (isPlaying) {
         SoundscapePlayer.pause();
         isPlaying = false;
         document.getElementById('play-btn').textContent = '▶';
         document.getElementById('soundscape-bars').classList.remove('playing');
         document.getElementById('player-sub').textContent = 'Paused';
+        setCardActive(currentCard.name, false);
       } else {
         SoundscapePlayer.resume();
         isPlaying = true;
         document.getElementById('play-btn').textContent = '⏸';
         document.getElementById('soundscape-bars').classList.add('playing');
         document.getElementById('player-sub').textContent = 'Now playing · Looping';
+        setCardActive(currentCard.name, true);
       }
     }
 
-    window.selectMood  = selectMood;
-    window.togglePlay  = togglePlay;
+    function setCardActive(name, active) {
+      document.querySelectorAll('.sc-card').forEach(c => {
+        const isThis = c.dataset.name === name;
+        c.classList.toggle('active', isThis && active);
+        const dot = c.querySelector('.sc-playing-dot');
+        if (dot) dot.style.display = (isThis && active) ? 'block' : 'none';
+      });
+    }
 
-    document.querySelectorAll('.mood-chip').forEach(chip => {
-      chip.addEventListener('click', () => selectMood(chip.dataset.mood));
-    });
+    window.togglePlay = togglePlay;
 
+    // ── RENDER CARDS ────────────────────────────────────────────
+    function renderCards(soundscapes) {
+      const grid = document.getElementById('sc-grid');
+      grid.innerHTML = soundscapes.map(s => `
+        <div class="sc-card" data-name="${s.name.replace(/"/g,'')}"
+             onclick="window._playCard(${JSON.stringify(s).replace(/</g,'\\u003c')})">
+          <div class="sc-playing-dot" style="display:none;"></div>
+          <span class="sc-card-emoji">${s.emoji}</span>
+          <div class="sc-card-name">${s.name}</div>
+          <div class="sc-card-desc">${s.description}</div>
+        </div>`).join('');
+      grid.style.display = 'grid';
+      document.getElementById('sc-loading').style.display = 'none';
+      document.getElementById('sc-custom').style.display = 'block';
+    }
+
+    function showFallbackGrid() {
+      const defaults = [
+        { name:'Rain',   description:'Steady rainfall, soft and still.',      emoji:'🌧️', base:'rain',   params:{} },
+        { name:'Ocean',  description:'Waves rolling in, slow and open.',       emoji:'🌊', base:'ocean',  params:{} },
+        { name:'Forest', description:'Wind through trees, leaves breathing.',  emoji:'🌲', base:'forest', params:{} },
+        { name:'Fire',   description:'Crackling embers, warm and close.',      emoji:'🔥', base:'fire',   params:{} },
+        { name:'Space',  description:'Deep cosmic drone, vast and weightless.',emoji:'🌌', base:'space',  params:{} },
+        { name:'Storm',  description:'Rolling thunder, safe inside.',          emoji:'⛈️', base:'storm',  params:{} },
+        { name:'Café',   description:'Quiet murmur, espresso and warmth.',     emoji:'☕', base:'cafe',   params:{} },
+      ];
+      renderCards(defaults);
+    }
+
+    window._playCard = function(card) { playCard(card); };
+
+    // ── CUSTOM SOUNDSCAPE ────────────────────────────────────────
+    window.generateCustomSoundscape = async function() {
+      const input = document.getElementById('sc-input');
+      const btn   = document.getElementById('sc-gen-btn');
+      const prompt = input.value.trim();
+      if (!prompt) return;
+
+      btn.disabled = true;
+      btn.textContent = '…';
+      input.disabled = true;
+
+      try {
+        const data = await getSoundscapeMenu([], [], prompt);
+        const card = data.soundscapes[0];
+        if (!card) throw new Error();
+
+        // prepend to grid
+        const grid = document.getElementById('sc-grid');
+        const el = document.createElement('div');
+        el.className = 'sc-card';
+        el.dataset.name = card.name;
+        el.style.borderColor = 'rgba(155,93,229,0.35)';
+        el.innerHTML = `
+          <div class="sc-playing-dot" style="display:none;"></div>
+          <span class="sc-card-emoji">${card.emoji}</span>
+          <div class="sc-card-name">${card.name}</div>
+          <div class="sc-card-desc">${card.description}</div>
+          <div style="font-size:10px;color:var(--accent-soft);margin-top:6px;font-weight:700;letter-spacing:0.05em;">✦ CREATED FOR YOU</div>`;
+        el.onclick = () => playCard(card);
+        grid.prepend(el);
+
+        input.value = '';
+        playCard(card);
+      } catch {
+        input.style.borderColor = 'rgba(239,68,68,0.5)';
+        setTimeout(() => input.style.borderColor = '', 2000);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '→';
+        input.disabled = false;
+      }
+    };
+
+    // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
-      if (!dreams.length) return;
+      const latest   = dreams[0];
+      const emotions = latest?.emotions || [];
+      const themes   = latest?.themes   || [];
 
-      const latest  = dreams[0];
-      const emotions = latest.emotions || [];
-      if (!emotions.length) return;
-
-      const rec  = SoundscapePlayer.emotionsToMood(emotions);
-      const m    = MOODS[rec];
-
-      const recSection = document.getElementById('rec-section');
-      const recCard    = document.getElementById('rec-card');
-      document.getElementById('rec-emoji').textContent = m.emoji;
-      document.getElementById('rec-title').textContent = `${m.label} Soundscape`;
-      document.getElementById('rec-sub').textContent   = `Based on your last dream's mood`;
-      recCard.dataset.mood = rec;
-      recCard.onclick      = () => selectMood(rec);
-      recSection.style.display = 'block';
+      try {
+        const data = await getSoundscapeMenu(emotions, themes);
+        renderCards(data.soundscapes);
+      } catch {
+        showFallbackGrid();
+      }
     });
   </script>
 

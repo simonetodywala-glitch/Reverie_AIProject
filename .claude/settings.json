@@ -19,7 +19,9 @@
       "Bash(grep -E \"\\\\.\\(html|js|py\\)$\")",
       "Bash(git pull *)",
       "Bash(git stash *)",
-      "Bash(firebase deploy *)"
+      "Bash(firebase deploy *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)"
     ],
     "additionalDirectories": [
       "/Users/simonetodywala/Desktop"
