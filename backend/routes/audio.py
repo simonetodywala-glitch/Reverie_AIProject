@@ -198,6 +198,7 @@ Return JSON:
 
     soundscapes = data.get("soundscapes", [])
     if not soundscapes:
+        print("Groq returned no soundscapes:", data)
         raise HTTPException(status_code=500, detail="No soundscapes returned")
 
     # Fetch real audio from Freesound in parallel (if key available)

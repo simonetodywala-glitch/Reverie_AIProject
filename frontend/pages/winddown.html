@@ -385,7 +385,7 @@
         playCard(card);
       } catch (e) {
         console.error('Custom soundscape error:', e);
-        errEl.textContent = 'Could not generate — try again in a moment.';
+        errEl.textContent = e?.message || 'Could not generate — try again in a moment.';
       } finally {
         btn.disabled = false;
         btn.textContent = '→';
