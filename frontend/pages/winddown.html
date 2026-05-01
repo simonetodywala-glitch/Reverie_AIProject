@@ -181,28 +181,10 @@
 
       <!-- ── TONIGHT'S ROUTINE ── -->
       <div class="section-label" style="margin-top:24px;">Tonight's routine</div>
-
-      <div class="routine-card" onclick="startBreathing()">
-        <div class="routine-icon">🫁</div>
-        <div>
-          <div class="routine-name">Breathing Exercise</div>
-          <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
-        </div>
-      </div>
-
-      <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
-        <div class="routine-icon">📓</div>
-        <div>
-          <div class="routine-name">Reflection Journal</div>
-          <div class="routine-desc">3 guided prompts · 5 minutes</div>
-        </div>
-      </div>
-
-      <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
-        <div class="routine-icon">📖</div>
-        <div>
-          <div class="routine-name">AI Bedtime Story</div>
-          <div class="routine-desc">Generated from your last dream · ElevenLabs</div>
+      <div id="routine-wrap">
+        <div class="sc-loading">
+          <div class="spinner"></div>
+          Personalising your routine…
         </div>
       </div>
 
@@ -406,6 +388,62 @@
       }
     };
 
+    // ── ROUTINE ──────────────────────────────────────────────────
+    const ROUTINE_META = {
+      breathing: { icon: '🫁', name: 'Breathing Exercise', action: 'startBreathing()' },
+      journaling: { icon: '📓', name: 'Reflection Journal', action: "alert('Journaling prompts coming soon!')" },
+      story:      { icon: '📖', name: 'AI Bedtime Story',   action: "alert('Bedtime stories coming soon!')" },
+    };
+
+    function renderRoutine(intention, items) {
+      const wrap = document.getElementById('routine-wrap');
+      const intentionHtml = intention ? `
+        <div class="intention-card">
+          <div class="intention-label">Tonight's intention</div>
+          <div class="intention-text">${intention}</div>
+        </div>` : '';
+
+      const cardsHtml = items.map(item => {
+        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type, action: '' };
+        return `
+          <div class="routine-card" onclick="${meta.action}">
+            <div class="routine-icon">${meta.icon}</div>
+            <div>
+              <div class="routine-name">${meta.name}</div>
+              ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = intentionHtml + cardsHtml;
+    }
+
+    function renderFallbackRoutine() {
+      const wrap = document.getElementById('routine-wrap');
+      wrap.innerHTML = `
+        <div class="routine-card" onclick="startBreathing()">
+          <div class="routine-icon">🫁</div>
+          <div>
+            <div class="routine-name">Breathing Exercise</div>
+            <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
+          </div>
+        </div>
+        <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
+          <div class="routine-icon">📓</div>
+          <div>
+            <div class="routine-name">Reflection Journal</div>
+            <div class="routine-desc">3 guided prompts · 5 minutes</div>
+          </div>
+        </div>
+        <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
+          <div class="routine-icon">📖</div>
+          <div>
+            <div class="routine-name">AI Bedtime Story</div>
+            <div class="routine-desc">Generated from your last dream</div>
+          </div>
+        </div>`;
+    }
+
     // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
@@ -413,11 +451,21 @@
       const emotions = latest?.emotions || [];
       const themes   = latest?.themes   || [];
 
-      try {
-        const data = await getSoundscapeMenu(emotions, themes);
-        renderCards(data.soundscapes);
-      } catch {
+      const [scResult, routineResult] = await Promise.allSettled([
+        getSoundscapeMenu(emotions, themes),
+        getWinddownRoutine(emotions, themes),
+      ]);
+
+      if (scResult.status === 'fulfilled') {
+        renderCards(scResult.value.soundscapes);
+      } else {
         showFallbackGrid();
+      }
+
+      if (routineResult.status === 'fulfilled') {
+        renderRoutine(routineResult.value.intention, routineResult.value.items);
+      } else {
+        renderFallbackRoutine();
       }
     });
   </script>
