@@ -1,4 +1,5 @@
 import os
+import asyncio
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from fastapi.responses import StreamingResponse
@@ -106,57 +107,76 @@ def _build_soundscape_prompt(emotions: list, themes: list) -> str:
     return prompt
 
 
+async def _freesound_search(query: str, api_key: str) -> str | None:
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.get(
+                "https://freesound.org/apiv2/search/text/",
+                params={
+                    "query": query,
+                    "token": api_key,
+                    "fields": "previews,duration",
+                    "filter": "duration:[15 TO 180] tag:loop",
+                    "page_size": 5,
+                    "sort": "score",
+                },
+            )
+            if res.status_code != 200:
+                return None
+            for r in res.json().get("results", []):
+                url = r.get("previews", {}).get("preview-hq-mp3") or r.get("previews", {}).get("preview-lq-mp3")
+                if url:
+                    return url
+    except Exception:
+        pass
+    return None
+
+
 @router.post("/soundscape-menu", response_model=SoundscapeMenuResponse)
 async def get_soundscape_menu(req: SoundscapeMenuRequest, _=Depends(verify_token)):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
 
+    SEARCH_QUERY_SCHEMA = '"search_query": "3-6 words for finding a matching loopable ambient recording on Freesound.org"'
+
     if req.custom_prompt:
         prompt = f"""Generate one ambient sleep soundscape for this description: "{req.custom_prompt}"
-
-Return JSON with this exact structure:
-{{
-  "soundscapes": [
-    {{
-      "name": "poetic 2-4 word name (specific, not generic)",
-      "description": "one atmospheric sentence capturing the feeling",
-      "emoji": "single relevant emoji",
-      "base": "one of: rain, ocean, forest, fire, space, storm, cafe",
-      "params": {{
-        "filter_freq": <200-8000, controls brightness>,
-        "lfo_rate": <0.03-0.5, controls movement speed>,
-        "lfo_depth": <0.05-0.35, controls variation>,
-        "gain": <0.15-0.75>
-      }}
-    }}
-  ]
-}}"""
-    else:
-        emotions_str = ", ".join(req.emotions[:5]) if req.emotions else "calm, reflective"
-        themes_str = ", ".join(req.themes[:3]) if req.themes else "rest"
-        prompt = f"""Generate 6 ambient sleep soundscapes for someone whose dream had these emotions: {emotions_str}, and themes: {themes_str}.
-
-Rules:
-- Names must be poetic and specific — think ambient album titles, not generic labels
-- Descriptions are one sentence, sensory, atmospheric
-- Vary the base types across the 6
-- Params should reflect the name's character (dark = low filter_freq, bright = high)
 
 Return JSON:
 {{
   "soundscapes": [
     {{
-      "name": "poetic 2-4 word title",
+      "name": "poetic 2-4 word name",
       "description": "one atmospheric sentence",
+      "emoji": "single relevant emoji",
+      "base": "one of: rain, ocean, forest, fire, space, storm, cafe",
+      {SEARCH_QUERY_SCHEMA},
+      "params": {{"filter_freq": <200-8000>, "lfo_rate": <0.03-0.5>, "lfo_depth": <0.05-0.35>, "gain": <0.15-0.75>}}
+    }}
+  ]
+}}"""
+    else:
+        emotions_str = ", ".join(req.emotions[:5]) if req.emotions else "calm, reflective"
+        themes_str   = ", ".join(req.themes[:3])   if req.themes   else "rest"
+        prompt = f"""Generate 6 ambient sleep soundscapes for someone whose dream had emotions: {emotions_str}, themes: {themes_str}.
+
+Rules:
+- Names are poetic, specific — think ambient album titles
+- Descriptions are one atmospheric sentence
+- Vary base types across the 6
+- search_query should find a real loopable recording (e.g. "gentle rain loop ambient", "ocean waves shore loop")
+
+Return JSON:
+{{
+  "soundscapes": [
+    {{
+      "name": "poetic title",
+      "description": "one sentence",
       "emoji": "single emoji",
       "base": "rain|ocean|forest|fire|space|storm|cafe",
-      "params": {{
-        "filter_freq": <200-8000>,
-        "lfo_rate": <0.03-0.5>,
-        "lfo_depth": <0.05-0.35>,
-        "gain": <0.15-0.75>
-      }}
+      {SEARCH_QUERY_SCHEMA},
+      "params": {{"filter_freq": <200-8000>, "lfo_rate": <0.03-0.5>, "lfo_depth": <0.05-0.35>, "gain": <0.15-0.75>}}
     }}
   ]
 }}"""
@@ -180,11 +200,24 @@ Return JSON:
     if not soundscapes:
         raise HTTPException(status_code=500, detail="No soundscapes returned")
 
-    return SoundscapeMenuResponse(soundscapes=[
-        {"name": s.get("name",""), "description": s.get("description",""),
-         "emoji": s.get("emoji","🎵"), "base": s.get("base","rain"),
-         "params": s.get("params",{})}
+    # Fetch real audio from Freesound in parallel (if key available)
+    freesound_key = os.getenv("FREESOUND_API_KEY")
+    audio_urls = await asyncio.gather(*[
+        _freesound_search(s.get("search_query", s.get("base", "ambient loop")), freesound_key)
         for s in soundscapes
+    ]) if freesound_key else [None] * len(soundscapes)
+
+    return SoundscapeMenuResponse(soundscapes=[
+        {
+            "name":         s.get("name", ""),
+            "description":  s.get("description", ""),
+            "emoji":        s.get("emoji", "🎵"),
+            "base":         s.get("base", "rain"),
+            "params":       s.get("params", {}),
+            "search_query": s.get("search_query"),
+            "audio_url":    url,
+        }
+        for s, url in zip(soundscapes, audio_urls)
     ])
 
 
