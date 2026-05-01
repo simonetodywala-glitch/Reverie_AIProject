@@ -6,6 +6,11 @@
   initial-value: 48px;
 }
 
+@view-transition {
+    navigation: auto;
+}
+
+
 :root, ::backdrop{
     --font: "Inter", sans-serif;
 
@@ -52,8 +57,15 @@ body{
     overflow-y: auto;
 }
 
-.moon {
+.moon-wrapper {
     justify-self: center;
+}
+
+.moon-wrapper.animate {
+    animation: moon-enter 1s cubic-bezier(.7,.7,.3,1) forwards;
+}
+
+.moon {
     width: var(--moon-size);
     height: var(--moon-size);
     border-radius: 50%;
@@ -63,9 +75,10 @@ body{
         0 0 calc(var(--glow-size) / 2.0) calc(var(--glow-size) / 2.0) oklch(from var(--container) l c h / 0.2),
         0 0 calc(var(--glow-size) / 4.0) calc(var(--glow-size) / 4.0) oklch(from var(--container) l c h / 0.2),
         0 0 calc(var(--glow-size) / 8.0) calc(var(--glow-size) / 8.0) oklch(from var(--container) l c h / 0.4);
-    animation:
-        moon-enter 1s cubic-bezier(.7,.7,.3,1) forwards,
-        moon-pulse 3s ease-in-out 1s infinite alternate;
+}
+
+.moon.animate {
+    animation: moon-pulse 3s ease-in-out 1s infinite alternate;
 }
 
 @keyframes moon-enter{
@@ -122,5 +135,20 @@ h1, h2, h3, h4, h5, h6 {
 .onBackgroundText {
     font-size: var(--font-size);
     font-weight: bold;
-    padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer) * 2)
+    padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer) * 2);
+
+    animation: text-enter 1s cubic-bezier(.7,.7,.3,1) forwards;
+}
+
+@keyframes text-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
 }

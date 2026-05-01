@@ -12,9 +12,20 @@
         <link rel="stylesheet" href="components.css">
     </head>
     <body>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!sessionStorage.getItem('moon-animated')) {
+                    document.querySelector('.moon-wrapper').classList.add('animate');
+                    document.querySelector('.moon').classList.add('animate');
+                    sessionStorage.setItem('moon-animated', true);
+                }
+            });
+        </script>
         <div class="app">
             <div class="head">
-                <div class="moon"></div>
+                <div class="moon-wrapper">
+                    <div class="moon"></div>
+                </div>
                 <h1 class="onBackgroundText">Good evening, Gemmy!<br>Ready to wind down?</h1>               
             </div>
         </div>
