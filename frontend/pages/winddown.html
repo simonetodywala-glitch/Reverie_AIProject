@@ -218,8 +218,9 @@
     import { requireAuth } from '../js/auth.js';
     import { getDreams }   from '../js/firebase.js';
 
-    let currentCard  = null;   // { name, base, params }
+    let currentCard  = null;
     let isPlaying    = false;
+    let currentAudio = null;   // HTMLAudioElement when using a real audio URL
 
     // ── PLAYER ──────────────────────────────────────────────────
     function showPlayer(card, playing) {
@@ -242,41 +243,61 @@
         </div>`;
     }
 
+    function _stopAll() {
+      SoundscapePlayer.stop();
+      if (currentAudio) { currentAudio.pause(); currentAudio.src = ''; currentAudio = null; }
+      isPlaying = false;
+    }
+
     function playCard(card) {
-      if (currentCard?.name === card.name && SoundscapePlayer.isPlaying()) {
-        SoundscapePlayer.pause();
-        isPlaying = false;
-        setCardActive(card.name, false);
-        document.getElementById('play-btn')?.textContent && (document.getElementById('play-btn').textContent = '▶');
-        document.getElementById('soundscape-bars')?.classList.remove('playing');
-        document.getElementById('player-sub') && (document.getElementById('player-sub').textContent = 'Paused');
+      if (currentCard?.name === card.name && isPlaying) {
+        _pauseCurrent();
         return;
       }
-      SoundscapePlayer.stop();
+      _stopAll();
       currentCard = card;
-      SoundscapePlayer.play(card.base, card.params || {});
+
+      if (card.audio_url) {
+        currentAudio = new Audio(card.audio_url);
+        currentAudio.loop = true;
+        currentAudio.volume = 0.72;
+        currentAudio.play().catch(() => {
+          // URL failed — fall back to Web Audio
+          currentAudio = null;
+          SoundscapePlayer.play(card.base, card.params || {});
+        });
+      } else {
+        SoundscapePlayer.play(card.base, card.params || {});
+      }
+
       isPlaying = true;
       setCardActive(card.name, true);
       showPlayer(card, true);
     }
 
+    function _pauseCurrent() {
+      if (currentAudio) currentAudio.pause();
+      else SoundscapePlayer.pause();
+      isPlaying = false;
+      setCardActive(currentCard?.name, false);
+      document.getElementById('play-btn')?.innerText !== undefined && (document.getElementById('play-btn').textContent = '▶');
+      document.getElementById('soundscape-bars')?.classList.remove('playing');
+      if (document.getElementById('player-sub')) document.getElementById('player-sub').textContent = 'Paused';
+    }
+
+    function _resumeCurrent() {
+      if (currentAudio) currentAudio.play();
+      else SoundscapePlayer.resume();
+      isPlaying = true;
+      setCardActive(currentCard?.name, true);
+      document.getElementById('play-btn').textContent = '⏸';
+      document.getElementById('soundscape-bars').classList.add('playing');
+      document.getElementById('player-sub').textContent = 'Now playing · Looping';
+    }
+
     function togglePlay() {
       if (!currentCard) return;
-      if (isPlaying) {
-        SoundscapePlayer.pause();
-        isPlaying = false;
-        document.getElementById('play-btn').textContent = '▶';
-        document.getElementById('soundscape-bars').classList.remove('playing');
-        document.getElementById('player-sub').textContent = 'Paused';
-        setCardActive(currentCard.name, false);
-      } else {
-        SoundscapePlayer.resume();
-        isPlaying = true;
-        document.getElementById('play-btn').textContent = '⏸';
-        document.getElementById('soundscape-bars').classList.add('playing');
-        document.getElementById('player-sub').textContent = 'Now playing · Looping';
-        setCardActive(currentCard.name, true);
-      }
+      if (isPlaying) _pauseCurrent(); else _resumeCurrent();
     }
 
     function setCardActive(name, active) {
@@ -332,12 +353,20 @@
       btn.textContent = '…';
       input.disabled = true;
 
+      let errEl = document.getElementById('sc-custom-err');
+      if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.id = 'sc-custom-err';
+        errEl.style.cssText = 'font-size:12px;color:rgba(239,100,100,0.85);margin-top:6px;';
+        document.getElementById('sc-custom').appendChild(errEl);
+      }
+      errEl.textContent = '';
+
       try {
         const data = await getSoundscapeMenu([], [], prompt);
         const card = data.soundscapes[0];
-        if (!card) throw new Error();
+        if (!card) throw new Error('No soundscape returned');
 
-        // prepend to grid
         const grid = document.getElementById('sc-grid');
         const el = document.createElement('div');
         el.className = 'sc-card';
@@ -354,9 +383,9 @@
 
         input.value = '';
         playCard(card);
-      } catch {
-        input.style.borderColor = 'rgba(239,68,68,0.5)';
-        setTimeout(() => input.style.borderColor = '', 2000);
+      } catch (e) {
+        console.error('Custom soundscape error:', e);
+        errEl.textContent = e?.message || 'Could not generate — try again in a moment.';
       } finally {
         btn.disabled = false;
         btn.textContent = '→';

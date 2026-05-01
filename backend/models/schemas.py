@@ -104,6 +104,8 @@ class SoundscapeItem(BaseModel):
     emoji: str
     base: str
     params: dict = {}
+    audio_url: Optional[str] = None
+    search_query: Optional[str] = None
 
 
 class SoundscapeMenuResponse(BaseModel):
