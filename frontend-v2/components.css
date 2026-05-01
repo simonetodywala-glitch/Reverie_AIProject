@@ -274,18 +274,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font);
   font-size: var(--font-size);
   color: var(--onSurface);
+  font-weight: bold;
 }
 
 .combo-stat-large {
   font-family: var(--font);
   font-size: var(--font-size-xlarge);
   color: var(--primary);
+  font-weight: bold;
 }
 
 .combo-stat-small {
   font-family: var(--font);
   font-size: var(--font-size);
   color: var(--onSurface);
+  font-weight: bold;
 }
 
 .combo-icon {
@@ -314,6 +317,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius);
   font-family: var(--font);
   font-size: var(--font-size);
+  font-weight: bold;
   cursor: pointer;
 }
 
@@ -326,6 +330,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius);
   font-family: var(--font);
   font-size: var(--font-size);
+  font-weight: bold;
   cursor: pointer;
 }
 
