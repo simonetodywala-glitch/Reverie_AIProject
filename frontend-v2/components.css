@@ -10,7 +10,6 @@
     navigation: auto;
 }
 
-
 :root, ::backdrop{
     --font: "Inter", sans-serif;
 
@@ -33,9 +32,11 @@
     --tap-target: 48px;
 
     --border-radius: 24px;
+    --inner-border: 16px;
 
     --pill-max-width: 352px;
     --pill-height: 72px;
+    --hero-height: 120px;
 
     --app-max-width: calc(var(--pill-max-width) + var(--padding-outer) * 2);
 }
@@ -153,6 +154,8 @@ h1, h2, h3, h4, h5, h6 {
     gap: var(--padding-outer);
 }
 
+/* HALF METRIC */
+
 .halfcontainer {
     display: flex;
     flex-direction: row;
@@ -183,6 +186,8 @@ h1, h2, h3, h4, h5, h6 {
     text-align: center;
     color: var(--primary);
 }
+
+/* FULL METRIC */
 
 .fullmetric {
     width: var(--pill-max-width);
@@ -228,6 +233,104 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--onSurface);
     height: 16px;
 }
+
+/* HERO */
+
+.combohero {
+  display: flex;
+  flex-direction: column;
+  width: var(--pill-max-width);
+}
+
+.hero {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: var(--padding-inner) var(--padding-outer);
+  gap: var(--padding-inner);
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  width: var(--pill-max-width);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  margin-bottom: calc(var(--border-radius) * -1);
+  height: var(--hero-height);
+}
+
+.combo-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.combo-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--padding-line);
+}
+
+.combo-title {
+  font-family: var(--font);
+  font-size: var(--font-size);
+  color: var(--onSurface);
+}
+
+.combo-stat-large {
+  font-family: var(--font);
+  font-size: var(--font-size-xlarge);
+  color: var(--primary);
+}
+
+.combo-stat-small {
+  font-family: var(--font);
+  font-size: var(--font-size);
+  color: var(--onSurface);
+}
+
+.combo-icon {
+  background-color: var(--background);
+  border-radius: var(--border-radius);
+  width: calc(var(--hero-height) - var(--padding-inner) * 2);
+  height: calc(var(--hero-height) - var(--padding-inner) * 2);
+  flex-shrink: 0;
+}
+
+.combo-buttons {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--container);
+  border-radius: 0px 0px var(--border-radius) var(--border-radius);
+  padding: calc(var(--padding-inner) + var(--border-radius)) var(--padding-outer) var(--padding-inner);
+  gap: var(--padding-inner);
+}
+
+.btn-surface {
+  flex: 1;
+  height: var(--tap-target);
+  background-color: var(--surface);
+  color: var(--onSurface);
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  cursor: pointer;
+}
+
+.btn-accent {
+  flex: 1.6;
+  height: var(--tap-target);
+  background-color: var(--primary);
+  color: var(--onPrimary);
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  cursor: pointer;
+}
+
+.btn-surface { flex: 1.6; background-color: var(--surface); }
+.btn-accent  { flex: 1; background-color: var(--primary); }
 
 @keyframes text-enter {
     from {
