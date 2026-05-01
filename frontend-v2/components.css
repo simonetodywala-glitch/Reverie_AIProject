@@ -30,6 +30,8 @@
 
     --moon-size: 128px;
 
+    --tap-target: 48px;
+
     --border-radius: 24px;
 
     --pill-max-width: 352px;
@@ -144,13 +146,87 @@ h1, h2, h3, h4, h5, h6 {
     animation: text-enter 1s cubic-bezier(.7,.7,.3,1) forwards;
 }
 
+.content {
+    padding: 0px var(--padding-outer) 0px var(--padding-outer);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-outer);
+}
+
+.halfcontainer {
+    display: flex;
+    flex-direction: row;
+    gap: var(--padding-outer);
+}
+
 .halfmetric {
-    width: calc(var(--pill-max-width) / 2 - var(--padding-outer));
+    width: calc(var(--pill-max-width) / 2 - var(--padding-outer) / 2);
     height: var(--pill-height);
     background-color: var(--surface);
     border-radius: var(--border-radius);
     padding: var(--padding-inner);
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.half-title {
+    font-size: var(--font-size);
+    font-family: var(--font);
+    text-align: center;
+    color: var(--onSurface);
+}
+
+.half-content {
+    font-size: var(--font-size);
+    font-family: var(--font);
+    text-align: center;
+    color: var(--primary);
+}
+
+.fullmetric {
+    width: var(--pill-max-width);
+    height: var(--pill-height);
+    background-color: var(--surface);
+    border-radius: var(--border-radius);
+    padding: var(--padding-inner) var(--padding-outer) var(--padding-inner) var(--padding-outer);
+    display: flex;
+    flex-direction: row;
+}
+
+.full-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.full-button {
+    border-radius: var(--border-radius);
+    background-color: var(--container);
+    height: var(--tap-target);
+    width: var(--tap-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: auto;
+    font-size: var(--font-size-large);
+    font-weight: bold;
+}
+
+.full-title {
+    font-size: var(--font-size-large);
+    font-family: var(--font);
+    text-align: left;
+    color: var(--primary);
+    height: 28px;
+}
+
+.full-content {
+    font-size: var(--font-size);
+    font-family: var(--font);
+    text-align: left;
+    color: var(--onSurface);
+    height: 16px;
 }
 
 @keyframes text-enter {
