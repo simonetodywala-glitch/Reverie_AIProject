@@ -332,12 +332,20 @@
       btn.textContent = '…';
       input.disabled = true;
 
+      let errEl = document.getElementById('sc-custom-err');
+      if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.id = 'sc-custom-err';
+        errEl.style.cssText = 'font-size:12px;color:rgba(239,100,100,0.85);margin-top:6px;';
+        document.getElementById('sc-custom').appendChild(errEl);
+      }
+      errEl.textContent = '';
+
       try {
         const data = await getSoundscapeMenu([], [], prompt);
         const card = data.soundscapes[0];
-        if (!card) throw new Error();
+        if (!card) throw new Error('No soundscape returned');
 
-        // prepend to grid
         const grid = document.getElementById('sc-grid');
         const el = document.createElement('div');
         el.className = 'sc-card';
@@ -354,9 +362,9 @@
 
         input.value = '';
         playCard(card);
-      } catch {
-        input.style.borderColor = 'rgba(239,68,68,0.5)';
-        setTimeout(() => input.style.borderColor = '', 2000);
+      } catch (e) {
+        console.error('Custom soundscape error:', e);
+        errEl.textContent = 'Could not generate — try again in a moment.';
       } finally {
         btn.disabled = false;
         btn.textContent = '→';
