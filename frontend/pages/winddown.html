@@ -102,6 +102,16 @@
     .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation: sbar 0.9s ease-in-out 0.6s infinite; }
     @keyframes sbar { 0%,100% { height: 5px; } 50% { height: 20px; } }
 
+    /* ── AI ROUTINE ── */
+    .intention-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(155,93,229,0.05));
+      border: 1px solid rgba(155,93,229,0.22); border-radius: 16px;
+      padding: 14px 16px; margin-bottom: 14px;
+    }
+    .intention-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 5px; }
+    .intention-text  { font-size: 14px; color: var(--text); line-height: 1.55; }
+    .routine-note    { font-size: 11.5px; color: var(--accent-soft); margin-top: 4px; font-style: italic; }
+
     .player-loading {
       display: flex; align-items: center; gap: 10px;
       padding: 14px 16px; font-size: 13px; color: var(--text-muted);
@@ -171,28 +181,10 @@
 
       <!-- ── TONIGHT'S ROUTINE ── -->
       <div class="section-label" style="margin-top:24px;">Tonight's routine</div>
-
-      <div class="routine-card" onclick="startBreathing()">
-        <div class="routine-icon">🫁</div>
-        <div>
-          <div class="routine-name">Breathing Exercise</div>
-          <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
-        </div>
-      </div>
-
-      <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
-        <div class="routine-icon">📓</div>
-        <div>
-          <div class="routine-name">Reflection Journal</div>
-          <div class="routine-desc">3 guided prompts · 5 minutes</div>
-        </div>
-      </div>
-
-      <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
-        <div class="routine-icon">📖</div>
-        <div>
-          <div class="routine-name">AI Bedtime Story</div>
-          <div class="routine-desc">Generated from your last dream · ElevenLabs</div>
+      <div id="routine-wrap">
+        <div class="sc-loading">
+          <div class="spinner"></div>
+          Personalising your routine…
         </div>
       </div>
 
@@ -312,11 +304,14 @@
     window.togglePlay = togglePlay;
 
     // ── RENDER CARDS ────────────────────────────────────────────
+    window._scItems = {};
+
     function renderCards(soundscapes) {
       const grid = document.getElementById('sc-grid');
-      grid.innerHTML = soundscapes.map(s => `
-        <div class="sc-card" data-name="${s.name.replace(/"/g,'')}"
-             onclick="window._playCard(${JSON.stringify(s).replace(/</g,'\\u003c')})">
+      soundscapes.forEach((s, i) => { window._scItems[i] = s; });
+      grid.innerHTML = soundscapes.map((s, i) => `
+        <div class="sc-card" data-name="${s.name.replace(/"/g,'&quot;')}"
+             onclick="window._playCard(${i})">
           <div class="sc-playing-dot" style="display:none;"></div>
           <span class="sc-card-emoji">${s.emoji}</span>
           <div class="sc-card-name">${s.name}</div>
@@ -340,7 +335,7 @@
       renderCards(defaults);
     }
 
-    window._playCard = function(card) { playCard(card); };
+    window._playCard = function(idx) { playCard(window._scItems[idx]); };
 
     // ── CUSTOM SOUNDSCAPE ────────────────────────────────────────
     window.generateCustomSoundscape = async function() {
@@ -393,6 +388,62 @@
       }
     };
 
+    // ── ROUTINE ──────────────────────────────────────────────────
+    const ROUTINE_META = {
+      breathing: { icon: '🫁', name: 'Breathing Exercise', action: 'startBreathing()' },
+      journaling: { icon: '📓', name: 'Reflection Journal', action: "alert('Journaling prompts coming soon!')" },
+      story:      { icon: '📖', name: 'AI Bedtime Story',   action: "alert('Bedtime stories coming soon!')" },
+    };
+
+    function renderRoutine(intention, items) {
+      const wrap = document.getElementById('routine-wrap');
+      const intentionHtml = intention ? `
+        <div class="intention-card">
+          <div class="intention-label">Tonight's intention</div>
+          <div class="intention-text">${intention}</div>
+        </div>` : '';
+
+      const cardsHtml = items.map(item => {
+        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type, action: '' };
+        return `
+          <div class="routine-card" onclick="${meta.action}">
+            <div class="routine-icon">${meta.icon}</div>
+            <div>
+              <div class="routine-name">${meta.name}</div>
+              ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = intentionHtml + cardsHtml;
+    }
+
+    function renderFallbackRoutine() {
+      const wrap = document.getElementById('routine-wrap');
+      wrap.innerHTML = `
+        <div class="routine-card" onclick="startBreathing()">
+          <div class="routine-icon">🫁</div>
+          <div>
+            <div class="routine-name">Breathing Exercise</div>
+            <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
+          </div>
+        </div>
+        <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
+          <div class="routine-icon">📓</div>
+          <div>
+            <div class="routine-name">Reflection Journal</div>
+            <div class="routine-desc">3 guided prompts · 5 minutes</div>
+          </div>
+        </div>
+        <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
+          <div class="routine-icon">📖</div>
+          <div>
+            <div class="routine-name">AI Bedtime Story</div>
+            <div class="routine-desc">Generated from your last dream</div>
+          </div>
+        </div>`;
+    }
+
     // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
@@ -400,11 +451,22 @@
       const emotions = latest?.emotions || [];
       const themes   = latest?.themes   || [];
 
-      try {
-        const data = await getSoundscapeMenu(emotions, themes);
-        renderCards(data.soundscapes);
-      } catch {
+      const [scResult, routineResult] = await Promise.allSettled([
+        getSoundscapeMenu(emotions, themes),
+        getWinddownRoutine(emotions, themes),
+      ]);
+
+      if (scResult.status === 'fulfilled') {
+        renderCards(scResult.value.soundscapes);
+      } else {
         showFallbackGrid();
+      }
+
+      if (routineResult.status === 'fulfilled') {
+        renderRoutine(routineResult.value.intention, routineResult.value.items);
+      } else {
+        console.error('Wind-down routine failed:', routineResult.reason);
+        renderFallbackRoutine();
       }
     });
   </script>
@@ -412,6 +474,7 @@
   <script>
     // ── BREATHING EXERCISE ──
     let breathTimer = null;
+    let breathActive = false;
 
     const PHASES = [
       { label: 'Inhale',  duration: 4, class: 'inhale' },
@@ -420,6 +483,7 @@
     ];
 
     function startBreathing() {
+      breathActive = true;
       document.getElementById('breath-modal').classList.add('open');
       document.getElementById('breath-label').textContent = 'Get ready';
       document.getElementById('breath-count').textContent = '';
@@ -430,6 +494,7 @@
       const sub     = document.getElementById('breath-sub');
 
       function nextPhase() {
+        if (!breathActive) return;
         if (cycle >= 4) { stopBreathing(); return; }
         const phase = PHASES[phaseIdx];
         label.textContent = phase.label;
@@ -439,6 +504,7 @@
         sub.textContent  = `Cycle ${cycle + 1} of 4`;
 
         breathTimer = setInterval(() => {
+          if (!breathActive) { clearInterval(breathTimer); return; }
           countdown--;
           count.textContent = countdown;
           if (countdown <= 0) {
@@ -454,9 +520,12 @@
     }
 
     function stopBreathing() {
+      breathActive = false;
       clearInterval(breathTimer);
       document.getElementById('breath-modal').classList.remove('open');
       document.getElementById('breath-circle').className = 'breath-circle';
+      document.getElementById('breath-label').textContent = 'Get ready';
+      document.getElementById('breath-count').textContent = '';
     }
 
     window.startBreathing = startBreathing;

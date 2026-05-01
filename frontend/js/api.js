@@ -121,6 +121,16 @@ async function generateBedtimeStory(dreamText) {
   return res.json();
 }
 
+async function getWinddownRoutine(emotions = [], themes = []) {
+  const res = await fetch(`${BASE_URL}/audio/winddown-routine`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+    body: JSON.stringify({ emotions, themes })
+  });
+  if (!res.ok) throw new Error('Routine generation failed');
+  return res.json();
+}
+
 async function getSoundscapeMenu(emotions = [], themes = [], customPrompt = null) {
   const res = await fetch(`${BASE_URL}/audio/soundscape-menu`, {
     method: 'POST',
