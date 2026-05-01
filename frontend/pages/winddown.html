@@ -465,6 +465,7 @@
       if (routineResult.status === 'fulfilled') {
         renderRoutine(routineResult.value.intention, routineResult.value.items);
       } else {
+        console.error('Wind-down routine failed:', routineResult.reason);
         renderFallbackRoutine();
       }
     });
@@ -473,6 +474,7 @@
   <script>
     // ── BREATHING EXERCISE ──
     let breathTimer = null;
+    let breathActive = false;
 
     const PHASES = [
       { label: 'Inhale',  duration: 4, class: 'inhale' },
@@ -481,6 +483,7 @@
     ];
 
     function startBreathing() {
+      breathActive = true;
       document.getElementById('breath-modal').classList.add('open');
       document.getElementById('breath-label').textContent = 'Get ready';
       document.getElementById('breath-count').textContent = '';
@@ -491,6 +494,7 @@
       const sub     = document.getElementById('breath-sub');
 
       function nextPhase() {
+        if (!breathActive) return;
         if (cycle >= 4) { stopBreathing(); return; }
         const phase = PHASES[phaseIdx];
         label.textContent = phase.label;
@@ -500,6 +504,7 @@
         sub.textContent  = `Cycle ${cycle + 1} of 4`;
 
         breathTimer = setInterval(() => {
+          if (!breathActive) { clearInterval(breathTimer); return; }
           countdown--;
           count.textContent = countdown;
           if (countdown <= 0) {
@@ -515,9 +520,12 @@
     }
 
     function stopBreathing() {
+      breathActive = false;
       clearInterval(breathTimer);
       document.getElementById('breath-modal').classList.remove('open');
       document.getElementById('breath-circle').className = 'breath-circle';
+      document.getElementById('breath-label').textContent = 'Get ready';
+      document.getElementById('breath-count').textContent = '';
     }
 
     window.startBreathing = startBreathing;
