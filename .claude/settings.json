@@ -21,7 +21,14 @@
       "Bash(git stash *)",
       "Bash(firebase deploy *)",
       "Bash(git fetch *)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(curl -s http://127.0.0.1:8000/openapi.json)",
+      "Bash(python3 -c \"import sys,json; paths=json.load\\(sys.stdin\\).get\\('paths',{}\\); print\\('\\\\n'.join\\(k for k in paths if 'soundscape' in k\\)\\)\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/audio/soundscape-menu -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"custom_prompt\": \"rain on a window\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/audio/soundscape-menu -H 'Content-Type: application/json' -d '{\"custom_prompt\": \"rain\"}')",
+      "Read(//Users/simonetodywala/**)",
+      "Bash(/Users/simonetodywala/PyCharmMiscProject/.venv/bin/python3 -c ' *)",
+      "Bash(/opt/anaconda3/bin/python -c ' *)"
     ],
     "additionalDirectories": [
       "/Users/simonetodywala/Desktop"

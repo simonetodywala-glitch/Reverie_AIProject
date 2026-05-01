@@ -7,6 +7,7 @@ import json
 from backend.models.schemas import (
     AudioRequest, AudioResponse, SoundscapeRequest,
     SoundscapeMenuRequest, SoundscapeMenuResponse,
+    WinddownRoutineRequest, WinddownRoutineResponse,
 )
 from backend.auth import verify_token
 
@@ -220,6 +221,52 @@ Return JSON:
         }
         for s, url in zip(soundscapes, audio_urls)
     ])
+
+
+@router.post("/winddown-routine", response_model=WinddownRoutineResponse)
+async def get_winddown_routine(req: WinddownRoutineRequest, _=Depends(verify_token)):
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    emotions_str = ", ".join(req.emotions[:5]) if req.emotions else "calm"
+    themes_str   = ", ".join(req.themes[:3])   if req.themes   else "rest"
+
+    prompt = f"""A user is winding down for sleep. Their last dream had emotions: {emotions_str}, and themes: {themes_str}.
+
+Write a short personalized wind-down routine recommendation. Be direct and specific — reference the dream's actual content. Tone: warm, like a thoughtful friend, not a wellness app.
+
+Return JSON:
+{{
+  "intention": "one sentence for tonight's focus — specific to the dream, calming, no clichés",
+  "items": [
+    {{"type": "breathing", "note": "8-10 word reason this helps tonight specifically"}},
+    {{"type": "journaling", "note": "8-10 word note on what to reflect on"}},
+    {{"type": "story",      "note": "8-10 word note on what the story will do"}}
+  ]
+}}
+
+Order the items by what would help most given the dream's emotional tone. breathing, journaling, and story must all appear exactly once."""
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        res = await client.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.8,
+                "response_format": {"type": "json_object"},
+            },
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq error {res.status_code}")
+        data = json.loads(res.json()["choices"][0]["message"]["content"])
+
+    return WinddownRoutineResponse(
+        intention=data.get("intention", ""),
+        items=[{"type": i.get("type",""), "note": i.get("note","")} for i in data.get("items", [])],
+    )
 
 
 @router.post("/soundscape")

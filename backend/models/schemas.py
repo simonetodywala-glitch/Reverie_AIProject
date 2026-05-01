@@ -92,6 +92,21 @@ class PatternReport(BaseModel):
     reflections: List[str]
 
 
+class WinddownRoutineRequest(BaseModel):
+    emotions: List[str] = []
+    themes: List[str] = []
+
+
+class WinddownRoutineItem(BaseModel):
+    type: str   # breathing | journaling | story
+    note: str   # short personalized reason
+
+
+class WinddownRoutineResponse(BaseModel):
+    intention: str
+    items: List[WinddownRoutineItem]
+
+
 class SoundscapeMenuRequest(BaseModel):
     emotions: List[str] = []
     themes: List[str] = []
