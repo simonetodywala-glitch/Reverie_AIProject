@@ -70,6 +70,8 @@ class AudioResponse(BaseModel):
 
 class StoryTTSRequest(BaseModel):
     story_text: str
+    emotions: List[str] = []
+    themes: List[str] = []
 
 
 class SoundscapeRequest(BaseModel):

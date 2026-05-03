@@ -364,6 +364,8 @@
 
     // ── STATE ────────────────────────────────────────────────────
     let latestDreamText = '';
+    let latestEmotions  = [];
+    let latestThemes    = [];
     let currentCard  = null;
     let isPlaying    = false;
     let currentAudio = null;
@@ -600,6 +602,8 @@
     let storyAudio    = null;
     let storyPlaying  = false;
     let storyText_    = '';
+    let storyEmotions_ = [];
+    let storyThemes_   = [];
 
     function _storySetUI(icon, label, playing) {
       const btn  = document.getElementById('story-play-btn');
@@ -612,8 +616,10 @@
     }
 
     async function startStory() {
-      storyAborted = false;
-      storyPlaying = false;
+      storyAborted  = false;
+      storyPlaying  = false;
+      storyEmotions_ = [...latestEmotions];
+      storyThemes_   = [...latestThemes];
       if (storyAudio) { storyAudio.pause(); storyAudio.src = ''; storyAudio = null; }
       window.speechSynthesis?.cancel();
       document.getElementById('story-loading').style.display = 'block';
@@ -659,7 +665,7 @@
       btn.disabled = true;
       _storySetUI('…', 'Loading audio…', false);
       try {
-        const url = await readStoryTTS(storyText_);
+        const url = await readStoryTTS(storyText_, storyEmotions_, storyThemes_);
         if (storyAborted) return;
         storyAudio = new Audio(url);
         storyAudio.onplay  = () => _storySetUI('⏸', 'Now reading…', true);
@@ -992,8 +998,10 @@
       const dreams = await getDreams(user.uid).catch(() => []);
       const latest   = dreams[0];
       latestDreamText = latest?.text || '';
-      const emotions  = latest?.emotions || [];
-      const themes    = latest?.themes   || [];
+      latestEmotions  = latest?.emotions || [];
+      latestThemes    = latest?.themes   || [];
+      const emotions  = latestEmotions;
+      const themes    = latestThemes;
 
       const [scResult, routineResult] = await Promise.allSettled([
         getSoundscapeMenu(emotions, themes),

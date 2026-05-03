@@ -121,11 +121,11 @@ async function generateBedtimeStory(dreamText) {
   return res.json();
 }
 
-async function readStoryTTS(storyText) {
+async function readStoryTTS(storyText, emotions = [], themes = []) {
   const res = await fetch(`${BASE_URL}/audio/story-tts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
-    body: JSON.stringify({ story_text: storyText })
+    body: JSON.stringify({ story_text: storyText, emotions, themes })
   });
   if (!res.ok) throw new Error(`TTS error ${res.status}`);
   const blob = await res.blob();

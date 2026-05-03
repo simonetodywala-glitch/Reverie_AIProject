@@ -55,22 +55,91 @@ async def generate_story(req: AudioRequest, _=Depends(verify_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM"  # Rachel — calm, warm
+# Voice roster — all calm/gentle, each suits different emotional tones
+ELEVENLABS_VOICES = {
+    "rachel":  "21m00Tcm4TlvDq8ikWAM",  # warm, grounding — anxious/unsettled dreams
+    "dorothy": "ThT5KcBeYPX3keUQqHPh",  # soft British intimacy — tender/sad/nostalgic
+    "bella":   "EXAVITQu4vr4xnSDxMaL",  # light, gentle — joyful/wonder dreams
+    "serena":  "pMsXgVXv3BLzUgSXRplE",  # measured calm — neutral/reflective dreams
+}
+
+_DEFAULT_TTS_PARAMS = {
+    "voice": "rachel", "stability": 0.82, "similarity_boost": 0.75, "style": 0.02
+}
+
+async def _choose_tts_params(story_text: str, emotions: list, themes: list) -> dict:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return _DEFAULT_TTS_PARAMS
+    emotions_str = ", ".join(emotions[:5]) if emotions else "calm"
+    themes_str   = ", ".join(themes[:3])   if themes   else "rest"
+    prompt = f"""Configure an ElevenLabs TTS voice to read a calming bedtime story.
+
+Dream emotions: {emotions_str}
+Dream themes: {themes_str}
+Story opening: "{story_text[:180]}"
+
+All settings must feel sleep-safe and gentle. Choose the voice that best matches the emotional tone.
+
+Voices:
+- rachel: warm, grounding American — best for anxious, fearful, restless dreams
+- dorothy: soft, intimate British — best for tender, sad, nostalgic, grief dreams
+- bella: light, airy — best for joyful, wonder, hopeful dreams
+- serena: steady, measured — best for neutral, reflective, confusion dreams
+
+Return JSON only:
+{{
+  "voice": "<rachel|dorothy|bella|serena>",
+  "stability": <0.76-0.93>,
+  "similarity_boost": <0.70-0.82>,
+  "style": <0.0-0.10>
+}}
+
+Higher stability = steadier and calmer (use for anxious/fearful).
+Lower stability = slightly warmer and more expressive (use for joyful/tender).
+Style above 0.05 only for very joyful or wonder-filled stories."""
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.post(
+                GROQ_URL,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": GROQ_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.2,
+                    "response_format": {"type": "json_object"},
+                },
+            )
+            if res.status_code != 200:
+                return _DEFAULT_TTS_PARAMS
+            return json.loads(res.json()["choices"][0]["message"]["content"])
+    except Exception:
+        return _DEFAULT_TTS_PARAMS
+
 
 @router.post("/story-tts")
 async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
-    api_key = os.getenv("ELEVENLABS_API_KEY")
-    if not api_key:
+    el_key = os.getenv("ELEVENLABS_API_KEY")
+    if not el_key:
         raise HTTPException(status_code=501, detail="ELEVENLABS_API_KEY not set")
+
+    params   = await _choose_tts_params(req.story_text, req.emotions, req.themes)
+    voice_id = ELEVENLABS_VOICES.get(params.get("voice", "rachel"), ELEVENLABS_VOICES["rachel"])
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         res = await client.post(
-            ELEVENLABS_TTS_URL,
-            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+            headers={"xi-api-key": el_key, "Content-Type": "application/json"},
             json={
                 "text": req.story_text,
-                "model_id": "eleven_monolingual_v1",
-                "voice_settings": {"stability": 0.78, "similarity_boost": 0.75, "style": 0.0},
+                "model_id": "eleven_turbo_v2_5",
+                "voice_settings": {
+                    "stability":        params.get("stability",        0.82),
+                    "similarity_boost": params.get("similarity_boost", 0.75),
+                    "style":            params.get("style",            0.02),
+                    "use_speaker_boost": True,
+                },
             },
         )
         if res.status_code != 200:
