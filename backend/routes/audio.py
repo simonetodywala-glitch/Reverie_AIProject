@@ -55,95 +55,54 @@ async def generate_story(req: AudioRequest, _=Depends(verify_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Voice roster — all calm/gentle, each suits different emotional tones
-ELEVENLABS_VOICES = {
-    "rachel":  "21m00Tcm4TlvDq8ikWAM",  # warm, grounding — anxious/unsettled dreams
-    "dorothy": "ThT5KcBeYPX3keUQqHPh",  # soft British intimacy — tender/sad/nostalgic
-    "bella":   "EXAVITQu4vr4xnSDxMaL",  # light, gentle — joyful/wonder dreams
-    "serena":  "pMsXgVXv3BLzUgSXRplE",  # measured calm — neutral/reflective dreams
+# PlayAI voices via Groq — mapped by emotional tone of the dream
+_PLAYAI_VOICE_MAP = {
+    "anxiety":     "Celeste-PlayAI",   # soft, grounding
+    "fear":        "Celeste-PlayAI",
+    "dread":       "Eleanor-PlayAI",   # warm, steady
+    "restlessness":"Celeste-PlayAI",
+    "sadness":     "Eleanor-PlayAI",   # mature warmth
+    "grief":       "Eleanor-PlayAI",
+    "nostalgia":   "Eleanor-PlayAI",
+    "tenderness":  "Waverly-PlayAI",   # close, intimate
+    "peaceful":    "Waverly-PlayAI",
+    "joy":         "Phoebe-PlayAI",    # light, gentle
+    "wonder":      "Phoebe-PlayAI",
+    "hope":        "Phoebe-PlayAI",
+    "excitement":  "Celeste-PlayAI",   # pull the energy down
 }
+_PLAYAI_DEFAULT = "Celeste-PlayAI"
 
-_DEFAULT_TTS_PARAMS = {
-    "voice": "rachel", "stability": 0.50, "similarity_boost": 0.82, "style": 0.25
-}
 
-async def _choose_tts_params(story_text: str, emotions: list, themes: list) -> dict:
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        return _DEFAULT_TTS_PARAMS
-    emotions_str = ", ".join(emotions[:5]) if emotions else "calm"
-    themes_str   = ", ".join(themes[:3])   if themes   else "rest"
-    prompt = f"""Configure an ElevenLabs TTS voice to read a calming bedtime story aloud.
-The goal is a warm, natural human sound — NOT robotic or monotone.
-
-Dream emotions: {emotions_str}
-Dream themes: {themes_str}
-Story opening: "{story_text[:180]}"
-
-Voices (all gentle, pick the best fit):
-- rachel: warm, grounding American — anxious, fearful, restless dreams
-- dorothy: soft, intimate British — tender, sad, nostalgic, grief dreams
-- bella: light, airy — joyful, wonder, hopeful dreams
-- serena: steady, measured — neutral, reflective, confusion dreams
-
-Return JSON only:
-{{
-  "voice": "<rachel|dorothy|bella|serena>",
-  "stability": <0.35-0.60>,
-  "similarity_boost": <0.75-0.88>,
-  "style": <0.15-0.40>
-}}
-
-Guidelines:
-- stability MUST stay between 0.35-0.60 — low values create natural vocal variation; high values sound robotic
-- style between 0.20-0.35 for most dreams; push toward 0.35-0.40 for joyful/tender
-- similarity_boost 0.80-0.88 keeps the voice sounding like a real person"""
-
-    try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            res = await client.post(
-                GROQ_URL,
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                json={
-                    "model": GROQ_MODEL,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.2,
-                    "response_format": {"type": "json_object"},
-                },
-            )
-            if res.status_code != 200:
-                return _DEFAULT_TTS_PARAMS
-            return json.loads(res.json()["choices"][0]["message"]["content"])
-    except Exception:
-        return _DEFAULT_TTS_PARAMS
+def _pick_playai_voice(emotions: list) -> str:
+    for e in emotions:
+        v = _PLAYAI_VOICE_MAP.get(e.lower())
+        if v:
+            return v
+    return _PLAYAI_DEFAULT
 
 
 @router.post("/story-tts")
 async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
-    el_key = os.getenv("ELEVENLABS_API_KEY")
-    if not el_key:
-        raise HTTPException(status_code=501, detail="ELEVENLABS_API_KEY not set")
+    groq_key = os.getenv("GROQ_API_KEY")
+    if not groq_key:
+        raise HTTPException(status_code=501, detail="GROQ_API_KEY not set")
 
-    params   = await _choose_tts_params(req.story_text, req.emotions, req.themes)
-    voice_id = ELEVENLABS_VOICES.get(params.get("voice", "rachel"), ELEVENLABS_VOICES["rachel"])
+    voice = _pick_playai_voice(req.emotions)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=90.0) as client:
         res = await client.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
-            headers={"xi-api-key": el_key, "Content-Type": "application/json"},
+            "https://api.groq.com/openai/v1/audio/speech",
+            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
             json={
-                "text": req.story_text,
-                "model_id": "eleven_multilingual_v2",
-                "voice_settings": {
-                    "stability":        params.get("stability",        0.82),
-                    "similarity_boost": params.get("similarity_boost", 0.75),
-                    "style":            params.get("style",            0.02),
-                    "use_speaker_boost": True,
-                },
+                "model":           "playai-tts",
+                "input":           req.story_text,
+                "voice":           voice,
+                "response_format": "mp3",
             },
         )
         if res.status_code != 200:
-            raise HTTPException(status_code=500, detail=f"ElevenLabs TTS error {res.status_code}: {res.text}")
+            raise HTTPException(status_code=500, detail=f"Groq TTS error {res.status_code}: {res.text}")
 
     return StreamingResponse(
         iter([res.content]),
