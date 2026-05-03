@@ -38,6 +38,11 @@
     --pill-height: 72px;
     --hero-height: 120px;
 
+    --min-content-width: 120px;
+
+    --enter-curve: cubic-bezier(.7,.7,.3,1);
+    --enter-duration: 1s;
+
     --app-max-width: calc(var(--pill-max-width) + var(--padding-outer) * 2);
 }
 
@@ -50,7 +55,9 @@ body{
     max-width: 100vw;
     max-height: 100vh;
 
-    background-color: var(--tertiaryContainer);
+    overflow-y: auto;
+
+    background-color: var(--background);
     color: var(--onBackground);
 }
 
@@ -62,6 +69,7 @@ body{
     flex-direction: column;
     background: var(--background);
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .moon-wrapper {
@@ -69,7 +77,7 @@ body{
 }
 
 .moon-wrapper.animate {
-    animation: moon-enter 1s cubic-bezier(.7,.7,.3,1) forwards;
+    animation: moon-enter var(--enter-duration) var(--enter-curve) forwards;
 }
 
 .moon {
@@ -85,7 +93,7 @@ body{
 }
 
 .moon.animate {
-    animation: moon-pulse 3s ease-in-out 1s infinite alternate;
+    animation: moon-pulse 3s ease-in-out var(--enter-duration) infinite alternate;
 }
 
 @keyframes moon-enter{
@@ -122,16 +130,33 @@ body{
 }
 
 .head {
-    height: 256px;
+    min-height: 256px;
     background: linear-gradient(var(--surface) 50%, var(--background));
     display: grid;
-    grid-template-rows: 1fr var(--top-text-height);
+    grid-template-rows: 1fr auto;
     align-items: center;
     overflow-y: hidden;
 }
 
+.head.animate{
+    animation: head-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes head-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-128px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
+}
+
 .titletext {
-    height: 60px;
+    min-height: 60px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -140,11 +165,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .onBackgroundText {
+    min-height: var(--top-text-height);
     font-size: var(--font-size);
     font-weight: bold;
     padding: 0px calc(var(--padding-outer) * 2) 0px calc(var(--padding-outer) * 2);
 
-    animation: text-enter 1s cubic-bezier(.7,.7,.3,1) forwards;
+    animation: text-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes text-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
 }
 
 .content {
@@ -159,10 +198,30 @@ h1, h2, h3, h4, h5, h6 {
 .halfcontainer {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+    max-width: var(--pill-max-width);
     gap: var(--padding-outer);
 }
 
+.halfcontainer.animate {
+    animation: halfcontainer-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes halfcontainer-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-16px) scale(0.9);
+        filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
+}
+
 .halfmetric {
+    flex: 1 1 var(--min-content-width);
     width: calc(var(--pill-max-width) / 2 - var(--padding-outer) / 2);
     height: var(--pill-height);
     background-color: var(--surface);
@@ -171,6 +230,23 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.halfmetric.animate {
+    animation: halfmetric-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes halfmetric-enter {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(1);
+        filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0px);
+    }
 }
 
 .half-title {
@@ -190,8 +266,8 @@ h1, h2, h3, h4, h5, h6 {
 /* FULL METRIC */
 
 .fullmetric {
-    width: var(--pill-max-width);
-    height: var(--pill-height);
+    max-width: var(--pill-max-width);
+    min-height: var(--pill-height);
     background-color: var(--surface);
     border-radius: var(--border-radius);
     padding: var(--padding-inner) var(--padding-outer) var(--padding-inner) var(--padding-outer);
@@ -199,17 +275,35 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: row;
 }
 
+.fullmetric.animate {
+    animation: fullmetric-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes fullmetric-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+        filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
+}
+
 .full-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 }
 
 .full-button {
     border-radius: var(--border-radius);
     background-color: var(--container);
     height: var(--tap-target);
-    width: var(--tap-target);
+    min-width: var(--tap-target);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -223,7 +317,11 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font);
     text-align: left;
     color: var(--primary);
-    height: 28px;
+    min-height: 28px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    min-width: 0;
 }
 
 .full-content {
@@ -231,121 +329,134 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font);
     text-align: left;
     color: var(--onSurface);
-    height: 16px;
 }
 
 /* HERO */
 
 .combohero {
-  display: flex;
-  flex-direction: column;
-  width: var(--pill-max-width);
+    display: flex;
+    flex-direction: column;
+    max-width: var(--pill-max-width);
+}
+
+.combohero.animate {
+    animation: combohero-enter var(--enter-duration) var(--enter-curve) forwards;
+}
+
+@keyframes combohero-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-64px) scale(1.5);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0px);
+    }
 }
 
 .hero {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  padding: var(--padding-inner) var(--padding-outer);
-  gap: var(--padding-inner);
-  background-color: var(--surface);
-  border-radius: var(--border-radius);
-  width: var(--pill-max-width);
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
-  margin-bottom: calc(var(--border-radius) * -1);
-  height: var(--hero-height);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: var(--padding-inner) var(--padding-outer);
+    gap: var(--padding-inner);
+    background-color: var(--surface);
+    border-radius: var(--border-radius);
+    max-width: var(--pill-max-width);
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    margin-bottom: calc(var(--border-radius) * -1);
+    min-height: var(--hero-height);
 }
 
 .combo-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    flex: 1 1 var(--min-content-width);
 }
 
 .combo-stats {
-  display: flex;
-  flex-direction: column;
-  gap: var(--padding-line);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-line);
 }
 
 .combo-title {
-  font-family: var(--font);
-  font-size: var(--font-size);
-  color: var(--onSurface);
-  font-weight: bold;
+    font-family: var(--font);
+    font-size: var(--font-size);
+    color: var(--onSurface);
+    font-weight: bold;
 }
 
 .combo-stat-large {
-  font-family: var(--font);
-  font-size: var(--font-size-xlarge);
-  color: var(--primary);
-  font-weight: bold;
+    font-size: var(--font-size-xlarge);
+    font-family: var(--font);
+    text-align: left;
+    color: var(--primary);
+    min-height: 28px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    min-width: 0;
 }
 
 .combo-stat-small {
-  font-family: var(--font);
-  font-size: var(--font-size);
-  color: var(--onSurface);
-  font-weight: bold;
+    font-family: var(--font);
+    font-size: var(--font-size);
+    color: var(--onSurface);
+    font-weight: bold;
 }
 
 .combo-icon {
-  background-color: var(--background);
-  border-radius: var(--border-radius);
-  width: calc(var(--hero-height) - var(--padding-inner) * 2);
-  height: calc(var(--hero-height) - var(--padding-inner) * 2);
-  flex-shrink: 0;
+    background-color: var(--background);
+    border-radius: var(--border-radius);
+    width: calc(var(--hero-height) - var(--padding-inner) * 2);
+    height: calc(var(--hero-height) - var(--padding-inner) * 2);
+    flex-shrink: 0;
 }
 
 .combo-buttons {
-  display: flex;
-  flex-direction: row;
-  background-color: var(--container);
-  border-radius: 0px 0px var(--border-radius) var(--border-radius);
-  padding: calc(var(--padding-inner) + var(--border-radius)) var(--padding-outer) var(--padding-inner);
-  gap: var(--padding-inner);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    background-color: var(--container);
+    border-radius: 0px 0px var(--border-radius) var(--border-radius);
+    padding: calc(var(--padding-inner) + var(--border-radius)) var(--padding-outer) var(--padding-inner);
+    gap: var(--padding-inner);
 }
 
 .btn-surface {
-  flex: 1;
-  height: var(--tap-target);
-  background-color: var(--surface);
-  color: var(--onSurface);
-  border: none;
-  border-radius: var(--border-radius);
-  font-family: var(--font);
-  font-size: var(--font-size);
-  font-weight: bold;
-  cursor: pointer;
+    flex: 1;
+    min-height: var(--tap-target);
+    background-color: var(--surface);
+    color: var(--onSurface);
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: var(--font);
+    font-size: var(--font-size);
+    font-weight: bold;
+    cursor: pointer;
 }
 
 .btn-accent {
-  flex: 1.6;
-  height: var(--tap-target);
-  background-color: var(--primary);
-  color: var(--onPrimary);
-  border: none;
-  border-radius: var(--border-radius);
-  font-family: var(--font);
-  font-size: var(--font-size);
-  font-weight: bold;
-  cursor: pointer;
+    flex: 1.6;
+    min-height: var(--tap-target);
+    background-color: var(--primary);
+    color: var(--onPrimary);
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: var(--font);
+    font-size: var(--font-size);
+    font-weight: bold;
+    cursor: pointer;
 }
 
 .btn-surface { flex: 1.6; background-color: var(--surface); }
 .btn-accent  { flex: 1; background-color: var(--primary); }
 
-@keyframes text-enter {
-    from {
-        opacity: 0;
-        transform: translateY(-16px);
-        filter: blur(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-        filter: blur(0px);
-    }
-}
