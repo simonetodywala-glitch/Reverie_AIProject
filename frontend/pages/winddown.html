@@ -158,6 +158,29 @@
     }
     .story-text::-webkit-scrollbar { width: 3px; }
     .story-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+    .story-player {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(155,93,229,0.2);
+      border-radius: 40px; padding: 10px 16px 10px 10px;
+      margin-top: 16px; width: 100%; max-width: 340px;
+    }
+    .story-play-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.45); transition: transform 0.15s;
+    }
+    .story-play-btn:active { transform: scale(0.92); }
+    .story-play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .story-player-label { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .story-bars { display: flex; align-items: center; gap: 2px; height: 18px; }
+    .story-bar  { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.35; }
+    .story-bars.playing .story-bar { opacity: 0.8; }
+    .story-bars.playing .story-bar:nth-child(1) { animation: sbar 1.1s ease-in-out infinite; }
+    .story-bars.playing .story-bar:nth-child(2) { animation: sbar 1.1s ease-in-out 0.2s infinite; }
+    .story-bars.playing .story-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
+    .story-bars.playing .story-bar:nth-child(4) { animation: sbar 1.1s ease-in-out 0.6s infinite; }
 
     /* ── STRETCH RING ── */
     .stretch-ring { position: relative; width: 104px; height: 104px; margin: 22px auto 16px; }
@@ -240,7 +263,17 @@
     </div>
     <div id="story-content" style="display:none; width:100%; max-width:340px;">
       <div class="story-text" id="story-text"></div>
-      <button class="modal-btn" onclick="window.stopActivity('story')">Done</button>
+      <div class="story-player">
+        <button class="story-play-btn" id="story-play-btn" onclick="window.toggleStoryAudio()">▶</button>
+        <span class="story-player-label" id="story-player-label">Tap to listen</span>
+        <div class="story-bars" id="story-bars">
+          <div class="story-bar" style="height:8px;"></div>
+          <div class="story-bar" style="height:14px;"></div>
+          <div class="story-bar" style="height:6px;"></div>
+          <div class="story-bar" style="height:11px;"></div>
+        </div>
+      </div>
+      <button class="modal-btn-sm" style="margin-top:14px;" onclick="window.stopActivity('story')">Done</button>
     </div>
   </div>
 
@@ -563,10 +596,26 @@
     };
 
     // ── STORY ────────────────────────────────────────────────────
-    let storyAborted = false;
+    let storyAborted  = false;
+    let storyAudio    = null;
+    let storyPlaying  = false;
+    let storyText_    = '';
+
+    function _storySetUI(icon, label, playing) {
+      const btn  = document.getElementById('story-play-btn');
+      const lbl  = document.getElementById('story-player-label');
+      const bars = document.getElementById('story-bars');
+      if (btn)  { btn.textContent = icon; btn.disabled = false; }
+      if (lbl)  lbl.textContent = label;
+      if (bars) bars.classList.toggle('playing', playing);
+      storyPlaying = playing;
+    }
 
     async function startStory() {
       storyAborted = false;
+      storyPlaying = false;
+      if (storyAudio) { storyAudio.pause(); storyAudio.src = ''; storyAudio = null; }
+      window.speechSynthesis?.cancel();
       document.getElementById('story-loading').style.display = 'block';
       document.getElementById('story-content').style.display = 'none';
       document.getElementById('story-text').textContent = '';
@@ -575,10 +624,11 @@
         const dreamText = latestDreamText || 'a quiet, peaceful night';
         const result = await generateBedtimeStory(dreamText);
         if (storyAborted) return;
-        const text = (result.audio_url || '').replace('STORY_TEXT:', '');
+        storyText_ = (result.audio_url || '').replace('STORY_TEXT:', '');
         document.getElementById('story-loading').style.display = 'none';
         document.getElementById('story-content').style.display = 'block';
-        document.getElementById('story-text').textContent = text;
+        document.getElementById('story-text').textContent = storyText_;
+        _storySetUI('▶', 'Tap to listen', false);
       } catch (e) {
         if (!storyAborted) {
           document.getElementById('story-loading').innerHTML = `<span class="modal-icon">😶</span><div class="modal-main" style="font-size:17px;">Couldn't load story</div><button class="modal-btn-sm" onclick="window.stopActivity('story')">Close</button>`;
@@ -586,7 +636,73 @@
       }
     }
 
-    function stopStory() { storyAborted = true; closeModal('story'); }
+    window.toggleStoryAudio = async function() {
+      // Pause if playing
+      if (storyPlaying) {
+        storyAudio ? storyAudio.pause() : window.speechSynthesis?.pause();
+        _storySetUI('▶', 'Paused', false);
+        return;
+      }
+      // Resume if paused mid-way
+      if (storyAudio && storyAudio.paused && storyAudio.currentTime > 0) {
+        storyAudio.play();
+        _storySetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      if (window.speechSynthesis?.paused) {
+        window.speechSynthesis.resume();
+        _storySetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      // Start fresh — try ElevenLabs TTS, fall back to Web Speech
+      const btn = document.getElementById('story-play-btn');
+      btn.disabled = true;
+      _storySetUI('…', 'Loading audio…', false);
+      try {
+        const url = await readStoryTTS(storyText_);
+        if (storyAborted) return;
+        storyAudio = new Audio(url);
+        storyAudio.onplay  = () => _storySetUI('⏸', 'Now reading…', true);
+        storyAudio.onpause = () => _storySetUI('▶', 'Paused', false);
+        storyAudio.onended = () => { _storySetUI('▶', 'Listen again', false); storyAudio = null; };
+        storyAudio.play();
+      } catch (e) {
+        // Fallback: Web Speech API
+        _speakStory(storyText_);
+      }
+    };
+
+    async function _speakStory(text) {
+      if (!window.speechSynthesis) { _storySetUI('▶', 'Audio unavailable', false); return; }
+      window.speechSynthesis.cancel();
+      // getVoices can be async on first call
+      let voices = window.speechSynthesis.getVoices();
+      if (!voices.length) {
+        await new Promise(r => window.speechSynthesis.addEventListener('voiceschanged', r, { once: true }));
+        voices = window.speechSynthesis.getVoices();
+      }
+      const calm = voices.find(v => ['Samantha','Karen','Moira','Serena'].some(n => v.name.includes(n)))
+        || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('google'))
+        || voices.find(v => v.lang.startsWith('en'));
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate  = 0.82;
+      utterance.pitch = 0.95;
+      if (calm) utterance.voice = calm;
+      utterance.onstart  = () => _storySetUI('⏸', 'Now reading…', true);
+      utterance.onend    = () => _storySetUI('▶', 'Listen again', false);
+      utterance.onpause  = () => _storySetUI('▶', 'Paused', false);
+      utterance.onerror  = () => _storySetUI('▶', 'Tap to retry', false);
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopStory() {
+      storyAborted = true;
+      if (storyAudio) { storyAudio.pause(); storyAudio.src = ''; storyAudio = null; }
+      window.speechSynthesis?.cancel();
+      storyPlaying = false;
+      closeModal('story');
+    }
 
     // ── STRETCHING ───────────────────────────────────────────────
     const STRETCHES = [

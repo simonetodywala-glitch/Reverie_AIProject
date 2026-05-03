@@ -121,6 +121,17 @@ async function generateBedtimeStory(dreamText) {
   return res.json();
 }
 
+async function readStoryTTS(storyText) {
+  const res = await fetch(`${BASE_URL}/audio/story-tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+    body: JSON.stringify({ story_text: storyText })
+  });
+  if (!res.ok) throw new Error(`TTS error ${res.status}`);
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
 async function getWinddownRoutine(emotions = [], themes = []) {
   const res = await fetch(`${BASE_URL}/audio/winddown-routine`, {
     method: 'POST',

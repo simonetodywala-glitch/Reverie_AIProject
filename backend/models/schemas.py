@@ -68,6 +68,10 @@ class AudioResponse(BaseModel):
     audio_url: str
 
 
+class StoryTTSRequest(BaseModel):
+    story_text: str
+
+
 class SoundscapeRequest(BaseModel):
     emotions: List[str]
     themes: List[str] = []

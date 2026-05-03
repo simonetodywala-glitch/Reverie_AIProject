@@ -8,6 +8,7 @@ from backend.models.schemas import (
     AudioRequest, AudioResponse, SoundscapeRequest,
     SoundscapeMenuRequest, SoundscapeMenuResponse,
     WinddownRoutineRequest, WinddownRoutineResponse,
+    StoryTTSRequest,
 )
 from backend.auth import verify_token
 
@@ -52,6 +53,34 @@ async def generate_story(req: AudioRequest, _=Depends(verify_token)):
         return AudioResponse(audio_url=f"STORY_TEXT:{story_text}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM"  # Rachel — calm, warm
+
+@router.post("/story-tts")
+async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=501, detail="ELEVENLABS_API_KEY not set")
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        res = await client.post(
+            ELEVENLABS_TTS_URL,
+            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            json={
+                "text": req.story_text,
+                "model_id": "eleven_monolingual_v1",
+                "voice_settings": {"stability": 0.78, "similarity_boost": 0.75, "style": 0.0},
+            },
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"ElevenLabs TTS error {res.status_code}: {res.text}")
+
+    return StreamingResponse(
+        iter([res.content]),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=story.mp3"},
+    )
 
 
 @router.post("/transcribe")
