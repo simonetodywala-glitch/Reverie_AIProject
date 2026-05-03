@@ -64,7 +64,7 @@ ELEVENLABS_VOICES = {
 }
 
 _DEFAULT_TTS_PARAMS = {
-    "voice": "rachel", "stability": 0.82, "similarity_boost": 0.75, "style": 0.02
+    "voice": "rachel", "stability": 0.50, "similarity_boost": 0.82, "style": 0.25
 }
 
 async def _choose_tts_params(story_text: str, emotions: list, themes: list) -> dict:
@@ -73,31 +73,31 @@ async def _choose_tts_params(story_text: str, emotions: list, themes: list) -> d
         return _DEFAULT_TTS_PARAMS
     emotions_str = ", ".join(emotions[:5]) if emotions else "calm"
     themes_str   = ", ".join(themes[:3])   if themes   else "rest"
-    prompt = f"""Configure an ElevenLabs TTS voice to read a calming bedtime story.
+    prompt = f"""Configure an ElevenLabs TTS voice to read a calming bedtime story aloud.
+The goal is a warm, natural human sound — NOT robotic or monotone.
 
 Dream emotions: {emotions_str}
 Dream themes: {themes_str}
 Story opening: "{story_text[:180]}"
 
-All settings must feel sleep-safe and gentle. Choose the voice that best matches the emotional tone.
-
-Voices:
-- rachel: warm, grounding American — best for anxious, fearful, restless dreams
-- dorothy: soft, intimate British — best for tender, sad, nostalgic, grief dreams
-- bella: light, airy — best for joyful, wonder, hopeful dreams
-- serena: steady, measured — best for neutral, reflective, confusion dreams
+Voices (all gentle, pick the best fit):
+- rachel: warm, grounding American — anxious, fearful, restless dreams
+- dorothy: soft, intimate British — tender, sad, nostalgic, grief dreams
+- bella: light, airy — joyful, wonder, hopeful dreams
+- serena: steady, measured — neutral, reflective, confusion dreams
 
 Return JSON only:
 {{
   "voice": "<rachel|dorothy|bella|serena>",
-  "stability": <0.76-0.93>,
-  "similarity_boost": <0.70-0.82>,
-  "style": <0.0-0.10>
+  "stability": <0.35-0.60>,
+  "similarity_boost": <0.75-0.88>,
+  "style": <0.15-0.40>
 }}
 
-Higher stability = steadier and calmer (use for anxious/fearful).
-Lower stability = slightly warmer and more expressive (use for joyful/tender).
-Style above 0.05 only for very joyful or wonder-filled stories."""
+Guidelines:
+- stability MUST stay between 0.35-0.60 — low values create natural vocal variation; high values sound robotic
+- style between 0.20-0.35 for most dreams; push toward 0.35-0.40 for joyful/tender
+- similarity_boost 0.80-0.88 keeps the voice sounding like a real person"""
 
     try:
         async with httpx.AsyncClient(timeout=8.0) as client:
@@ -133,7 +133,7 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
             headers={"xi-api-key": el_key, "Content-Type": "application/json"},
             json={
                 "text": req.story_text,
-                "model_id": "eleven_turbo_v2_5",
+                "model_id": "eleven_multilingual_v2",
                 "voice_settings": {
                     "stability":        params.get("stability",        0.82),
                     "similarity_boost": params.get("similarity_boost", 0.75),

@@ -663,7 +663,7 @@
       // Start fresh — try ElevenLabs TTS, fall back to Web Speech
       const btn = document.getElementById('story-play-btn');
       btn.disabled = true;
-      _storySetUI('…', 'Loading audio…', false);
+      _storySetUI('…', 'Preparing voice…', false);
       try {
         const url = await readStoryTTS(storyText_, storyEmotions_, storyThemes_);
         if (storyAborted) return;
