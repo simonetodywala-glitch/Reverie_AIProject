@@ -7,157 +7,269 @@
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="stylesheet" href="../css/components.css">
   <style>
+    /* ── ROUTINE CARDS ── */
     .routine-card {
-      background: var(--card); border-radius: 20px; padding: 20px;
-      margin-bottom: 14px; cursor: pointer;
+      background: var(--card); border-radius: 20px; padding: 18px 20px;
+      margin-bottom: 12px; cursor: pointer;
       border: 1px solid rgba(255,255,255,0.05);
-      transition: background 0.2s, transform 0.2s;
+      transition: background 0.2s, transform 0.15s;
       display: flex; align-items: center; gap: 16px;
     }
-    .routine-card:hover { background: var(--card-hover); transform: translateY(-2px); }
-    .routine-icon { font-size: 32px; flex-shrink: 0; }
-    .routine-name { font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
-    .routine-desc { font-size: 13px; color: var(--text-dim); }
+    .routine-card:hover  { background: var(--card-hover); transform: translateY(-2px); }
+    .routine-card:active { transform: scale(0.98); }
+    .routine-icon { font-size: 30px; flex-shrink: 0; }
+    .routine-name { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .routine-note { font-size: 12px; color: var(--accent-soft); font-style: italic; margin-top: 3px; }
+    .routine-arrow { margin-left: auto; font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
+    #routine-toast { font-size: 12.5px; color: var(--accent-soft); text-align: center; padding: 6px 0; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
 
-    /* ── SOUNDSCAPE CARDS ── */
+    /* ── SOUNDSCAPE SECTION ── */
     .sc-loading { display: flex; align-items: center; gap: 10px; padding: 18px 0; font-size: 13px; color: var(--text-muted); }
     .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     .sc-card {
       background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
       border-radius: 18px; padding: 16px 14px; cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-      position: relative;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s; position: relative;
     }
     .sc-card:hover  { background: var(--card); transform: translateY(-2px); }
     .sc-card:active { transform: scale(0.97); }
-    .sc-card.active {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(155,93,229,0.06));
-    }
+    .sc-card.active { border-color: var(--accent); background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(155,93,229,0.06)); }
     .sc-card-emoji { font-size: 26px; margin-bottom: 9px; display: block; }
     .sc-card-name  { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 5px; line-height: 1.25; }
     .sc-card-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
     .sc-card.active .sc-card-name { color: var(--accent-soft); }
-    .sc-playing-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-      position: absolute; top: 12px; right: 12px;
-      animation: pulse-dot 1.4s ease-in-out infinite;
-    }
-    @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
-
-    /* ── CUSTOM INPUT ── */
-    .sc-divider {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em;
-      text-transform: uppercase; margin: 16px 0 12px;
-    }
-    .sc-divider::before, .sc-divider::after {
-      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07);
-    }
+    .sc-playing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); position: absolute; top: 12px; right: 12px; animation: pulse-dot 1.4s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+    .sc-divider { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; margin: 16px 0 12px; }
+    .sc-divider::before,.sc-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.07); }
     .sc-input-row { display: flex; gap: 8px; }
-    .sc-input {
-      flex: 1; font-size: 13px; padding: 11px 14px; border-radius: 12px;
-      background: var(--surface); border: 1px solid rgba(255,255,255,0.08);
-      color: var(--text); outline: none;
-      transition: border-color 0.2s;
-    }
-    .sc-input:focus { border-color: rgba(124,58,237,0.4); }
-    .sc-input::placeholder { color: var(--text-muted); }
-    .sc-gen-btn {
-      padding: 0 16px; border-radius: 12px; border: none; cursor: pointer;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      color: #fff; font-size: 18px; font-weight: 700;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 3px 12px rgba(124,58,237,0.4);
-      display: flex; align-items: center; justify-content: center; min-width: 46px;
-    }
-    .sc-gen-btn:active { transform: scale(0.93); }
-    .sc-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sc-input { flex:1; font-size:13px; padding:11px 14px; border-radius:12px; background:var(--surface); border:1px solid rgba(255,255,255,0.08); color:var(--text); outline:none; transition:border-color 0.2s; }
+    .sc-input:focus { border-color:rgba(124,58,237,0.4); }
+    .sc-input::placeholder { color:var(--text-muted); }
+    .sc-gen-btn { padding:0 16px; border-radius:12px; border:none; cursor:pointer; background:linear-gradient(135deg,var(--accent),var(--accent-soft)); color:#fff; font-size:18px; font-weight:700; transition:transform 0.15s; box-shadow:0 3px 12px rgba(124,58,237,0.4); display:flex; align-items:center; justify-content:center; min-width:46px; }
+    .sc-gen-btn:active { transform:scale(0.93); }
+    .sc-gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-    /* ── PLAYER ── */
-    .soundscape-player {
-      display: flex; align-items: center; gap: 14px;
-      background: var(--surface); border-radius: 16px;
-      padding: 14px 16px; margin-top: 12px;
+    /* ── SOUNDSCAPE PLAYER ── */
+    .soundscape-player { display:flex; align-items:center; gap:14px; background:var(--surface); border-radius:16px; padding:14px 16px; margin-top:12px; }
+    .soundscape-play-btn { width:44px; height:44px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--accent),var(--accent-soft)); border:none; color:#fff; font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.15s; box-shadow:0 4px 14px rgba(124,58,237,0.45); }
+    .soundscape-play-btn:active { transform:scale(0.92); }
+    .soundscape-info { flex:1; min-width:0; }
+    .soundscape-title { font-size:13.5px; font-weight:600; color:var(--text); }
+    .soundscape-sub   { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .soundscape-bars  { display:flex; align-items:center; gap:2px; height:24px; flex-shrink:0; }
+    .soundscape-bar   { width:3px; border-radius:2px; background:var(--accent-soft); opacity:0.4; }
+    .soundscape-bars.playing .soundscape-bar { opacity:0.85; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation:sbar 0.9s ease-in-out infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation:sbar 0.9s ease-in-out 0.15s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation:sbar 0.9s ease-in-out 0.3s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation:sbar 0.9s ease-in-out 0.45s infinite; }
+    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation:sbar 0.9s ease-in-out 0.6s infinite; }
+    @keyframes sbar { 0%,100% { height:5px; } 50% { height:20px; } }
+
+    /* ── AI INTENTION CARD ── */
+    .intention-card { background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(155,93,229,0.05)); border:1px solid rgba(155,93,229,0.22); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+    .intention-label { font-size:10px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--accent-soft); margin-bottom:5px; }
+    .intention-text  { font-size:14px; color:var(--text); line-height:1.55; }
+
+    /* ── ACTIVITY MODALS (shared) ── */
+    .activity-modal {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+      padding: 52px 28px 40px; text-align: center;
     }
-    .soundscape-play-btn {
-      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      border: none; color: #fff; font-size: 17px; cursor: pointer;
+    .activity-modal.open { opacity: 1; pointer-events: all; }
+    .modal-close {
+      position: absolute; top: 20px; right: 20px;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.45); font-size: 20px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 4px 14px rgba(124,58,237,0.45);
+      transition: background 0.2s, color 0.2s; line-height: 1; padding: 0;
     }
-    .soundscape-play-btn:active { transform: scale(0.92); }
-    .soundscape-info { flex: 1; min-width: 0; }
-    .soundscape-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
-    .soundscape-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .soundscape-bars  { display: flex; align-items: center; gap: 2px; height: 24px; flex-shrink: 0; }
-    .soundscape-bar   { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.4; }
-    .soundscape-bars.playing .soundscape-bar { opacity: 0.85; }
-    .soundscape-bars.playing .soundscape-bar:nth-child(1) { animation: sbar 0.9s ease-in-out infinite; }
-    .soundscape-bars.playing .soundscape-bar:nth-child(2) { animation: sbar 0.9s ease-in-out 0.15s infinite; }
-    .soundscape-bars.playing .soundscape-bar:nth-child(3) { animation: sbar 0.9s ease-in-out 0.3s infinite; }
-    .soundscape-bars.playing .soundscape-bar:nth-child(4) { animation: sbar 0.9s ease-in-out 0.45s infinite; }
-    .soundscape-bars.playing .soundscape-bar:nth-child(5) { animation: sbar 0.9s ease-in-out 0.6s infinite; }
-    @keyframes sbar { 0%,100% { height: 5px; } 50% { height: 20px; } }
-
-    /* ── AI ROUTINE ── */
-    .intention-card {
-      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(155,93,229,0.05));
-      border: 1px solid rgba(155,93,229,0.22); border-radius: 16px;
-      padding: 14px 16px; margin-bottom: 14px;
+    .modal-close:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
+    .modal-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-soft); opacity: 0.75; }
+    .modal-icon { font-size: 54px; margin: 20px 0 14px; display: block; line-height: 1; }
+    .modal-main { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .modal-body-text { font-size: 15px; color: var(--text-muted); line-height: 1.65; max-width: 290px; margin: 10px auto 0; }
+    .modal-step { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 8px; }
+    .modal-btn {
+      padding: 13px 32px; border-radius: 40px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 15px; font-weight: 700;
+      box-shadow: 0 4px 18px rgba(124,58,237,0.4);
+      transition: transform 0.15s; margin-top: 28px; display: inline-block;
     }
-    .intention-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 5px; }
-    .intention-text  { font-size: 14px; color: var(--text); line-height: 1.55; }
-    .routine-note    { font-size: 11.5px; color: var(--accent-soft); margin-top: 4px; font-style: italic; }
-    .routine-soon    { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-    #routine-toast   {
-      font-size: 12.5px; color: var(--accent-soft); text-align: center;
-      padding: 8px 0 2px; opacity: 0; transition: opacity 0.25s;
-      pointer-events: none;
+    .modal-btn:active { transform: scale(0.95); }
+    .modal-btn-sm {
+      padding: 10px 22px; border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+      background: transparent; color: var(--text-muted);
+      font-size: 13px; transition: border-color 0.2s, color 0.2s; margin-top: 12px; display: inline-block;
     }
-
-    .player-loading {
-      display: flex; align-items: center; gap: 10px;
-      padding: 14px 16px; font-size: 13px; color: var(--text-muted);
-    }
+    .modal-btn-sm:hover { border-color: rgba(255,255,255,0.28); color: var(--text); }
+    .modal-dots { display: flex; gap: 8px; justify-content: center; margin-top: 22px; }
+    .modal-dot  { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.13); transition: background 0.35s; }
+    .modal-dot.active { background: var(--accent-soft); }
+    .modal-dot.done   { background: rgba(155,93,229,0.4); }
 
     /* ── BREATHING ── */
-    .breath-modal {
-      position: fixed; inset: 0; z-index: 500;
-      background: rgba(4,0,14,0.96);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 28px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-    .breath-modal.open { opacity: 1; pointer-events: all; }
     .breath-circle {
-      width: 140px; height: 140px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(155,93,229,0.6), rgba(124,58,237,0.2));
-      border: 2px solid rgba(155,93,229,0.4);
+      width: 154px; height: 154px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, rgba(155,93,229,0.5), rgba(80,20,180,0.12));
+      border: 2px solid rgba(155,93,229,0.3);
+      box-shadow: 0 0 70px rgba(124,58,237,0.18), inset 0 0 30px rgba(155,93,229,0.06);
       display: flex; align-items: center; justify-content: center;
-      transition: transform 4s ease-in-out;
+      transition: transform 4s cubic-bezier(0.4,0,0.2,1);
+      margin: 22px 0 18px;
     }
-    .breath-circle.inhale  { transform: scale(1.6); }
-    .breath-circle.exhale  { transform: scale(1.0); }
-    .breath-label { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
-    .breath-count { font-size: 48px; font-weight: 300; color: var(--accent-soft); font-family: 'Nunito', sans-serif; }
-    .breath-sub   { font-size: 14px; color: var(--text-muted); }
+    .breath-circle.inhale { transform: scale(1.52); }
+    .breath-circle.exhale { transform: scale(1.0); }
+    .breath-count-inner { font-family: 'Nunito', sans-serif; font-size: 40px; font-weight: 300; color: rgba(255,255,255,0.85); }
+    .breath-phase { font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); }
+    .breath-hint  { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+    .breath-dots  { display: flex; gap: 10px; margin-top: 26px; }
+    .breath-dot   { width: 9px; height: 9px; border-radius: 50%; background: rgba(155,93,229,0.2); transition: background 0.4s; }
+    .breath-dot.done   { background: rgba(155,93,229,0.55); }
+    .breath-dot.active { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.5); }
+
+    /* ── BODY SCAN ── */
+    .bs-bar-wrap { width: 240px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 3px; margin: 30px auto 8px; overflow: hidden; }
+    .bs-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); border-radius: 3px; transition: width 1s linear; }
+
+    /* ── PROMPT-BASED (journal/gratitude) ── */
+    .modal-prompt { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.5; max-width: 280px; margin: 20px auto 10px; }
+    .modal-hint   { font-size: 13px; color: rgba(155,93,229,0.75); font-style: italic; }
+
+    /* ── VISUALIZATION ── */
+    .viz-text { font-size: 17px; color: var(--text); line-height: 1.75; max-width: 290px; margin: 22px auto 0; transition: opacity 0.6s ease; font-weight: 300; }
+
+    /* ── STORY ── */
+    .story-text {
+      font-size: 15px; color: var(--text); line-height: 1.85; text-align: left;
+      max-height: 52vh; overflow-y: auto; padding: 20px 18px;
+      background: rgba(255,255,255,0.03); border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin: 18px 0 0; width: 100%; max-width: 340px;
+    }
+    .story-text::-webkit-scrollbar { width: 3px; }
+    .story-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+
+    /* ── STRETCH RING ── */
+    .stretch-ring { position: relative; width: 104px; height: 104px; margin: 22px auto 16px; }
+    .stretch-ring svg { transform: rotate(-90deg); }
+    .stretch-ring-bg   { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; }
+    .stretch-ring-fill { fill: none; stroke: url(#ring-grad); stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .stretch-ring-num  { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 300; color: var(--text); }
   </style>
 </head>
 <body>
 
-  <!-- BREATHING MODAL -->
-  <div class="breath-modal" id="breath-modal">
-    <div class="breath-circle" id="breath-circle"></div>
-    <div class="breath-label" id="breath-label">Get ready</div>
-    <div class="breath-count" id="breath-count"></div>
-    <div class="breath-sub" id="breath-sub">4-7-8 breathing · 4 cycles</div>
-    <button class="btn btn-ghost" style="min-width:140px;" onclick="stopBreathing()">Stop</button>
+  <!-- ──────────── BREATHING MODAL ──────────── -->
+  <div class="activity-modal" id="modal-breathing">
+    <button class="modal-close" onclick="window.stopActivity('breathing')">×</button>
+    <div class="modal-tag">4 · 7 · 8 Breathing</div>
+    <div class="breath-circle" id="breath-circle">
+      <span class="breath-count-inner" id="breath-count"></span>
+    </div>
+    <div class="breath-phase" id="breath-label">Get ready</div>
+    <div class="breath-hint"  id="breath-sub">4 cycles · ~2 min</div>
+    <div class="breath-dots">
+      <div class="breath-dot" id="bdot-0"></div>
+      <div class="breath-dot" id="bdot-1"></div>
+      <div class="breath-dot" id="bdot-2"></div>
+      <div class="breath-dot" id="bdot-3"></div>
+    </div>
   </div>
 
+  <!-- ──────────── BODY SCAN MODAL ──────────── -->
+  <div class="activity-modal" id="modal-bodyscan">
+    <button class="modal-close" onclick="window.stopActivity('bodyscan')">×</button>
+    <div class="modal-tag">Body Scan</div>
+    <span class="modal-icon">🌊</span>
+    <div class="modal-main" id="bs-part">Feet</div>
+    <div class="modal-body-text" id="bs-desc">Curl your toes tight, then let them go.</div>
+    <div class="bs-bar-wrap"><div class="bs-bar-fill" id="bs-fill" style="width:100%;"></div></div>
+    <div class="modal-step" id="bs-step">1 of 10</div>
+  </div>
+
+  <!-- ──────────── JOURNAL MODAL ──────────── -->
+  <div class="activity-modal" id="modal-journal">
+    <button class="modal-close" onclick="window.stopActivity('journal')">×</button>
+    <span class="modal-icon">📓</span>
+    <div class="modal-tag">Dream Journal</div>
+    <div class="modal-prompt" id="journal-q">What emotion from your dream is still with you?</div>
+    <div class="modal-hint"   id="journal-hint">Sit with it — no need to write</div>
+    <div class="modal-dots"   id="journal-dots"></div>
+    <button class="modal-btn" id="journal-btn" onclick="window.journalNext()">Next →</button>
+  </div>
+
+  <!-- ──────────── VISUALIZATION MODAL ──────────── -->
+  <div class="activity-modal" id="modal-viz" onclick="window.vizNext()">
+    <button class="modal-close" onclick="event.stopPropagation(); window.stopActivity('viz')">×</button>
+    <div class="modal-tag">Visualization</div>
+    <div class="viz-text" id="viz-text">Close your eyes.</div>
+    <div class="modal-dots" id="viz-dots"></div>
+    <div class="modal-step" style="margin-top:18px;">Tap anywhere to continue</div>
+  </div>
+
+  <!-- ──────────── GRATITUDE MODAL ──────────── -->
+  <div class="activity-modal" id="modal-gratitude">
+    <button class="modal-close" onclick="window.stopActivity('gratitude')">×</button>
+    <span class="modal-icon">🙏</span>
+    <div class="modal-tag">Gratitude</div>
+    <div class="modal-prompt" id="grat-q">Name one small thing that felt good today.</div>
+    <div class="modal-hint"   id="grat-hint">A warmth, a moment, a taste</div>
+    <div class="modal-dots"   id="grat-dots"></div>
+    <button class="modal-btn" id="grat-btn" onclick="window.gratNext()">Next →</button>
+  </div>
+
+  <!-- ──────────── STORY MODAL ──────────── -->
+  <div class="activity-modal" id="modal-story">
+    <button class="modal-close" onclick="window.stopActivity('story')">×</button>
+    <div class="modal-tag">AI Bedtime Story</div>
+    <div id="story-loading">
+      <span class="modal-icon">📖</span>
+      <div class="modal-main">Writing your story…</div>
+      <div class="modal-body-text">Drawing from your last dream</div>
+      <div style="margin-top:24px;"><div class="spinner"></div></div>
+    </div>
+    <div id="story-content" style="display:none; width:100%; max-width:340px;">
+      <div class="story-text" id="story-text"></div>
+      <button class="modal-btn" onclick="window.stopActivity('story')">Done</button>
+    </div>
+  </div>
+
+  <!-- ──────────── STRETCHING MODAL ──────────── -->
+  <div class="activity-modal" id="modal-stretching">
+    <button class="modal-close" onclick="window.stopActivity('stretching')">×</button>
+    <div class="modal-tag">Gentle Stretch</div>
+    <div class="stretch-ring">
+      <svg width="104" height="104" viewBox="0 0 104 104">
+        <defs>
+          <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#9b5de5"/>
+          </linearGradient>
+        </defs>
+        <circle class="stretch-ring-bg"   cx="52" cy="52" r="46"/>
+        <circle class="stretch-ring-fill" id="stretch-ring-fill" cx="52" cy="52" r="46"
+                stroke-dasharray="289" stroke-dashoffset="0"/>
+      </svg>
+      <div class="stretch-ring-num" id="stretch-count">20</div>
+    </div>
+    <div class="modal-main"      id="stretch-name">Neck Roll</div>
+    <div class="modal-body-text" id="stretch-desc">Drop your right ear to your shoulder, hold, then switch.</div>
+    <div class="modal-step"      id="stretch-step">1 of 5</div>
+    <button class="modal-btn-sm" id="stretch-skip" onclick="window.stretchSkip()">Skip →</button>
+  </div>
+
+
+  <!-- ──────────── APP SHELL ──────────── -->
   <div class="app-frame">
     <div class="page-header">🌬️ Wind Down</div>
 
@@ -170,7 +282,6 @@
         <div class="spinner"></div>
         Curating tonight's soundscapes…
       </div>
-
       <div id="sc-grid" class="sc-grid" style="display:none;"></div>
 
       <div id="sc-custom" style="display:none;">
@@ -209,18 +320,409 @@
     </nav>
   </div>
 
+
   <script src="../js/app.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/soundscapes.js"></script>
+
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     import { getDreams }   from '../js/firebase.js';
 
+    // ── STATE ────────────────────────────────────────────────────
+    let latestDreamText = '';
     let currentCard  = null;
     let isPlaying    = false;
-    let currentAudio = null;   // HTMLAudioElement when using a real audio URL
+    let currentAudio = null;
 
-    // ── PLAYER ──────────────────────────────────────────────────
+    // ── MODAL HELPERS ────────────────────────────────────────────
+    function openModal(id)  { document.getElementById(`modal-${id}`).classList.add('open'); }
+    function closeModal(id) { document.getElementById(`modal-${id}`).classList.remove('open'); }
+
+    // ── BREATHING ────────────────────────────────────────────────
+    const BREATH_PHASES = [
+      { label: 'Inhale',  secs: 4, cls: 'inhale' },
+      { label: 'Hold',    secs: 7, cls: 'inhale'  },
+      { label: 'Exhale',  secs: 8, cls: 'exhale'  },
+    ];
+    let breathActive = false;
+    let breathTimer  = null;
+
+    function startBreathing() {
+      breathActive = true;
+      openModal('breathing');
+      const circle = document.getElementById('breath-circle');
+      const label  = document.getElementById('breath-label');
+      const count  = document.getElementById('breath-count');
+      const sub    = document.getElementById('breath-sub');
+      circle.className = 'breath-circle';
+      label.textContent = 'Get ready';
+      count.textContent = '';
+      for (let i = 0; i < 4; i++) {
+        const d = document.getElementById(`bdot-${i}`);
+        if (d) d.className = 'breath-dot';
+      }
+
+      let cycle = 0, phaseIdx = 0, countdown = 0;
+
+      function nextPhase() {
+        if (!breathActive) return;
+        if (cycle >= 4) { stopBreathing(); return; }
+        const phase = BREATH_PHASES[phaseIdx];
+        label.textContent  = phase.label;
+        circle.className   = 'breath-circle ' + phase.cls;
+        countdown          = phase.secs;
+        count.textContent  = countdown;
+        sub.textContent    = `Cycle ${cycle + 1} of 4`;
+        const dot = document.getElementById(`bdot-${cycle}`);
+        if (dot) dot.className = 'breath-dot active';
+
+        breathTimer = setInterval(() => {
+          if (!breathActive) { clearInterval(breathTimer); return; }
+          countdown--;
+          count.textContent = countdown;
+          if (countdown <= 0) {
+            clearInterval(breathTimer);
+            phaseIdx++;
+            if (phaseIdx >= BREATH_PHASES.length) {
+              phaseIdx = 0; cycle++;
+              const prev = document.getElementById(`bdot-${cycle - 1}`);
+              if (prev) prev.className = 'breath-dot done';
+            }
+            setTimeout(nextPhase, 300);
+          }
+        }, 1000);
+      }
+      setTimeout(nextPhase, 800);
+    }
+
+    function stopBreathing() {
+      breathActive = false;
+      clearInterval(breathTimer);
+      closeModal('breathing');
+      document.getElementById('breath-label').textContent = 'Get ready';
+      document.getElementById('breath-count').textContent = '';
+      document.getElementById('breath-circle').className  = 'breath-circle';
+    }
+
+    // ── BODY SCAN ────────────────────────────────────────────────
+    const BODY_PARTS = [
+      { name: 'Feet',           desc: 'Curl your toes tight, then let them go completely.' },
+      { name: 'Calves',         desc: 'Flex gently, breathe out, feel the tension drain.' },
+      { name: 'Knees & Thighs', desc: 'Squeeze lightly, then release. Notice the warmth.' },
+      { name: 'Hips',           desc: 'Sink heavier into the surface beneath you.' },
+      { name: 'Abdomen',        desc: 'Let your belly soften with every breath out.' },
+      { name: 'Chest',          desc: 'Feel your ribcage rise, then gently settle.' },
+      { name: 'Hands & Arms',   desc: 'Clench your fists, hold, then release fully.' },
+      { name: 'Shoulders',      desc: 'Roll them back, breathe in deep, melt on the exhale.' },
+      { name: 'Neck',           desc: 'Release any holding. Let your head feel heavy.' },
+      { name: 'Face',           desc: 'Unclench your jaw. Soften your eyes and brow.' },
+    ];
+    const BS_SECS = 6;
+    let bsActive = false;
+    let bsTimer  = null;
+
+    function startBodyScan() {
+      bsActive = true;
+      openModal('bodyscan');
+      let idx = 0, elapsed = 0;
+
+      function showPart() {
+        if (!bsActive) return;
+        if (idx >= BODY_PARTS.length) { stopBodyScan(); return; }
+        const p = BODY_PARTS[idx];
+        document.getElementById('bs-part').textContent = p.name;
+        document.getElementById('bs-desc').textContent = p.desc;
+        document.getElementById('bs-step').textContent = `${idx + 1} of ${BODY_PARTS.length}`;
+        document.getElementById('bs-fill').style.width = '100%';
+        elapsed = 0;
+
+        bsTimer = setInterval(() => {
+          if (!bsActive) { clearInterval(bsTimer); return; }
+          elapsed++;
+          const pct = Math.max(0, 100 - (elapsed / BS_SECS) * 100);
+          document.getElementById('bs-fill').style.width = pct + '%';
+          if (elapsed >= BS_SECS) {
+            clearInterval(bsTimer);
+            idx++;
+            setTimeout(showPart, 400);
+          }
+        }, 1000);
+      }
+      showPart();
+    }
+
+    function stopBodyScan() {
+      bsActive = false;
+      clearInterval(bsTimer);
+      closeModal('bodyscan');
+    }
+
+    // ── JOURNAL ──────────────────────────────────────────────────
+    const JOURNAL_PROMPTS = [
+      { q: 'What emotion from your dream is still with you right now?',    hint: 'Sit with it — no need to write' },
+      { q: 'Was there a moment that felt meaningful, even if strange?',    hint: 'Let the image come back' },
+      { q: 'What would you tell the version of you inside that dream?',    hint: 'Be kind' },
+    ];
+    let journalIdx = 0;
+
+    function startJournal() {
+      journalIdx = 0;
+      openModal('journal');
+      renderJournalStep();
+    }
+
+    function renderJournalStep() {
+      const p = JOURNAL_PROMPTS[journalIdx];
+      document.getElementById('journal-q').textContent    = p.q;
+      document.getElementById('journal-hint').textContent = p.hint;
+      document.getElementById('journal-btn').textContent  = journalIdx < JOURNAL_PROMPTS.length - 1 ? 'Next →' : 'Done ✓';
+      const dots = document.getElementById('journal-dots');
+      dots.innerHTML = JOURNAL_PROMPTS.map((_, i) => `<div class="modal-dot${i === journalIdx ? ' active' : (i < journalIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.journalNext = function() {
+      if (journalIdx < JOURNAL_PROMPTS.length - 1) {
+        journalIdx++;
+        renderJournalStep();
+      } else {
+        closeModal('journal');
+      }
+    };
+
+    // ── VISUALIZATION ────────────────────────────────────────────
+    const VIZ_STEPS = [
+      'Close your eyes. Take one slow breath in through your nose…',
+      'Imagine a place where you feel completely at ease. Real or imagined.',
+      'Notice the light there — warm and soft, like late afternoon.',
+      'Feel the air. Is there a gentle breeze? The sound of water nearby?',
+      'Let yourself sink deeper into this place with every exhale.',
+      'You carry this feeling of safety with you into sleep.',
+    ];
+    let vizIdx    = 0;
+    let vizTimer  = null;
+
+    function startViz() {
+      vizIdx = 0;
+      openModal('viz');
+      renderVizStep();
+      vizTimer = setInterval(() => { if (vizIdx < VIZ_STEPS.length - 1) { vizIdx++; renderVizStep(); } else clearInterval(vizTimer); }, 9000);
+    }
+
+    function renderVizStep() {
+      const el = document.getElementById('viz-text');
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = VIZ_STEPS[vizIdx]; el.style.opacity = '1'; }, 300);
+      const dots = document.getElementById('viz-dots');
+      dots.innerHTML = VIZ_STEPS.map((_, i) => `<div class="modal-dot${i === vizIdx ? ' active' : (i < vizIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.vizNext = function() {
+      clearInterval(vizTimer);
+      if (vizIdx < VIZ_STEPS.length - 1) {
+        vizIdx++;
+        renderVizStep();
+        vizTimer = setInterval(() => { if (vizIdx < VIZ_STEPS.length - 1) { vizIdx++; renderVizStep(); } else clearInterval(vizTimer); }, 9000);
+      } else {
+        closeModal('viz');
+      }
+    };
+
+    function stopViz() { clearInterval(vizTimer); closeModal('viz'); }
+
+    // ── GRATITUDE ────────────────────────────────────────────────
+    const GRAT_PROMPTS = [
+      { q: 'Name one small thing that felt good today.',      hint: 'A warmth, a moment, a taste' },
+      { q: 'Who made you feel seen or safe recently?',        hint: 'Even a small kindness counts' },
+      { q: 'What does your body need tonight to feel held?',  hint: 'Rest, warmth, quiet…' },
+    ];
+    let gratIdx = 0;
+
+    function startGratitude() {
+      gratIdx = 0;
+      openModal('gratitude');
+      renderGratStep();
+    }
+
+    function renderGratStep() {
+      const p = GRAT_PROMPTS[gratIdx];
+      document.getElementById('grat-q').textContent    = p.q;
+      document.getElementById('grat-hint').textContent = p.hint;
+      document.getElementById('grat-btn').textContent  = gratIdx < GRAT_PROMPTS.length - 1 ? 'Next →' : 'Done ✓';
+      const dots = document.getElementById('grat-dots');
+      dots.innerHTML = GRAT_PROMPTS.map((_, i) => `<div class="modal-dot${i === gratIdx ? ' active' : (i < gratIdx ? ' done' : '')}"></div>`).join('');
+    }
+
+    window.gratNext = function() {
+      if (gratIdx < GRAT_PROMPTS.length - 1) {
+        gratIdx++;
+        renderGratStep();
+      } else {
+        closeModal('gratitude');
+      }
+    };
+
+    // ── STORY ────────────────────────────────────────────────────
+    let storyAborted = false;
+
+    async function startStory() {
+      storyAborted = false;
+      document.getElementById('story-loading').style.display = 'block';
+      document.getElementById('story-content').style.display = 'none';
+      document.getElementById('story-text').textContent = '';
+      openModal('story');
+      try {
+        const dreamText = latestDreamText || 'a quiet, peaceful night';
+        const result = await generateBedtimeStory(dreamText);
+        if (storyAborted) return;
+        const text = (result.audio_url || '').replace('STORY_TEXT:', '');
+        document.getElementById('story-loading').style.display = 'none';
+        document.getElementById('story-content').style.display = 'block';
+        document.getElementById('story-text').textContent = text;
+      } catch (e) {
+        if (!storyAborted) {
+          document.getElementById('story-loading').innerHTML = `<span class="modal-icon">😶</span><div class="modal-main" style="font-size:17px;">Couldn't load story</div><button class="modal-btn-sm" onclick="window.stopActivity('story')">Close</button>`;
+        }
+      }
+    }
+
+    function stopStory() { storyAborted = true; closeModal('story'); }
+
+    // ── STRETCHING ───────────────────────────────────────────────
+    const STRETCHES = [
+      { name: 'Neck Roll',          desc: 'Drop your right ear to your shoulder, hold, then slowly switch sides.',          secs: 20 },
+      { name: 'Shoulder Release',   desc: 'Interlace your fingers, extend arms forward, round your upper back. Breathe.',   secs: 20 },
+      { name: 'Seated Forward Fold',desc: 'Sit at the edge of your bed, hinge forward from your hips. Let everything hang.', secs: 25 },
+      { name: 'Supine Twist',       desc: 'Lie flat. Draw your right knee to your chest, guide it across your body.',        secs: 25 },
+      { name: "Child's Pose",       desc: 'Kneel and sit back on your heels, stretch arms forward, rest your forehead.',     secs: 30 },
+    ];
+    const RING_CIRCUMF = 289;
+    let stretchActive = false;
+    let stretchTimer  = null;
+    let stretchIdx    = 0;
+
+    function startStretching() {
+      stretchActive = true;
+      stretchIdx    = 0;
+      openModal('stretching');
+      showStretch();
+    }
+
+    function showStretch() {
+      if (!stretchActive) return;
+      if (stretchIdx >= STRETCHES.length) { stopStretching(); return; }
+      const s = STRETCHES[stretchIdx];
+      document.getElementById('stretch-name').textContent = s.name;
+      document.getElementById('stretch-desc').textContent = s.desc;
+      document.getElementById('stretch-step').textContent = `${stretchIdx + 1} of ${STRETCHES.length}`;
+      document.getElementById('stretch-skip').textContent = stretchIdx < STRETCHES.length - 1 ? 'Skip →' : 'Done ✓';
+
+      let elapsed = 0;
+      document.getElementById('stretch-count').textContent = s.secs;
+      document.getElementById('stretch-ring-fill').style.strokeDashoffset = '0';
+
+      stretchTimer = setInterval(() => {
+        if (!stretchActive) { clearInterval(stretchTimer); return; }
+        elapsed++;
+        const remaining = s.secs - elapsed;
+        document.getElementById('stretch-count').textContent = remaining;
+        const offset = RING_CIRCUMF * (elapsed / s.secs);
+        document.getElementById('stretch-ring-fill').style.strokeDashoffset = offset;
+        if (elapsed >= s.secs) {
+          clearInterval(stretchTimer);
+          stretchIdx++;
+          setTimeout(showStretch, 500);
+        }
+      }, 1000);
+    }
+
+    window.stretchSkip = function() {
+      clearInterval(stretchTimer);
+      if (stretchIdx < STRETCHES.length - 1) { stretchIdx++; showStretch(); }
+      else stopStretching();
+    };
+
+    function stopStretching() {
+      stretchActive = false;
+      clearInterval(stretchTimer);
+      closeModal('stretching');
+    }
+
+    // ── STOP DISPATCHER ──────────────────────────────────────────
+    window.stopActivity = function(id) {
+      if (id === 'breathing')  return stopBreathing();
+      if (id === 'bodyscan')   return stopBodyScan();
+      if (id === 'journal')    return closeModal('journal');
+      if (id === 'viz')        return stopViz();
+      if (id === 'gratitude')  return closeModal('gratitude');
+      if (id === 'story')      return stopStory();
+      if (id === 'stretching') return stopStretching();
+      closeModal(id);
+    };
+
+    // ── ROUTINE META ─────────────────────────────────────────────
+    const ROUTINE_META = {
+      breathing:     { icon: '🫁', name: 'Breathing Exercise',  open: startBreathing  },
+      body_scan:     { icon: '🌊', name: 'Body Scan',           open: startBodyScan   },
+      journaling:    { icon: '📓', name: 'Dream Journal',       open: startJournal    },
+      visualization: { icon: '🌙', name: 'Visualization',       open: startViz        },
+      gratitude:     { icon: '🙏', name: 'Gratitude Practice',  open: startGratitude  },
+      story:         { icon: '📖', name: 'AI Bedtime Story',    open: startStory      },
+      stretching:    { icon: '🧘', name: 'Gentle Stretch',      open: startStretching },
+    };
+
+    // ── ROUTINE RENDER ───────────────────────────────────────────
+    function showRoutineToast(name) {
+      let t = document.getElementById('routine-toast');
+      if (!t) { t = document.createElement('div'); t.id = 'routine-toast'; document.getElementById('routine-wrap').after(t); }
+      t.textContent = `${name} coming soon ✦`;
+      t.style.opacity = '1';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = '0'; }, 1800);
+    }
+
+    function renderRoutine(intention, items) {
+      const wrap = document.getElementById('routine-wrap');
+      const intentHtml = intention ? `
+        <div class="intention-card">
+          <div class="intention-label">Tonight's intention</div>
+          <div class="intention-text">${intention}</div>
+        </div>` : '';
+
+      const cardsHtml = items.map((item, i) => {
+        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type };
+        return `
+          <div class="routine-card" data-ri="${i}">
+            <div class="routine-icon">${meta.icon}</div>
+            <div style="flex:1;">
+              <div class="routine-name">${meta.name}</div>
+              ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
+            </div>
+            <div class="routine-arrow">›</div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = intentHtml + cardsHtml;
+
+      wrap.querySelectorAll('.routine-card[data-ri]').forEach(el => {
+        const item = items[parseInt(el.dataset.ri)];
+        const meta = ROUTINE_META[item.type];
+        el.addEventListener('click', () => {
+          if (meta?.open) meta.open();
+          else showRoutineToast(meta?.name || item.type);
+        });
+      });
+    }
+
+    function renderFallbackRoutine() {
+      renderRoutine('', [
+        { type: 'breathing',  note: 'Ground yourself before sleep' },
+        { type: 'journaling', note: 'Write down what\'s on your mind' },
+        { type: 'story',      note: 'Let a story carry you to sleep' },
+      ]);
+    }
+
+    // ── SOUNDSCAPE PLAYER ────────────────────────────────────────
     function showPlayer(card, playing) {
       document.getElementById('player-wrap').innerHTML = `
         <div class="soundscape-player" style="margin-top:14px;">
@@ -248,44 +750,35 @@
     }
 
     function playCard(card) {
-      if (currentCard?.name === card.name && isPlaying) {
-        _pauseCurrent();
-        return;
-      }
+      if (currentCard?.name === card.name && isPlaying) { _pauseCurrent(); return; }
       _stopAll();
       currentCard = card;
-
       if (card.audio_url) {
         currentAudio = new Audio(card.audio_url);
-        currentAudio.loop = true;
-        currentAudio.volume = 0.72;
+        currentAudio.loop = true; currentAudio.volume = 0.72;
         currentAudio.play().catch(() => {
-          // URL failed — fall back to Web Audio
           currentAudio = null;
           SoundscapePlayer.play(card.base, card.params || {});
         });
       } else {
         SoundscapePlayer.play(card.base, card.params || {});
       }
-
       isPlaying = true;
       setCardActive(card.name, true);
       showPlayer(card, true);
     }
 
     function _pauseCurrent() {
-      if (currentAudio) currentAudio.pause();
-      else SoundscapePlayer.pause();
+      if (currentAudio) currentAudio.pause(); else SoundscapePlayer.pause();
       isPlaying = false;
       setCardActive(currentCard?.name, false);
-      document.getElementById('play-btn')?.innerText !== undefined && (document.getElementById('play-btn').textContent = '▶');
+      const pb = document.getElementById('play-btn'); if (pb) pb.textContent = '▶';
       document.getElementById('soundscape-bars')?.classList.remove('playing');
-      if (document.getElementById('player-sub')) document.getElementById('player-sub').textContent = 'Paused';
+      const ps = document.getElementById('player-sub'); if (ps) ps.textContent = 'Paused';
     }
 
     function _resumeCurrent() {
-      if (currentAudio) currentAudio.play();
-      else SoundscapePlayer.resume();
+      if (currentAudio) currentAudio.play(); else SoundscapePlayer.resume();
       isPlaying = true;
       setCardActive(currentCard?.name, true);
       document.getElementById('play-btn').textContent = '⏸';
@@ -297,6 +790,7 @@
       if (!currentCard) return;
       if (isPlaying) _pauseCurrent(); else _resumeCurrent();
     }
+    window.togglePlay = togglePlay;
 
     function setCardActive(name, active) {
       document.querySelectorAll('.sc-card').forEach(c => {
@@ -307,17 +801,14 @@
       });
     }
 
-    window.togglePlay = togglePlay;
-
-    // ── RENDER CARDS ────────────────────────────────────────────
+    // ── SOUNDSCAPE RENDER ────────────────────────────────────────
     window._scItems = {};
 
     function renderCards(soundscapes) {
       const grid = document.getElementById('sc-grid');
       soundscapes.forEach((s, i) => { window._scItems[i] = s; });
       grid.innerHTML = soundscapes.map((s, i) => `
-        <div class="sc-card" data-name="${s.name.replace(/"/g,'&quot;')}"
-             onclick="window._playCard(${i})">
+        <div class="sc-card" data-name="${s.name.replace(/"/g,'&quot;')}" onclick="window._playCard(${i})">
           <div class="sc-playing-dot" style="display:none;"></div>
           <span class="sc-card-emoji">${s.emoji}</span>
           <div class="sc-card-name">${s.name}</div>
@@ -329,49 +820,38 @@
     }
 
     function showFallbackGrid() {
-      const defaults = [
-        { name:'Rain',   description:'Steady rainfall, soft and still.',      emoji:'🌧️', base:'rain',   params:{} },
-        { name:'Ocean',  description:'Waves rolling in, slow and open.',       emoji:'🌊', base:'ocean',  params:{} },
-        { name:'Forest', description:'Wind through trees, leaves breathing.',  emoji:'🌲', base:'forest', params:{} },
-        { name:'Fire',   description:'Crackling embers, warm and close.',      emoji:'🔥', base:'fire',   params:{} },
-        { name:'Space',  description:'Deep cosmic drone, vast and weightless.',emoji:'🌌', base:'space',  params:{} },
-        { name:'Storm',  description:'Rolling thunder, safe inside.',          emoji:'⛈️', base:'storm',  params:{} },
-        { name:'Café',   description:'Quiet murmur, espresso and warmth.',     emoji:'☕', base:'cafe',   params:{} },
-      ];
-      renderCards(defaults);
+      renderCards([
+        { name:'Rain',   description:'Steady rainfall, soft and still.',       emoji:'🌧️', base:'rain',   params:{} },
+        { name:'Ocean',  description:'Waves rolling in, slow and open.',        emoji:'🌊', base:'ocean',  params:{} },
+        { name:'Forest', description:'Wind through trees, leaves breathing.',   emoji:'🌲', base:'forest', params:{} },
+        { name:'Fire',   description:'Crackling embers, warm and close.',       emoji:'🔥', base:'fire',   params:{} },
+        { name:'Space',  description:'Deep cosmic drone, vast and weightless.', emoji:'🌌', base:'space',  params:{} },
+        { name:'Storm',  description:'Rolling thunder, safe inside.',           emoji:'⛈️', base:'storm',  params:{} },
+      ]);
     }
 
     window._playCard = function(idx) { playCard(window._scItems[idx]); };
 
-    // ── CUSTOM SOUNDSCAPE ────────────────────────────────────────
     window.generateCustomSoundscape = async function() {
       const input = document.getElementById('sc-input');
       const btn   = document.getElementById('sc-gen-btn');
       const prompt = input.value.trim();
       if (!prompt) return;
-
-      btn.disabled = true;
-      btn.textContent = '…';
-      input.disabled = true;
-
+      btn.disabled = true; btn.textContent = '…'; input.disabled = true;
       let errEl = document.getElementById('sc-custom-err');
       if (!errEl) {
-        errEl = document.createElement('div');
-        errEl.id = 'sc-custom-err';
+        errEl = document.createElement('div'); errEl.id = 'sc-custom-err';
         errEl.style.cssText = 'font-size:12px;color:rgba(239,100,100,0.85);margin-top:6px;';
         document.getElementById('sc-custom').appendChild(errEl);
       }
       errEl.textContent = '';
-
       try {
         const data = await getSoundscapeMenu([], [], prompt);
         const card = data.soundscapes[0];
         if (!card) throw new Error('No soundscape returned');
-
         const grid = document.getElementById('sc-grid');
         const el = document.createElement('div');
-        el.className = 'sc-card';
-        el.dataset.name = card.name;
+        el.className = 'sc-card'; el.dataset.name = card.name;
         el.style.borderColor = 'rgba(155,93,229,0.35)';
         el.innerHTML = `
           <div class="sc-playing-dot" style="display:none;"></div>
@@ -381,104 +861,31 @@
           <div style="font-size:10px;color:var(--accent-soft);margin-top:6px;font-weight:700;letter-spacing:0.05em;">✦ CREATED FOR YOU</div>`;
         el.onclick = () => playCard(card);
         grid.prepend(el);
-
         input.value = '';
         playCard(card);
-      } catch (e) {
+      } catch(e) {
         console.error('Custom soundscape error:', e);
-        errEl.textContent = e?.message || 'Could not generate — try again in a moment.';
+        errEl.textContent = e?.message || 'Could not generate — try again.';
       } finally {
-        btn.disabled = false;
-        btn.textContent = '→';
-        input.disabled = false;
+        btn.disabled = false; btn.textContent = '→'; input.disabled = false;
       }
     };
-
-    // ── ROUTINE ──────────────────────────────────────────────────
-    const ROUTINE_META = {
-      breathing:     { icon: '🫁', name: 'Breathing Exercise',  ready: true  },
-      body_scan:     { icon: '🌊', name: 'Body Scan',           ready: false },
-      journaling:    { icon: '📓', name: 'Dream Journal',       ready: false },
-      visualization: { icon: '🌙', name: 'Visualization',       ready: false },
-      gratitude:     { icon: '🙏', name: 'Gratitude Practice',  ready: false },
-      story:         { icon: '📖', name: 'AI Bedtime Story',    ready: false },
-      stretching:    { icon: '🧘', name: 'Gentle Stretch',      ready: false },
-    };
-
-    function showRoutineToast(name) {
-      let toast = document.getElementById('routine-toast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'routine-toast';
-        document.getElementById('routine-wrap').after(toast);
-      }
-      toast.textContent = `${name} is coming soon ✦`;
-      toast.style.opacity = '1';
-      clearTimeout(toast._timer);
-      toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 1800);
-    }
-
-    function renderRoutine(intention, items) {
-      const wrap = document.getElementById('routine-wrap');
-      const intentionHtml = intention ? `
-        <div class="intention-card">
-          <div class="intention-label">Tonight's intention</div>
-          <div class="intention-text">${intention}</div>
-        </div>` : '';
-
-      const cardsHtml = items.map((item, i) => {
-        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type, ready: false };
-        return `
-          <div class="routine-card" data-routine="${i}">
-            <div class="routine-icon">${meta.icon}</div>
-            <div style="flex:1;">
-              <div class="routine-name">${meta.name}</div>
-              ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
-              ${!meta.ready ? `<div class="routine-soon">Coming soon</div>` : ''}
-            </div>
-          </div>`;
-      }).join('');
-
-      wrap.innerHTML = intentionHtml + cardsHtml;
-
-      wrap.querySelectorAll('.routine-card[data-routine]').forEach(el => {
-        const item = items[parseInt(el.dataset.routine)];
-        const meta = ROUTINE_META[item.type] || { ready: false };
-        el.addEventListener('click', () => {
-          if (item.type === 'breathing') {
-            window.startBreathing();
-          } else {
-            showRoutineToast(meta.name || item.type);
-          }
-        });
-      });
-    }
-
-    function renderFallbackRoutine() {
-      renderRoutine('', [
-        { type: 'breathing',  note: 'Ground yourself before sleep' },
-        { type: 'journaling', note: 'Write down what\'s on your mind' },
-        { type: 'story',      note: 'Let a story carry you to sleep' },
-      ]);
-    }
 
     // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
       const latest   = dreams[0];
-      const emotions = latest?.emotions || [];
-      const themes   = latest?.themes   || [];
+      latestDreamText = latest?.text || '';
+      const emotions  = latest?.emotions || [];
+      const themes    = latest?.themes   || [];
 
       const [scResult, routineResult] = await Promise.allSettled([
         getSoundscapeMenu(emotions, themes),
         getWinddownRoutine(emotions, themes),
       ]);
 
-      if (scResult.status === 'fulfilled') {
-        renderCards(scResult.value.soundscapes);
-      } else {
-        showFallbackGrid();
-      }
+      if (scResult.status === 'fulfilled') renderCards(scResult.value.soundscapes);
+      else showFallbackGrid();
 
       if (routineResult.status === 'fulfilled') {
         renderRoutine(routineResult.value.intention, routineResult.value.items);
@@ -487,67 +894,6 @@
         renderFallbackRoutine();
       }
     });
-  </script>
-
-  <script>
-    // ── BREATHING EXERCISE ──
-    let breathTimer = null;
-    let breathActive = false;
-
-    const PHASES = [
-      { label: 'Inhale',  duration: 4, class: 'inhale' },
-      { label: 'Hold',    duration: 7, class: 'inhale' },
-      { label: 'Exhale',  duration: 8, class: 'exhale' },
-    ];
-
-    function startBreathing() {
-      breathActive = true;
-      document.getElementById('breath-modal').classList.add('open');
-      document.getElementById('breath-label').textContent = 'Get ready';
-      document.getElementById('breath-count').textContent = '';
-      let cycle = 0, phaseIdx = 0, countdown = 0;
-      const circle  = document.getElementById('breath-circle');
-      const label   = document.getElementById('breath-label');
-      const count   = document.getElementById('breath-count');
-      const sub     = document.getElementById('breath-sub');
-
-      function nextPhase() {
-        if (!breathActive) return;
-        if (cycle >= 4) { stopBreathing(); return; }
-        const phase = PHASES[phaseIdx];
-        label.textContent = phase.label;
-        countdown = phase.duration;
-        count.textContent = countdown;
-        circle.className = 'breath-circle ' + phase.class;
-        sub.textContent  = `Cycle ${cycle + 1} of 4`;
-
-        breathTimer = setInterval(() => {
-          if (!breathActive) { clearInterval(breathTimer); return; }
-          countdown--;
-          count.textContent = countdown;
-          if (countdown <= 0) {
-            clearInterval(breathTimer);
-            phaseIdx++;
-            if (phaseIdx >= PHASES.length) { phaseIdx = 0; cycle++; }
-            setTimeout(nextPhase, 300);
-          }
-        }, 1000);
-      }
-
-      setTimeout(nextPhase, 800);
-    }
-
-    function stopBreathing() {
-      breathActive = false;
-      clearInterval(breathTimer);
-      document.getElementById('breath-modal').classList.remove('open');
-      document.getElementById('breath-circle').className = 'breath-circle';
-      document.getElementById('breath-label').textContent = 'Get ready';
-      document.getElementById('breath-count').textContent = '';
-    }
-
-    window.startBreathing = startBreathing;
-    window.stopBreathing  = stopBreathing;
   </script>
 
 </body>
