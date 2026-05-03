@@ -111,6 +111,12 @@
     .intention-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 5px; }
     .intention-text  { font-size: 14px; color: var(--text); line-height: 1.55; }
     .routine-note    { font-size: 11.5px; color: var(--accent-soft); margin-top: 4px; font-style: italic; }
+    .routine-soon    { font-size: 10px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+    #routine-toast   {
+      font-size: 12.5px; color: var(--accent-soft); text-align: center;
+      padding: 8px 0 2px; opacity: 0; transition: opacity 0.25s;
+      pointer-events: none;
+    }
 
     .player-loading {
       display: flex; align-items: center; gap: 10px;
@@ -390,10 +396,27 @@
 
     // ── ROUTINE ──────────────────────────────────────────────────
     const ROUTINE_META = {
-      breathing: { icon: '🫁', name: 'Breathing Exercise', action: 'startBreathing()' },
-      journaling: { icon: '📓', name: 'Reflection Journal', action: "alert('Journaling prompts coming soon!')" },
-      story:      { icon: '📖', name: 'AI Bedtime Story',   action: "alert('Bedtime stories coming soon!')" },
+      breathing:     { icon: '🫁', name: 'Breathing Exercise',  ready: true  },
+      body_scan:     { icon: '🌊', name: 'Body Scan',           ready: false },
+      journaling:    { icon: '📓', name: 'Dream Journal',       ready: false },
+      visualization: { icon: '🌙', name: 'Visualization',       ready: false },
+      gratitude:     { icon: '🙏', name: 'Gratitude Practice',  ready: false },
+      story:         { icon: '📖', name: 'AI Bedtime Story',    ready: false },
+      stretching:    { icon: '🧘', name: 'Gentle Stretch',      ready: false },
     };
+
+    function showRoutineToast(name) {
+      let toast = document.getElementById('routine-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'routine-toast';
+        document.getElementById('routine-wrap').after(toast);
+      }
+      toast.textContent = `${name} is coming soon ✦`;
+      toast.style.opacity = '1';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 1800);
+    }
 
     function renderRoutine(intention, items) {
       const wrap = document.getElementById('routine-wrap');
@@ -403,45 +426,40 @@
           <div class="intention-text">${intention}</div>
         </div>` : '';
 
-      const cardsHtml = items.map(item => {
-        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type, action: '' };
+      const cardsHtml = items.map((item, i) => {
+        const meta = ROUTINE_META[item.type] || { icon: '✨', name: item.type, ready: false };
         return `
-          <div class="routine-card" onclick="${meta.action}">
+          <div class="routine-card" data-routine="${i}">
             <div class="routine-icon">${meta.icon}</div>
-            <div>
+            <div style="flex:1;">
               <div class="routine-name">${meta.name}</div>
               ${item.note ? `<div class="routine-note">${item.note}</div>` : ''}
+              ${!meta.ready ? `<div class="routine-soon">Coming soon</div>` : ''}
             </div>
           </div>`;
       }).join('');
 
       wrap.innerHTML = intentionHtml + cardsHtml;
+
+      wrap.querySelectorAll('.routine-card[data-routine]').forEach(el => {
+        const item = items[parseInt(el.dataset.routine)];
+        const meta = ROUTINE_META[item.type] || { ready: false };
+        el.addEventListener('click', () => {
+          if (item.type === 'breathing') {
+            window.startBreathing();
+          } else {
+            showRoutineToast(meta.name || item.type);
+          }
+        });
+      });
     }
 
     function renderFallbackRoutine() {
-      const wrap = document.getElementById('routine-wrap');
-      wrap.innerHTML = `
-        <div class="routine-card" onclick="startBreathing()">
-          <div class="routine-icon">🫁</div>
-          <div>
-            <div class="routine-name">Breathing Exercise</div>
-            <div class="routine-desc">4-7-8 technique · 4 cycles · 2 minutes</div>
-          </div>
-        </div>
-        <div class="routine-card" onclick="alert('Journaling prompts coming soon!')">
-          <div class="routine-icon">📓</div>
-          <div>
-            <div class="routine-name">Reflection Journal</div>
-            <div class="routine-desc">3 guided prompts · 5 minutes</div>
-          </div>
-        </div>
-        <div class="routine-card" onclick="alert('Bedtime stories coming soon!')">
-          <div class="routine-icon">📖</div>
-          <div>
-            <div class="routine-name">AI Bedtime Story</div>
-            <div class="routine-desc">Generated from your last dream</div>
-          </div>
-        </div>`;
+      renderRoutine('', [
+        { type: 'breathing',  note: 'Ground yourself before sleep' },
+        { type: 'journaling', note: 'Write down what\'s on your mind' },
+        { type: 'story',      note: 'Let a story carry you to sleep' },
+      ]);
     }
 
     // ── INIT ─────────────────────────────────────────────────────

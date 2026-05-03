@@ -232,21 +232,31 @@ async def get_winddown_routine(req: WinddownRoutineRequest, _=Depends(verify_tok
     emotions_str = ", ".join(req.emotions[:5]) if req.emotions else "calm"
     themes_str   = ", ".join(req.themes[:3])   if req.themes   else "rest"
 
-    prompt = f"""A user is winding down for sleep. Their last dream had emotions: {emotions_str}, and themes: {themes_str}.
+    prompt = f"""A user is winding down for sleep. Their dream had emotions: {emotions_str}, and themes: {themes_str}.
 
-Write a short personalized wind-down routine recommendation. Be direct and specific — reference the dream's actual content. Tone: warm, like a thoughtful friend, not a wellness app.
+Choose exactly 3 wind-down activities that fit tonight's emotional content. Pick from this list — vary your choices based on the dream, don't default to the same options every time:
+
+- breathing: slow breath work to calm the nervous system
+- body_scan: progressive relaxation from feet to head
+- journaling: writing to process what the dream stirred up
+- visualization: calming mental imagery to replace difficult feelings
+- gratitude: grounding in what felt safe or good today
+- story: a gentle AI-narrated bedtime story
+- stretching: physical movement to release stored tension
+
+Tone: warm and direct, like a thoughtful friend — not a wellness app.
 
 Return JSON:
 {{
-  "intention": "one sentence for tonight's focus — specific to the dream, calming, no clichés",
+  "intention": "one specific sentence for tonight — reference the dream's emotional tone, no clichés",
   "items": [
-    {{"type": "breathing", "note": "8-10 word reason this helps tonight specifically"}},
-    {{"type": "journaling", "note": "8-10 word note on what to reflect on"}},
-    {{"type": "story",      "note": "8-10 word note on what the story will do"}}
+    {{"type": "<activity from list>", "note": "8-10 words on why this helps tonight specifically"}},
+    {{"type": "<activity from list>", "note": "8-10 words"}},
+    {{"type": "<activity from list>", "note": "8-10 words"}}
   ]
 }}
 
-Order the items by what would help most given the dream's emotional tone. breathing, journaling, and story must all appear exactly once."""
+Order from most to least urgent for tonight. Each type must be unique. Notes must reflect the actual dream emotions."""
 
     async with httpx.AsyncClient(timeout=20.0) as client:
         res = await client.post(
