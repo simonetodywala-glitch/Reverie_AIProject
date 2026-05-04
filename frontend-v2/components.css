@@ -430,8 +430,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: var(--padding-inner);
 }
 
-.btn-surface {
-    flex: 1;
+.btn.btn-surface {
     min-height: var(--tap-target);
     background-color: var(--surface);
     color: var(--onSurface);
@@ -443,8 +442,7 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-.btn-accent {
-    flex: 1.6;
+.btn.btn-accent {
     min-height: var(--tap-target);
     background-color: var(--primary);
     color: var(--onPrimary);
@@ -456,6 +454,19 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-.btn-surface { flex: 1.6; background-color: var(--surface); }
-.btn-accent  { flex: 1; background-color: var(--primary); }
+.btn.btn-surface { flex: 1.6; }
+.btn.btn-accent  { flex: 1; }
 
+/*
+@media (hover: hover){
+    .btn {
+        transition-duration: 200ms;
+    }
+    .btn:hover{
+        transition-duration: 200ms;
+        box-shadow:
+            0 0 8px 2px var(--primary),
+            0 0 16px 4px var(--secondary);
+    }
+}
+*/
