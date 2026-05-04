@@ -41,7 +41,7 @@
     --min-content-width: 120px;
 
     --enter-curve: cubic-bezier(.7,.7,.3,1);
-    --enter-duration: 1s;
+    --enter-duration: 800ms;
 
     --app-max-width: calc(var(--pill-max-width) + var(--padding-outer) * 2);
 }
@@ -222,8 +222,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .halfmetric {
     flex: 1 1 var(--min-content-width);
-    width: calc(var(--pill-max-width) / 2 - var(--padding-outer) / 2);
-    height: var(--pill-height);
+    min-height: var(--pill-height);
     background-color: var(--surface);
     border-radius: var(--border-radius);
     padding: var(--padding-inner);
