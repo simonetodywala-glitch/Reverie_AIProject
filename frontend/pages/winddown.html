@@ -185,13 +185,15 @@
     /* ── STORY PICKER ── */
     .sp-entry-card {
       border-radius: 20px; padding: 18px 20px; margin-top: 24px; cursor: pointer;
-      border: 1px solid rgba(155,93,229,0.28);
-      background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(155,93,229,0.04));
+      border: 1px solid rgba(155,93,229,0.3);
+      background: linear-gradient(135deg, rgba(124,58,237,0.13), rgba(155,93,229,0.05));
       transition: background 0.2s, transform 0.15s;
       display: flex; align-items: center; gap: 16px;
     }
-    .sp-entry-card:hover  { background: rgba(124,58,237,0.18); transform: translateY(-2px); }
+    .sp-entry-card:hover  { background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.1)); transform: translateY(-2px); }
     .sp-entry-card:active { transform: scale(0.98); }
+
+    /* The modal is always dark — use explicit rgba, never CSS vars */
     .sp-modal {
       position: fixed; inset: 0; z-index: 500;
       background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
@@ -200,85 +202,98 @@
       transition: opacity 0.35s ease; overflow: hidden;
     }
     .sp-modal.open { opacity: 1; pointer-events: all; }
+
     .sp-header {
       display: flex; align-items: center; gap: 12px;
-      padding: 54px 20px 16px; flex-shrink: 0;
+      padding: 52px 20px 14px; flex-shrink: 0;
+      max-width: 500px; width: 100%; margin: 0 auto; box-sizing: border-box;
     }
     .sp-back-btn {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
       background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
       color: rgba(255,255,255,0.55); font-size: 20px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.2s, color 0.2s; line-height: 1; padding: 0;
     }
     .sp-back-btn:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
-    .sp-header-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); flex: 1; }
-    .sp-scroll { flex: 1; overflow-y: auto; padding: 0 20px 40px; }
+    .sp-header-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.92); flex: 1; }
+
+    .sp-scroll { flex: 1; overflow-y: auto; }
     .sp-scroll::-webkit-scrollbar { width: 3px; }
     .sp-scroll::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 3px; }
-    .sp-view { display: none; }
+
+    /* constrain content width and centre it */
+    .sp-view { display: none; max-width: 500px; margin: 0 auto; padding: 0 20px 40px; box-sizing: border-box; }
     .sp-view.active { display: block; }
-    .sp-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+    .sp-subtitle { font-size: 13px; color: rgba(255,255,255,0.42); margin-bottom: 18px; line-height: 1.5; }
+
     .sp-opt-btn {
-      width: 100%; text-align: left; background: var(--card);
-      border: 1px solid rgba(255,255,255,0.06); border-radius: 18px;
-      padding: 18px 20px; cursor: pointer;
-      transition: background 0.2s, transform 0.15s; margin-bottom: 10px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    .sp-opt-btn:hover  { background: var(--card-hover); transform: translateY(-2px); }
-    .sp-opt-btn:active { transform: scale(0.98); }
-    .sp-opt-icon  { font-size: 28px; flex-shrink: 0; }
-    .sp-opt-name  { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-    .sp-opt-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-    .sp-opt-arrow { margin-left: auto; font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
-    .sp-dream-item {
-      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px; padding: 14px 16px; cursor: pointer;
-      margin-bottom: 10px; transition: background 0.2s, transform 0.15s;
-    }
-    .sp-dream-item:hover  { background: var(--card); transform: translateY(-2px); }
-    .sp-dream-item:active { transform: scale(0.98); }
-    .sp-dream-date    { font-size: 10px; color: var(--accent-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
-    .sp-dream-preview { font-size: 13.5px; color: var(--text); line-height: 1.55; }
-    .sp-classic-item {
-      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px; padding: 14px 16px; cursor: pointer;
-      margin-bottom: 10px; transition: background 0.2s, transform 0.15s;
+      width: 100%; text-align: left; box-sizing: border-box;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09); border-radius: 18px;
+      padding: 16px 18px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s; margin-bottom: 10px;
       display: flex; align-items: center; gap: 14px;
     }
-    .sp-classic-item:hover  { background: var(--card); transform: translateY(-2px); }
+    .sp-opt-btn:hover  { background: rgba(255,255,255,0.09); border-color: rgba(155,93,229,0.35); transform: translateY(-2px); }
+    .sp-opt-btn:active { transform: scale(0.98); }
+    .sp-opt-icon  { font-size: 26px; flex-shrink: 0; }
+    .sp-opt-name  { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: rgba(255,255,255,0.9); margin-bottom: 3px; }
+    .sp-opt-desc  { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.45; }
+    .sp-opt-arrow { margin-left: auto; font-size: 18px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+
+    .sp-dream-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .sp-dream-item:hover  { background: rgba(255,255,255,0.08); border-color: rgba(155,93,229,0.28); transform: translateY(-2px); }
+    .sp-dream-item:active { transform: scale(0.98); }
+    .sp-dream-date    { font-size: 10px; color: rgba(155,93,229,0.85); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .sp-dream-preview { font-size: 13.5px; color: rgba(255,255,255,0.78); line-height: 1.55; }
+
+    .sp-classic-item {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sp-classic-item:hover  { background: rgba(255,255,255,0.08); border-color: rgba(155,93,229,0.28); transform: translateY(-2px); }
     .sp-classic-item:active { transform: scale(0.98); }
     .sp-classic-emoji { font-size: 24px; flex-shrink: 0; }
-    .sp-classic-name  { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-    .sp-classic-desc  { font-size: 12px; color: var(--text-muted); }
-    .sp-classic-arrow { margin-left: auto; font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+    .sp-classic-name  { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: rgba(255,255,255,0.88); margin-bottom: 2px; }
+    .sp-classic-desc  { font-size: 12px; color: rgba(255,255,255,0.42); }
+    .sp-classic-arrow { margin-left: auto; font-size: 16px; color: rgba(255,255,255,0.22); flex-shrink: 0; }
+
     .sp-loading { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 16px; }
-    .sp-loading-text { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.65; white-space: pre-line; }
+    .sp-loading-text { font-size: 14px; color: rgba(255,255,255,0.45); text-align: center; line-height: 1.65; white-space: pre-line; }
+
     .sp-reader-story {
-      font-size: 15px; color: var(--text); line-height: 1.85;
-      padding: 20px 18px; background: rgba(255,255,255,0.03); border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.06); margin: 0 0 16px; max-height: 44vh; overflow-y: auto;
+      font-size: 15px; color: rgba(255,255,255,0.82); line-height: 1.85;
+      padding: 20px 18px; background: rgba(255,255,255,0.04); border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08); margin: 0 0 16px; max-height: 46vh; overflow-y: auto;
     }
     .sp-reader-story::-webkit-scrollbar { width: 3px; }
     .sp-reader-story::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+
     .sp-player {
       display: flex; align-items: center; gap: 12px;
-      background: rgba(124,58,237,0.1); border: 1px solid rgba(155,93,229,0.2);
+      background: rgba(124,58,237,0.12); border: 1px solid rgba(155,93,229,0.22);
       border-radius: 40px; padding: 10px 16px 10px 10px;
     }
     .sp-play-btn {
       width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
       color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 3px 12px rgba(124,58,237,0.45); transition: transform 0.15s;
     }
     .sp-play-btn:active   { transform: scale(0.92); }
     .sp-play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .sp-player-label { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .sp-player-label { flex: 1; font-size: 13px; color: rgba(255,255,255,0.45); }
     .sp-bars { display: flex; align-items: center; gap: 2px; height: 18px; }
-    .sp-bar  { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.35; }
-    .sp-bars.playing .sp-bar { opacity: 0.8; }
+    .sp-bar  { width: 3px; border-radius: 2px; background: rgba(155,93,229,0.75); opacity: 0.35; }
+    .sp-bars.playing .sp-bar { opacity: 0.85; }
     .sp-bars.playing .sp-bar:nth-child(1) { animation: sbar 1.1s ease-in-out infinite; }
     .sp-bars.playing .sp-bar:nth-child(2) { animation: sbar 1.1s ease-in-out 0.2s infinite; }
     .sp-bars.playing .sp-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
