@@ -55,83 +55,79 @@ async def generate_story(req: AudioRequest, _=Depends(verify_token)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# PlayAI voices via Groq — mapped by emotional tone of the dream
-_PLAYAI_VOICE_MAP = {
-    "anxiety":     "Celeste-PlayAI",   # soft, grounding
-    "fear":        "Celeste-PlayAI",
-    "dread":       "Eleanor-PlayAI",   # warm, steady
-    "restlessness":"Celeste-PlayAI",
-    "sadness":     "Eleanor-PlayAI",   # mature warmth
-    "grief":       "Eleanor-PlayAI",
-    "nostalgia":   "Eleanor-PlayAI",
-    "tenderness":  "Waverly-PlayAI",   # close, intimate
-    "peaceful":    "Waverly-PlayAI",
-    "joy":         "Phoebe-PlayAI",    # light, gentle
-    "wonder":      "Phoebe-PlayAI",
-    "hope":        "Phoebe-PlayAI",
-    "excitement":  "Celeste-PlayAI",   # pull the energy down
+# ElevenLabs voice IDs for narration — pre-made voices available on all plans
+# Rachel: warm calm female  |  Bella: soft intimate female
+# Josh: deep storyteller    |  Elli: bright expressive female
+_EL_VOICE_MAP = {
+    "anxiety":      "21m00Tcm4TlvDq8ikWAM",  # Rachel — warm, grounding
+    "fear":         "21m00Tcm4TlvDq8ikWAM",  # Rachel
+    "dread":        "21m00Tcm4TlvDq8ikWAM",  # Rachel
+    "restlessness": "21m00Tcm4TlvDq8ikWAM",  # Rachel
+    "sadness":      "EXAVITQu4vr4xnSDxMaL",  # Bella — gentle, intimate
+    "grief":        "EXAVITQu4vr4xnSDxMaL",  # Bella
+    "tenderness":   "EXAVITQu4vr4xnSDxMaL",  # Bella
+    "nostalgia":    "TxGEqnHWrfWFTfGW9XjX",  # Josh — warm storyteller
+    "wonder":       "TxGEqnHWrfWFTfGW9XjX",  # Josh
+    "awe":          "TxGEqnHWrfWFTfGW9XjX",  # Josh
+    "peaceful":     "21m00Tcm4TlvDq8ikWAM",  # Rachel
+    "hope":         "21m00Tcm4TlvDq8ikWAM",  # Rachel
+    "joy":          "MF3mGyEYCl7XYWbV9V6O",  # Elli — bright, expressive
+    "excitement":   "MF3mGyEYCl7XYWbV9V6O",  # Elli
 }
+_EL_DEFAULT_VOICE = "21m00Tcm4TlvDq8ikWAM"  # Rachel
+
+
+def _pick_el_voice(emotions: list) -> str:
+    for e in emotions:
+        v = _EL_VOICE_MAP.get(e.lower())
+        if v:
+            return v
+    return _EL_DEFAULT_VOICE
+
+
+# Groq PlayAI fallback
 _PLAYAI_DEFAULT = "Celeste-PlayAI"
 
-
 def _pick_playai_voice(emotions: list) -> str:
+    m = {"anxiety":"Celeste-PlayAI","fear":"Celeste-PlayAI","dread":"Eleanor-PlayAI",
+         "sadness":"Eleanor-PlayAI","grief":"Eleanor-PlayAI","tenderness":"Waverly-PlayAI",
+         "peaceful":"Waverly-PlayAI","joy":"Phoebe-PlayAI","wonder":"Phoebe-PlayAI",
+         "hope":"Phoebe-PlayAI"}
     for e in emotions:
-        v = _PLAYAI_VOICE_MAP.get(e.lower())
+        v = m.get(e.lower())
         if v:
             return v
     return _PLAYAI_DEFAULT
 
 
-# OpenAI TTS voices matched to dream emotional tone
-# shimmer/nova/fable are the most natural for calm narration
-_OPENAI_VOICE_MAP = {
-    "anxiety":     ("shimmer", 0.88),
-    "fear":        ("shimmer", 0.85),
-    "dread":       ("nova",    0.85),
-    "restlessness":("shimmer", 0.88),
-    "sadness":     ("nova",    0.88),
-    "grief":       ("nova",    0.85),
-    "nostalgia":   ("fable",   0.90),
-    "tenderness":  ("shimmer", 0.90),
-    "peaceful":    ("nova",    0.92),
-    "joy":         ("nova",    0.92),
-    "wonder":      ("fable",   0.90),
-    "hope":        ("nova",    0.90),
-    "excitement":  ("shimmer", 0.88),
-}
-_OPENAI_DEFAULT_VOICE = ("nova", 0.88)
-
-
-def _pick_openai_voice(emotions: list) -> tuple:
-    for e in emotions:
-        v = _OPENAI_VOICE_MAP.get(e.lower())
-        if v:
-            return v
-    return _OPENAI_DEFAULT_VOICE
-
-
 @router.post("/story-tts")
 async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
-    openai_key = os.getenv("OPENAI_API_KEY")
-    groq_key   = os.getenv("GROQ_API_KEY")
+    el_key   = os.getenv("ELEVENLABS_API_KEY")
+    groq_key = os.getenv("GROQ_API_KEY")
 
-    if openai_key:
-        # OpenAI TTS-1-HD: significantly more natural for narration
-        voice, speed = _pick_openai_voice(req.emotions)
+    if el_key:
+        voice_id = _pick_el_voice(req.emotions)
         async with httpx.AsyncClient(timeout=90.0) as client:
             res = await client.post(
-                "https://api.openai.com/v1/audio/speech",
-                headers={"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"},
+                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+                headers={
+                    "xi-api-key":   el_key,
+                    "Content-Type": "application/json",
+                    "Accept":       "audio/mpeg",
+                },
                 json={
-                    "model":           "tts-1-hd",
-                    "input":           req.story_text,
-                    "voice":           voice,
-                    "response_format": "mp3",
-                    "speed":           speed,
+                    "text":     req.story_text,
+                    "model_id": "eleven_multilingual_v2",
+                    "voice_settings": {
+                        "stability":        0.38,
+                        "similarity_boost": 0.80,
+                        "style":            0.42,
+                        "use_speaker_boost": True,
+                    },
                 },
             )
             if res.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"OpenAI TTS error {res.status_code}: {res.text}")
+                raise HTTPException(status_code=500, detail=f"ElevenLabs TTS error {res.status_code}: {res.text}")
         return StreamingResponse(
             iter([res.content]),
             media_type="audio/mpeg",
@@ -140,7 +136,7 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
 
     # Fallback: Groq PlayAI
     if not groq_key:
-        raise HTTPException(status_code=501, detail="No TTS API key set (OPENAI_API_KEY or GROQ_API_KEY)")
+        raise HTTPException(status_code=501, detail="No TTS API key set (ELEVENLABS_API_KEY or GROQ_API_KEY)")
 
     voice = _pick_playai_voice(req.emotions)
     async with httpx.AsyncClient(timeout=90.0) as client:
