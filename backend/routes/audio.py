@@ -145,32 +145,35 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
 
     if el_key:
         voice_id = _pick_el_voice(req.emotions)
-        async with httpx.AsyncClient(timeout=90.0) as client:
-            res = await client.post(
-                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
-                headers={
-                    "xi-api-key":   el_key,
-                    "Content-Type": "application/json",
-                    "Accept":       "audio/mpeg",
-                },
-                json={
-                    "text":     req.story_text,
-                    "model_id": "eleven_multilingual_v2",
-                    "voice_settings": {
-                        "stability":        0.38,
-                        "similarity_boost": 0.80,
-                        "style":            0.42,
-                        "use_speaker_boost": True,
+        try:
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                res = await client.post(
+                    f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+                    headers={
+                        "xi-api-key":   el_key,
+                        "Content-Type": "application/json",
+                        "Accept":       "audio/mpeg",
                     },
-                },
-            )
-            if res.status_code != 200:
-                raise HTTPException(status_code=500, detail=f"ElevenLabs TTS error {res.status_code}: {res.text}")
-        return StreamingResponse(
-            iter([res.content]),
-            media_type="audio/mpeg",
-            headers={"Content-Disposition": "inline; filename=story.mp3"},
-        )
+                    json={
+                        "text":     req.story_text,
+                        "model_id": "eleven_multilingual_v2",
+                        "voice_settings": {
+                            "stability":        0.38,
+                            "similarity_boost": 0.80,
+                            "style":            0.42,
+                            "use_speaker_boost": True,
+                        },
+                    },
+                )
+            if res.status_code == 200:
+                return StreamingResponse(
+                    iter([res.content]),
+                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": "inline; filename=story.mp3"},
+                )
+            # Non-200 from ElevenLabs — fall through to Groq
+        except Exception:
+            pass  # network error — fall through to Groq
 
     # Fallback: Groq PlayAI
     if not groq_key:
