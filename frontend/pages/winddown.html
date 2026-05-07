@@ -182,6 +182,108 @@
     .story-bars.playing .story-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
     .story-bars.playing .story-bar:nth-child(4) { animation: sbar 1.1s ease-in-out 0.6s infinite; }
 
+    /* ── STORY PICKER ── */
+    .sp-entry-card {
+      border-radius: 20px; padding: 18px 20px; margin-top: 24px; cursor: pointer;
+      border: 1px solid rgba(155,93,229,0.28);
+      background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(155,93,229,0.04));
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .sp-entry-card:hover  { background: rgba(124,58,237,0.18); transform: translateY(-2px); }
+    .sp-entry-card:active { transform: scale(0.98); }
+    .sp-modal {
+      position: fixed; inset: 0; z-index: 500;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease; overflow: hidden;
+    }
+    .sp-modal.open { opacity: 1; pointer-events: all; }
+    .sp-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 54px 20px 16px; flex-shrink: 0;
+    }
+    .sp-back-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.55); font-size: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, color 0.2s; line-height: 1; padding: 0;
+    }
+    .sp-back-btn:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.85); }
+    .sp-header-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); flex: 1; }
+    .sp-scroll { flex: 1; overflow-y: auto; padding: 0 20px 40px; }
+    .sp-scroll::-webkit-scrollbar { width: 3px; }
+    .sp-scroll::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 3px; }
+    .sp-view { display: none; }
+    .sp-view.active { display: block; }
+    .sp-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .sp-opt-btn {
+      width: 100%; text-align: left; background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 18px;
+      padding: 18px 20px; cursor: pointer;
+      transition: background 0.2s, transform 0.15s; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .sp-opt-btn:hover  { background: var(--card-hover); transform: translateY(-2px); }
+    .sp-opt-btn:active { transform: scale(0.98); }
+    .sp-opt-icon  { font-size: 28px; flex-shrink: 0; }
+    .sp-opt-name  { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .sp-opt-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .sp-opt-arrow { margin-left: auto; font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
+    .sp-dream-item {
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, transform 0.15s;
+    }
+    .sp-dream-item:hover  { background: var(--card); transform: translateY(-2px); }
+    .sp-dream-item:active { transform: scale(0.98); }
+    .sp-dream-date    { font-size: 10px; color: var(--accent-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .sp-dream-preview { font-size: 13.5px; color: var(--text); line-height: 1.55; }
+    .sp-classic-item {
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 14px 16px; cursor: pointer;
+      margin-bottom: 10px; transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sp-classic-item:hover  { background: var(--card); transform: translateY(-2px); }
+    .sp-classic-item:active { transform: scale(0.98); }
+    .sp-classic-emoji { font-size: 24px; flex-shrink: 0; }
+    .sp-classic-name  { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .sp-classic-desc  { font-size: 12px; color: var(--text-muted); }
+    .sp-classic-arrow { margin-left: auto; font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
+    .sp-loading { display: flex; flex-direction: column; align-items: center; padding: 60px 20px; gap: 16px; }
+    .sp-loading-text { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.65; white-space: pre-line; }
+    .sp-reader-story {
+      font-size: 15px; color: var(--text); line-height: 1.85;
+      padding: 20px 18px; background: rgba(255,255,255,0.03); border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06); margin: 0 0 16px; max-height: 44vh; overflow-y: auto;
+    }
+    .sp-reader-story::-webkit-scrollbar { width: 3px; }
+    .sp-reader-story::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.35); border-radius: 3px; }
+    .sp-player {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(124,58,237,0.1); border: 1px solid rgba(155,93,229,0.2);
+      border-radius: 40px; padding: 10px 16px 10px 10px;
+    }
+    .sp-play-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #fff; font-size: 16px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 12px rgba(124,58,237,0.45); transition: transform 0.15s;
+    }
+    .sp-play-btn:active   { transform: scale(0.92); }
+    .sp-play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sp-player-label { flex: 1; font-size: 13px; color: var(--text-muted); }
+    .sp-bars { display: flex; align-items: center; gap: 2px; height: 18px; }
+    .sp-bar  { width: 3px; border-radius: 2px; background: var(--accent-soft); opacity: 0.35; }
+    .sp-bars.playing .sp-bar { opacity: 0.8; }
+    .sp-bars.playing .sp-bar:nth-child(1) { animation: sbar 1.1s ease-in-out infinite; }
+    .sp-bars.playing .sp-bar:nth-child(2) { animation: sbar 1.1s ease-in-out 0.2s infinite; }
+    .sp-bars.playing .sp-bar:nth-child(3) { animation: sbar 1.1s ease-in-out 0.4s infinite; }
+    .sp-bars.playing .sp-bar:nth-child(4) { animation: sbar 1.1s ease-in-out 0.6s infinite; }
+
     /* ── STRETCH RING ── */
     .stretch-ring { position: relative; width: 104px; height: 104px; margin: 22px auto 16px; }
     .stretch-ring svg { transform: rotate(-90deg); }
@@ -302,6 +404,84 @@
   </div>
 
 
+  <!-- ──────────── STORY PICKER MODAL ──────────── -->
+  <div class="sp-modal" id="modal-story-picker">
+    <div class="sp-header">
+      <button class="sp-back-btn" id="sp-back-btn" onclick="spGoBack()" style="visibility:hidden;">‹</button>
+      <div class="sp-header-title" id="sp-header-title">Bedtime Story</div>
+      <button class="modal-close" style="position:static;margin-left:auto;" onclick="closeStoryPicker()">×</button>
+    </div>
+
+    <div class="sp-scroll" id="sp-scroll">
+
+      <!-- options -->
+      <div class="sp-view active" id="sp-view-options">
+        <div class="sp-subtitle">Choose how your story is made</div>
+        <button class="sp-opt-btn" onclick="spShowDreams()">
+          <span class="sp-opt-icon">🌙</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">From a dream</div>
+            <div class="sp-opt-desc">Pick one of your logged dreams to transform into a bedtime story</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+        <button class="sp-opt-btn" onclick="spStartPatterns(event)">
+          <span class="sp-opt-icon">✦</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">From your patterns</div>
+            <div class="sp-opt-desc" id="sp-patterns-desc">AI weaves a story from the recurring themes and emotions in your dreams</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+        <button class="sp-opt-btn" onclick="spShowClassics()">
+          <span class="sp-opt-icon">📚</span>
+          <div style="flex:1;">
+            <div class="sp-opt-name">Classic stories</div>
+            <div class="sp-opt-desc">A curated library of gentle, sleep-ready bedtime stories</div>
+          </div>
+          <span class="sp-opt-arrow">›</span>
+        </button>
+      </div>
+
+      <!-- pick a dream -->
+      <div class="sp-view" id="sp-view-dreams">
+        <div class="sp-subtitle">Which dream should inspire your story?</div>
+        <div id="sp-dream-list"></div>
+      </div>
+
+      <!-- classics list -->
+      <div class="sp-view" id="sp-view-classics">
+        <div class="sp-subtitle">Timeless tales written for drifting off</div>
+        <div id="sp-classics-list"></div>
+      </div>
+
+      <!-- loading -->
+      <div class="sp-view" id="sp-view-loading">
+        <div class="sp-loading">
+          <span style="font-size:48px;">📖</span>
+          <div class="spinner"></div>
+          <div class="sp-loading-text" id="sp-loading-text">Writing your story…</div>
+        </div>
+      </div>
+
+      <!-- reader -->
+      <div class="sp-view" id="sp-view-reader">
+        <div class="sp-reader-story" id="sp-reader-text"></div>
+        <div class="sp-player">
+          <button class="sp-play-btn" id="sp-play-btn" onclick="window.sp_toggleAudio()">▶</button>
+          <span class="sp-player-label" id="sp-player-label">Tap to listen</span>
+          <div class="sp-bars" id="sp-bars">
+            <div class="sp-bar" style="height:8px;"></div>
+            <div class="sp-bar" style="height:14px;"></div>
+            <div class="sp-bar" style="height:6px;"></div>
+            <div class="sp-bar" style="height:11px;"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ──────────── APP SHELL ──────────── -->
   <div class="app-frame">
     <div class="page-header">🌬️ Wind Down</div>
@@ -338,6 +518,16 @@
         </div>
       </div>
 
+      <!-- ── BEDTIME STORY ENTRY ── -->
+      <div class="sp-entry-card" onclick="openStoryPicker()">
+        <div class="routine-icon">📚</div>
+        <div style="flex:1;">
+          <div class="routine-name">Fall asleep to a story</div>
+          <div class="routine-note">Dream-inspired · Pattern-based · Classics</div>
+        </div>
+        <div class="routine-arrow">›</div>
+      </div>
+
     </div>
 
     <nav class="bottom-nav">
@@ -366,6 +556,7 @@
     let latestDreamText = '';
     let latestEmotions  = [];
     let latestThemes    = [];
+    let allDreams    = [];
     let currentCard  = null;
     let isPlaying    = false;
     let currentAudio = null;
@@ -994,9 +1185,210 @@
       }
     };
 
+    // ── STORY PICKER ─────────────────────────────────────────────
+    const CLASSIC_STORIES = [
+      { title: 'The Moonlit Garden',             emoji: '🌕', desc: 'A gardener tends flowers that only bloom by moonlight',
+        text: `In a valley forgotten by maps, there lived an old gardener named Sera who had spent her whole life tending a garden that only bloomed at night.\n\nEvery evening she would pad out in her soft slippers, lantern swinging, to find each flower opening like a slow, quiet breath. The white roses first — pale as milk, petals curved inward, then gradually releasing their secret perfume. Then the night jasmine, then the silver poppies, then the blue moonflowers that hummed faintly in the dark.\n\nSera never asked why the flowers slept through the day. She only knew that caring for them at night had made her unafraid of darkness — had shown her that some of the most beautiful things only needed stillness and shadow to become themselves.\n\nOn the last night of every month she would sit in the center of the garden, all the flowers open around her, and simply breathe. The air was so soft it felt like being held.\n\nAnd one by one the flowers would turn their faces toward the moon, and Sera would close her eyes, and the garden and the gardener would fall asleep together, comfortable in the quiet dark.` },
+      { title: 'The Cloud Shepherd',             emoji: '☁️', desc: 'A shepherd who guides clouds across the sky at dusk',
+        text: `High above the world where the air is thin and cool, there was a shepherd who tended clouds.\n\nHis name was Elmo, and each morning before sunrise he would climb to the ridge above the town and begin his rounds. The clouds were sleepy creatures — they drifted and bunched and sometimes forgot where they were going. Elmo would nudge the small ones gently with his long staff, herding them toward the horizon where the light was softest.\n\nBy midday the clouds were playful. They bumped into each other and made shapes: a whale, a sleeping dog, a hand reaching toward something out of reach. Elmo watched with patient amusement.\n\nBut evening was his favorite. When the sun began to settle, the clouds would blush — pink first, then a deep amber, then the soft grey-violet of near sleep. They moved slowly now, heavy with the day, and Elmo walked behind them, murmuring, guiding them to the places where they could rest until morning.\n\nAs the last light went out he would sit on his ridge and watch them still. The sky was so quiet. And very slowly, without meaning to, the shepherd and the clouds drifted off together.` },
+      { title: 'The Sleeping Train',             emoji: '🚂', desc: 'A train that carries passengers into peaceful dreams',
+        text: `There is a train that only runs at night, and it has no schedule anyone can find.\n\nIf you are very tired and very still, you may hear it — a low, rhythmic rumble far away, growing closer, like a deep breath repeated. The station appears where you need it to be: a warm platform, soft lights, a small sign that says simply Onward.\n\nThe seats are wide and soft. The windows show nothing but gently moving dark — now and then a distant light, a reflection of the moon on still water. The other passengers are all half-asleep already, their heads resting, their breathing slow.\n\nThe conductor, an old woman with silver hair and quiet eyes, walks the aisle once to hand out something warm to drink. She doesn't speak. She smiles, and somehow that's enough.\n\nThe train moves through places that have no names — through night forests where the trees have grown into shapes of comfort, through plains where grass moves in slow silver waves, through tunnels lined with the soft sound of rain.\n\nNo one knows when they arrive. They only know that when the train finally stills, they are somewhere safe, and they are already asleep.` },
+      { title: 'The River\'s Turn',              emoji: '🌊', desc: 'A river that winds toward the sea, carrying old worries away',
+        text: `Every river remembers where it began, but only the oldest ones remember why they run.\n\nThe river that flowed through the town of Mirren had been running for so long it no longer hurried. It moved with the patience of something that has no doubt about where it is going. It passed under the old stone bridge and turned, slowly, toward the sea.\n\nThe people of Mirren had a custom: before sleep, they would go to the riverbank and name a worry — just whisper it — and let it go. Some said the river took these things away. Others said it was just the act of speaking aloud into the night air that helped.\n\nEither way, the people of Mirren slept deeply.\n\nAt night the river caught the light of the moon in pieces — little white fragments that scattered and rejoined as it moved. Frogs sat on the flat stones, absolutely still, as if they were thinking something very important and very slow.\n\nAnd the water moved on, quiet and sure, carrying everything it had been given — all the worries, all the fears, all the things too heavy for sleep — and bringing them, gently and without complaint, down to the wide sea where they could finally dissolve.` },
+      { title: 'The Library at the End of the Street', emoji: '📖', desc: 'A library open only at night, full of books that read themselves',
+        text: `At the very end of a long, quiet street there was a library that was only open after dark.\n\nNo one had built it, exactly. It had always been there — or so the neighbors said. The door was always unlocked. The lights were low and amber and smelled faintly of old paper.\n\nInside, the books would read themselves to you if you sat still enough. You didn't need to open them. You only had to settle into one of the chairs — which were old and deep and shaped, somehow, exactly like the feeling of being held — and close your eyes, and the books would begin.\n\nNot out loud. More like the way a dream begins: a shape, a color, a feeling of somewhere else. A story slipping in through the sides of sleep.\n\nSome people came to the library every night. Others came once and were satisfied. None of them could say exactly what they had read. Only that they had woken with a sense of having traveled somewhere very beautiful and very far away, and of having been, in that place, completely safe.\n\nThe library closed at dawn. But at night it waited, patient and lit, for anyone who needed a story to carry them to sleep.` },
+      { title: 'The Beekeeper\'s Evening',       emoji: '🐝', desc: 'A beekeeper who hums her bees to sleep each night',
+        text: `Every evening, when the light turned amber and the last of the wildflowers closed, the beekeeper Marta would walk slowly out to her hives.\n\nShe had fourteen hives, and each one she knew by sound. She had learned long ago that bees, like people, needed to be settled into sleep — not just left to fall into it alone. And so each evening she would hum.\n\nNot any particular song. The kind of hum that starts deep in the chest and rises slowly, the kind that has no words because words aren't the point. Just sound. Just the feeling of a voice saying: it's alright, the day is done, you are warm, you are safe.\n\nThe hives would quiet as she moved among them. The buzzing would slow — that particular shift from the busy sound of afternoon to the low, drowsy pulse of dusk. Marta moved without hurry. She pressed her palm, sometimes, gently against a hive and felt it hum back.\n\nWhen the last hive was still she would stand for a moment in the evening air and breathe. The garden was dark and soft. Somewhere a bird called once and then was silent.\n\nMarta walked back to her house. She made her tea. She sat by the window. And very slowly, like her bees, she let the day go.` },
+      { title: 'The Lighthouse in the Fog',      emoji: '🏠', desc: 'A lighthouse keeper whose steady light guides ships safely home',
+        text: `On a rocky point at the edge of the mainland there was a lighthouse that had been turning for longer than anyone could remember.\n\nThe keeper's name was Tobias, and he had been there for forty years. He didn't mind the isolation. He had come to love the particular quality of the foggy nights — the way the beam swung through the white nothing and came back again, steady, certain, patient.\n\nShips would emerge from the fog like half-remembered things — shapes becoming shapes, lights becoming lights. Tobias watched from the gallery, and when they passed safely, something in him eased.\n\nOn quiet nights he would sit inside with his lamp and read, or sometimes just listen. The ocean never stopped making sound — restless and ancient and entirely indifferent — and there was comfort in that too.\n\nHe had learned to sleep deeply here. The light moved through his room in its steady circle, and instead of waking him it became part of the rhythm of sleep — light, dark, light, dark — like breathing, like a heartbeat, like something that would go on as long as it needed to.\n\nTobias pulled his blanket up and felt the lighthouse turn around him, and slept.` },
+      { title: 'The Bakery at Four',             emoji: '🥐', desc: 'A baker who wakes before dawn to fill the town with warmth',
+        text: `The baker, whose name was Ilse, woke at four every morning without an alarm.\n\nHer body simply knew. Before the town was anything other than dark houses and sleeping streets, she was already at work. The oven heated slowly. She moved without turning on extra lights — she had done this so many times her hands remembered everything.\n\nThe bread she made was not complicated. Good flour, water, salt, time. But people came from the next town and the town after that to buy it, and what they said, always, was that it tasted like something they couldn't quite name. Like home, maybe. Like the good kind of tired.\n\nBy the time the sun came up, the bread was already in the window. The whole street smelled of it. Ilse would sit outside for a moment — just a moment, before the day properly began — and drink her coffee and watch the light change.\n\nIn the evening she went to sleep at eight, without shame, without apology. She had earned her rest. She fell asleep quickly, and she slept the way only those who have done good work can sleep — deeply, thoroughly, without reservation.` },
+      { title: 'The Cartographer\'s Last Map',   emoji: '🗺️', desc: 'A mapmaker who charts the landscape of her own dreams',
+        text: `The old cartographer had mapped every country she could reach, and some she could only reach by other means.\n\nHer walls were covered in them — careful lines in sepia and blue, names written small in her neat hand. Mountains, rivers, coastlines. The shapes of things that stayed still long enough to be drawn.\n\nBut in her last years she began a different map. Each morning she would sit at her desk and draw what she had seen in the night — not precisely, because dream geography is not precise, but faithfully, because she believed fidelity to something you experienced matters even if you can't prove it.\n\nThe dream map grew slowly. There was a coast where the tide came in made of light. There was a forest that moved. There was a city built in the shape of a sleep, tall and beautiful and full of doors.\n\nWhen visitors came and looked at the map on her table they were always quiet for a moment. 'Is this a real place?' one asked. 'It's the most real place I know,' she said.\n\nAt night she would fall asleep easily, already anticipating what new shape might be waiting. She went into it the way you go into a country you have traveled before — with curiosity, with respect, with the pen ready.` },
+      { title: 'The Whale Song',                 emoji: '🐋', desc: 'A whale that sings the ocean floor to sleep each night',
+        text: `Deep below the surface where the light gives out completely, a whale was singing.\n\nThe song had no beginning and no end. It moved through the water the way sound moves through a sleeping body — slow and resonant and felt more than heard. Small fish drifted toward it without deciding to. Coral opened faintly in its frequency.\n\nThe whale was old. It had been singing this particular arrangement of sounds for longer than any map above the water had been drawn. It didn't sing for anyone. Or perhaps it sang for everything.\n\nAbove the water, on the surface of the sea, a small boat drifted. The woman in the boat had been awake for a long time and was very tired. She lay on her back and looked at the sky — dense with stars, impossibly far, completely still — and slowly she became aware of something beneath her.\n\nNot vibration exactly. More like the memory of vibration. A deep low presence moving through the hull of the boat and into her back and her shoulders and her tired hands. Something ancient and unhurried and certain.\n\nShe didn't know what it was. She only knew she stopped bracing against sleep. She let herself go heavy. And the whale sang on below her in the dark, in the deep, in the place where everything finally rests.` },
+      { title: 'The Storm Watcher',              emoji: '⛈️', desc: 'A woman who finds peace in watching storms from her window',
+        text: `Her name was Adaeze, and she had never been afraid of storms.\n\nOther children hid under blankets when thunder came. Adaeze pressed her forehead to the glass. She wanted to see it — the white fork of lightning, the way the trees bent all at once like they were agreeing to something, the rain arriving in sheets from the left, then somehow from everywhere.\n\nShe grew up and still she watched. Her apartment had a window she had chosen carefully — wide and west-facing, perfect for weather. On storm nights she would turn off the lamps and sit in the dark with her tea and simply watch.\n\nThere was nothing to be done during a storm. That was what she loved. No list was appropriate. No task was urgent. The storm made everything else seem, correctly, very small.\n\nAfter the lightning and the rain came the long, clean aftermath — the air changed, heavier and easier at once, the streets below her dark and gleaming. Everything washed. Everything a little renewed.\n\nAdaeze would finish her tea and go to bed. She slept best after storms. She had been like this her whole life and she thought she understood why: storms reminded her that there were things much larger than whatever she was carrying, and that those things passed too, always, and left the world somehow more itself.` },
+      { title: 'The Mountain Pass at Dusk',      emoji: '🏔️', desc: 'A traveler finds rest at a high mountain pass as night falls',
+        text: `She had been walking for three days and the pass was finally behind her.\n\nThe far side of the mountain was different — softer, the angle of the slope changed, trees that were different trees. The light was going fast. She didn't rush.\n\nShe found a flat place among old stones and made her camp the way she always made it: without hurry, without wasted motion. The fire took on the first try. She was pleased by this.\n\nFrom her elevation she could see where she had come from — or some of it. The long valley, the lower forests, the vague suggestion of the river she had followed for a day. Everything small and quiet and further away than she had thought.\n\nThe stars here were different from the city stars. They were dense and very present, the kind that made you feel that you were on the outside of something enormous and held up against it.\n\nShe lay on her back for a while before sleep. Her body was tired in a way that felt clean. Her pack was propped up nearby. The fire burned low.\n\nShe had crossed the pass. Whatever was on the other side of it would wait until morning. Right now there was only the dark and the cold air and the particular satisfaction of being exactly where she had set out to be. She closed her eyes, and the mountain was very still around her.` },
+    ];
+
+    let _spViewStack  = [];
+    let _spAudio      = null;
+    let _spPlaying    = false;
+    let _spStoryText  = '';
+    let _spEmotions   = [];
+    let _spThemes     = [];
+
+    function openStoryPicker() {
+      document.getElementById('modal-story-picker').classList.add('open');
+      _spShowView('options');
+    }
+
+    function closeStoryPicker() {
+      document.getElementById('modal-story-picker').classList.remove('open');
+      _spStopAudio();
+    }
+    window.closeStoryPicker = closeStoryPicker;
+
+    function _spShowView(name) {
+      document.querySelectorAll('.sp-view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`sp-view-${name}`)?.classList.add('active');
+      const titles = { options: 'Bedtime Story', dreams: 'Choose a Dream', classics: 'Classic Stories', loading: 'Writing Your Story…', reader: 'Your Story' };
+      document.getElementById('sp-header-title').textContent = titles[name] || 'Bedtime Story';
+      document.getElementById('sp-back-btn').style.visibility = name === 'options' ? 'hidden' : 'visible';
+      document.getElementById('sp-scroll').scrollTop = 0;
+    }
+
+    window.spGoBack = function() {
+      _spStopAudio();
+      _spShowView(_spViewStack.pop() || 'options');
+    };
+
+    window.spShowDreams = function() {
+      _spViewStack.push('options');
+      _spShowView('dreams');
+      const list = document.getElementById('sp-dream-list');
+      if (!allDreams.length) {
+        list.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:14px;">No dreams logged yet.<br><br><a href="journal.html" style="color:var(--accent-soft);">Log your first dream →</a></div>`;
+        return;
+      }
+      list.innerHTML = allDreams.slice(0, 12).map((d, i) => {
+        const raw = d.createdAt;
+        const ms  = raw?.seconds ? raw.seconds * 1000 : (raw ? new Date(raw).getTime() : 0);
+        const date = ms ? new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const preview = (d.text || '').slice(0, 130) + ((d.text || '').length > 130 ? '…' : '');
+        return `<div class="sp-dream-item" onclick="startDreamStory(${i})">${date ? `<div class="sp-dream-date">${date}</div>` : ''}<div class="sp-dream-preview">${preview}</div></div>`;
+      }).join('');
+    };
+
+    window.startDreamStory = async function(idx) {
+      _spViewStack.push('dreams');
+      _spEmotions = allDreams[idx]?.emotions || latestEmotions;
+      _spThemes   = allDreams[idx]?.themes   || latestThemes;
+      _spShowView('loading');
+      document.getElementById('sp-loading-text').textContent = 'Writing your story…\nThis takes a moment';
+      try {
+        const result = await generateBedtimeStory(allDreams[idx]?.text || 'a quiet, peaceful night');
+        _spStoryText = (result.audio_url || '').replace('STORY_TEXT:', '');
+        _spShowReader(_spStoryText);
+      } catch(e) {
+        document.getElementById('sp-loading-text').innerHTML = `<span style="color:rgba(239,100,100,0.8);">Couldn't generate story<br>${e.message}</span>`;
+      }
+    };
+
+    window.spStartPatterns = async function(e) {
+      if (!allDreams.length) {
+        const desc = document.getElementById('sp-patterns-desc');
+        const orig = desc.textContent;
+        desc.style.color = 'rgba(239,100,100,0.85)';
+        desc.textContent = 'No dreams yet — log some first!';
+        setTimeout(() => { desc.style.color = ''; desc.textContent = orig; }, 2500);
+        return;
+      }
+      _spViewStack.push('options');
+      _spEmotions = latestEmotions;
+      _spThemes   = latestThemes;
+      _spShowView('loading');
+      document.getElementById('sp-loading-text').textContent = 'Analysing your dream patterns…\nThis takes a moment';
+      try {
+        const summaries = allDreams.slice(0, 8).map(d => (d.text || '').slice(0, 200));
+        const result = await generateStoryFromPatterns(summaries, latestEmotions, latestThemes);
+        _spStoryText = result.story_text || '';
+        _spShowReader(_spStoryText);
+      } catch(e) {
+        document.getElementById('sp-loading-text').innerHTML = `<span style="color:rgba(239,100,100,0.8);">Couldn't generate story<br>${e.message}</span>`;
+      }
+    };
+
+    window.spShowClassics = function() {
+      _spViewStack.push('options');
+      _spShowView('classics');
+      document.getElementById('sp-classics-list').innerHTML = CLASSIC_STORIES.map((s, i) => `
+        <div class="sp-classic-item" onclick="openClassicStory(${i})">
+          <span class="sp-classic-emoji">${s.emoji}</span>
+          <div style="flex:1;">
+            <div class="sp-classic-name">${s.title}</div>
+            <div class="sp-classic-desc">${s.desc}</div>
+          </div>
+          <span class="sp-classic-arrow">›</span>
+        </div>`).join('');
+    };
+
+    window.openClassicStory = function(idx) {
+      _spViewStack.push('classics');
+      _spStoryText = CLASSIC_STORIES[idx].text;
+      _spEmotions  = ['peaceful'];
+      _spThemes    = [];
+      _spShowReader(_spStoryText);
+    };
+
+    function _spShowReader(text) {
+      document.getElementById('sp-reader-text').textContent = text;
+      _spResetPlayer();
+      _spShowView('reader');
+    }
+
+    function _spResetPlayer() {
+      _spStopAudio();
+      const btn  = document.getElementById('sp-play-btn');
+      const lbl  = document.getElementById('sp-player-label');
+      const bars = document.getElementById('sp-bars');
+      if (btn)  { btn.textContent = '▶'; btn.disabled = false; }
+      if (lbl)  lbl.textContent = 'Tap to listen';
+      if (bars) bars.classList.remove('playing');
+      _spPlaying = false;
+    }
+
+    function _spStopAudio() {
+      if (_spAudio) { _spAudio.pause(); _spAudio.src = ''; _spAudio = null; }
+      _spPlaying = false;
+    }
+
+    function _spSetUI(icon, label, playing) {
+      const btn  = document.getElementById('sp-play-btn');
+      const lbl  = document.getElementById('sp-player-label');
+      const bars = document.getElementById('sp-bars');
+      if (btn)  { btn.textContent = icon; btn.disabled = false; }
+      if (lbl)  lbl.textContent = label;
+      if (bars) bars.classList.toggle('playing', playing);
+      _spPlaying = playing;
+    }
+
+    window.sp_toggleAudio = async function() {
+      if (_spPlaying) {
+        if (_spAudio) _spAudio.pause();
+        _spSetUI('▶', 'Paused', false);
+        return;
+      }
+      if (_spAudio && _spAudio.paused && _spAudio.currentTime > 0) {
+        _spAudio.play();
+        _spSetUI('⏸', 'Now reading…', true);
+        return;
+      }
+      const btn = document.getElementById('sp-play-btn');
+      btn.disabled = true;
+      _spSetUI('…', 'Preparing voice…', false);
+      try {
+        const url = await readStoryTTS(_spStoryText, _spEmotions, _spThemes);
+        _spAudio = new Audio(url);
+        _spAudio.onplay  = () => _spSetUI('⏸', 'Now reading…', true);
+        _spAudio.onpause = () => _spSetUI('▶', 'Paused', false);
+        _spAudio.onended = () => { _spSetUI('▶', 'Listen again', false); _spAudio = null; };
+        _spAudio.play();
+      } catch(e) {
+        console.error('SP TTS error:', e);
+        _spSetUI('▶', `Voice error: ${e.message}`, false);
+        btn.disabled = false;
+      }
+    };
+
+    window.openStoryPicker = openStoryPicker;
+
     // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
+      allDreams = dreams;
       const latest   = dreams[0];
       latestDreamText = latest?.text || '';
       latestEmotions  = latest?.emotions || [];

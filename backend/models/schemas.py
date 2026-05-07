@@ -74,6 +74,12 @@ class StoryTTSRequest(BaseModel):
     themes: List[str] = []
 
 
+class StoryFromPatternsRequest(BaseModel):
+    dream_summaries: List[str]
+    emotions: List[str] = []
+    themes: List[str] = []
+
+
 class SoundscapeRequest(BaseModel):
     emotions: List[str]
     themes: List[str] = []

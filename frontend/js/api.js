@@ -111,6 +111,16 @@ async function transcribeAudio(audioBlob) {
   return res.json();
 }
 
+async function generateStoryFromPatterns(dreamSummaries, emotions = [], themes = []) {
+  const res = await fetch(`${BASE_URL}/audio/story-from-patterns`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+    body: JSON.stringify({ dream_summaries: dreamSummaries, emotions, themes })
+  });
+  if (!res.ok) throw new Error('Pattern story generation failed');
+  return res.json();
+}
+
 async function generateBedtimeStory(dreamText) {
   const res = await fetch(`${BASE_URL}/audio/story`, {
     method: 'POST',

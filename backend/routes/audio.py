@@ -8,7 +8,7 @@ from backend.models.schemas import (
     AudioRequest, AudioResponse, SoundscapeRequest,
     SoundscapeMenuRequest, SoundscapeMenuResponse,
     WinddownRoutineRequest, WinddownRoutineResponse,
-    StoryTTSRequest,
+    StoryTTSRequest, StoryFromPatternsRequest,
 )
 from backend.auth import verify_token
 
@@ -53,6 +53,44 @@ async def generate_story(req: AudioRequest, _=Depends(verify_token)):
         return AudioResponse(audio_url=f"STORY_TEXT:{story_text}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/story-from-patterns")
+async def story_from_patterns(req: StoryFromPatternsRequest, _=Depends(verify_token)):
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    summaries_text = "\n".join(f"- {s}" for s in req.dream_summaries[:8] if s.strip())
+    emotions_text  = ", ".join(req.emotions[:5]) if req.emotions else "peaceful, calm"
+    themes_text    = ", ".join(req.themes[:5])   if req.themes   else "rest, quiet"
+
+    prompt = f"""Based on the recurring themes and emotions from someone's dream journal, write a slow, peaceful, third-person bedtime story (180–220 words).
+
+The story should subtly echo the emotional landscape of their dreams — using similar feelings, imagery, and motifs — but transformed into something calm and beautiful.
+
+Dream journal excerpts:
+{summaries_text}
+
+Recurring emotions: {emotions_text}
+Recurring themes: {themes_text}
+
+Write a gentle, lullaby-like bedtime story. Use flowing, unhurried language. End with the main character drifting peacefully to sleep. Do not reference dreams or the journal directly."""
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        res = await client.post(
+            GROQ_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.75,
+            },
+        )
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Groq error {res.status_code}")
+        story_text = res.json()["choices"][0]["message"]["content"].strip()
+        return {"story_text": story_text}
 
 
 # ElevenLabs voice IDs for narration — pre-made voices available on all plans
