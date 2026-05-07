@@ -82,14 +82,67 @@ def _pick_playai_voice(emotions: list) -> str:
     return _PLAYAI_DEFAULT
 
 
+# OpenAI TTS voices matched to dream emotional tone
+# shimmer/nova/fable are the most natural for calm narration
+_OPENAI_VOICE_MAP = {
+    "anxiety":     ("shimmer", 0.88),
+    "fear":        ("shimmer", 0.85),
+    "dread":       ("nova",    0.85),
+    "restlessness":("shimmer", 0.88),
+    "sadness":     ("nova",    0.88),
+    "grief":       ("nova",    0.85),
+    "nostalgia":   ("fable",   0.90),
+    "tenderness":  ("shimmer", 0.90),
+    "peaceful":    ("nova",    0.92),
+    "joy":         ("nova",    0.92),
+    "wonder":      ("fable",   0.90),
+    "hope":        ("nova",    0.90),
+    "excitement":  ("shimmer", 0.88),
+}
+_OPENAI_DEFAULT_VOICE = ("nova", 0.88)
+
+
+def _pick_openai_voice(emotions: list) -> tuple:
+    for e in emotions:
+        v = _OPENAI_VOICE_MAP.get(e.lower())
+        if v:
+            return v
+    return _OPENAI_DEFAULT_VOICE
+
+
 @router.post("/story-tts")
 async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
-    groq_key = os.getenv("GROQ_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    groq_key   = os.getenv("GROQ_API_KEY")
+
+    if openai_key:
+        # OpenAI TTS-1-HD: significantly more natural for narration
+        voice, speed = _pick_openai_voice(req.emotions)
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            res = await client.post(
+                "https://api.openai.com/v1/audio/speech",
+                headers={"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"},
+                json={
+                    "model":           "tts-1-hd",
+                    "input":           req.story_text,
+                    "voice":           voice,
+                    "response_format": "mp3",
+                    "speed":           speed,
+                },
+            )
+            if res.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"OpenAI TTS error {res.status_code}: {res.text}")
+        return StreamingResponse(
+            iter([res.content]),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=story.mp3"},
+        )
+
+    # Fallback: Groq PlayAI
     if not groq_key:
-        raise HTTPException(status_code=501, detail="GROQ_API_KEY not set")
+        raise HTTPException(status_code=501, detail="No TTS API key set (OPENAI_API_KEY or GROQ_API_KEY)")
 
     voice = _pick_playai_voice(req.emotions)
-
     async with httpx.AsyncClient(timeout=90.0) as client:
         res = await client.post(
             "https://api.groq.com/openai/v1/audio/speech",
@@ -126,7 +179,11 @@ async def transcribe_audio(file: UploadFile = File(...), _=Depends(verify_token)
             GROQ_WHISPER_URL,
             headers={"Authorization": f"Bearer {api_key}"},
             files={"file": (filename, audio_data, content_type)},
-            data={"model": "whisper-large-v3"},
+            data={
+                "model":    "whisper-large-v3-turbo",
+                "language": "en",
+                "prompt":   "Personal dream journal entry. The speaker describes a dream they had, including people, places, emotions, and events. May include proper nouns and vivid imagery.",
+            },
         )
         if res.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Whisper error {res.status_code}: {res.text}")
