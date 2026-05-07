@@ -6,7 +6,7 @@ class ViewModel {
 
     #state = {
         screen: 'home',
-        screenData: {},
+        screenData: [],
     };
 
     // The ViewModel suggests that the state be accessed through its getter.
@@ -46,8 +46,8 @@ class ViewModel {
 
     // The ViewModel provides a way to update the data for the current screen.
     
-    setScreenData(patch) {
-        this.#state.screenData = { ...this.#state.screenData, ...patch };
+    setScreenData(data) {
+        this.#state.screenData = data;
         this.#notify();
     }
 }
