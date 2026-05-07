@@ -127,7 +127,10 @@ async function readStoryTTS(storyText, emotions = [], themes = []) {
     headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
     body: JSON.stringify({ story_text: storyText, emotions, themes })
   });
-  if (!res.ok) throw new Error(`TTS error ${res.status}`);
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail.detail || `TTS error ${res.status}`);
+  }
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }

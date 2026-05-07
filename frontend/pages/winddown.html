@@ -660,7 +660,7 @@
         _storySetUI('⏸', 'Now reading…', true);
         return;
       }
-      // Start fresh — try ElevenLabs TTS, fall back to Web Speech
+      // Start fresh — call backend TTS
       const btn = document.getElementById('story-play-btn');
       btn.disabled = true;
       _storySetUI('…', 'Preparing voice…', false);
@@ -673,8 +673,9 @@
         storyAudio.onended = () => { _storySetUI('▶', 'Listen again', false); storyAudio = null; };
         storyAudio.play();
       } catch (e) {
-        // Fallback: Web Speech API
-        _speakStory(storyText_);
+        console.error('TTS error:', e);
+        _storySetUI('▶', `Voice error: ${e.message}`, false);
+        btn.disabled = false;
       }
     };
 
