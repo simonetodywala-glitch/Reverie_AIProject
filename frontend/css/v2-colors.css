@@ -1,34 +1,52 @@
+/* ── NIGHT (default) — matches old #0a0015 deep purple ── */
 :root, ::backdrop {
-    --hue: 300;
+    --hue: 299;
+
+    --bg-chroma: 0.05;
+    --surface-chroma: 0.10;
+    --container-chroma: 0.16;
+    --accent-chroma: 0.22;
+
+    --bg-lightness: 0.06;
+    --surface-lightness: 0.13;
+    --container-lightness: 0.21;
+    --accent-lightness: 0.68;
+    --text-lightness: 0.90;
+
     --secondary-hue: calc(var(--hue) - 40);
     --tertiary-hue: calc(var(--hue) + 40);
 
-    --bg-chroma: 0.02;
-    --surface-chroma: 0.04;
-    --container-chroma: 0.08;
-    --accent-chroma: 0.14;
+    --primary:            oklch(var(--accent-lightness)    var(--accent-chroma)    var(--hue));
+    --onPrimary:          oklch(var(--bg-lightness)        var(--bg-chroma)        var(--hue));
+    --background:         oklch(var(--bg-lightness)        var(--bg-chroma)        var(--hue));
+    --onBackground:       oklch(var(--text-lightness)      var(--surface-chroma)   var(--hue));
+    --surface:            oklch(var(--surface-lightness)   var(--surface-chroma)   var(--hue));
+    --onSurface:          oklch(var(--accent-lightness)    var(--surface-chroma)   var(--hue));
+    --container:          oklch(var(--container-lightness) var(--container-chroma) var(--hue));
+    --onContainer:        oklch(var(--text-lightness)      var(--container-chroma) var(--hue));
 
-    --bg-lightness: 0.2;
-    --surface-lightness: 0.3;
-    --container-lightness: 0.4;
-    --accent-lightness: 0.7;
-    --text-lightness: 0.8;
+    --secondary:          oklch(var(--accent-lightness)    var(--accent-chroma)    var(--secondary-hue));
+    --secondarySurface:   oklch(var(--surface-lightness)   var(--surface-chroma)   var(--secondary-hue));
+    --secondaryContainer: oklch(var(--container-lightness) var(--container-chroma) var(--secondary-hue));
 
-    --primary:           oklch(var(--accent-lightness)    var(--accent-chroma)    var(--hue));
-    --onPrimary:         oklch(var(--bg-lightness)        var(--bg-chroma)        var(--hue));
-    --background:        oklch(var(--bg-lightness)        var(--bg-chroma)        var(--hue));
-    --onBackground:      oklch(var(--text-lightness)      var(--surface-chroma)   var(--hue));
-    --surface:           oklch(var(--surface-lightness)   var(--surface-chroma)   var(--hue));
-    --onSurface:         oklch(var(--accent-lightness)    var(--surface-chroma)   var(--hue));
-    --container:         oklch(var(--container-lightness) var(--container-chroma) var(--hue));
-    --onContainer:       oklch(var(--text-lightness)      var(--container-chroma) var(--hue));
+    --tertiary:           oklch(var(--accent-lightness)    var(--accent-chroma)    var(--tertiary-hue));
+    --tertiarySurface:    oklch(var(--surface-lightness)   var(--surface-chroma)   var(--tertiary-hue));
+    --tertiaryContainer:  oklch(var(--container-lightness) var(--container-chroma) var(--tertiary-hue));
+    --onTertiaryContainer:oklch(var(--text-lightness)      var(--container-chroma) var(--tertiary-hue));
+}
 
-    --secondary:         oklch(var(--accent-lightness)    var(--accent-chroma)    var(--secondary-hue));
-    --secondarySurface:  oklch(var(--surface-lightness)   var(--surface-chroma)   var(--secondary-hue));
-    --secondaryContainer:oklch(var(--container-lightness) var(--container-chroma) var(--secondary-hue));
+/* ── MORNING — matches old #c8eeff sky blue ── */
+body.morning {
+    --hue: 215;
 
-    --tertiary:          oklch(var(--accent-lightness)    var(--accent-chroma)    var(--tertiary-hue));
-    --tertiarySurface:   oklch(var(--surface-lightness)   var(--surface-chroma)   var(--tertiary-hue));
-    --tertiaryContainer: oklch(var(--container-lightness) var(--container-chroma) var(--tertiary-hue));
-    --onTertiaryContainer:oklch(var(--text-lightness)     var(--container-chroma) var(--tertiary-hue));
+    --bg-chroma: 0.04;
+    --surface-chroma: 0.06;
+    --container-chroma: 0.10;
+    --accent-chroma: 0.18;
+
+    --bg-lightness: 0.91;
+    --surface-lightness: 0.83;
+    --container-lightness: 0.75;
+    --accent-lightness: 0.38;
+    --text-lightness: 0.15;
 }

@@ -5,11 +5,19 @@
     if (!localStorage.getItem('reverie_onboarded')) {
       window.location.href = 'pages/onboarding.html';
     }
+    // Apply morning class immediately to prevent color flash
+    (function() {
+      const h = new Date().getHours();
+      if (h >= 6 && h < 18) document.documentElement.classList.add('morning-pending');
+    })();
   </script>
-  <style>body { opacity: 0; transition: opacity 0.25s ease; }</style>
+  <style>
+    body { opacity: 0; transition: opacity 0.25s ease; }
+    .morning-pending body, html.morning-pending body { /* handled in DOMContentLoaded */ }
+  </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#17141e">
+  <meta name="theme-color" content="#17141e" id="theme-color-meta">
   <title>Reverie — Home</title>
   <link rel="stylesheet" href="css/v2-colors.css">
   <link rel="stylesheet" href="css/v2-components.css">
@@ -23,7 +31,7 @@
     <div class="moon-wrapper" id="moon-wrapper" onclick="handleMoonClick()">
       <div class="moon" id="moon"></div>
     </div>
-    <p class="onBackgroundText" id="greeting-text">Good evening</p>
+    <p class="onBackgroundText" id="greeting-text"><span id="greeting-main">Good evening</span><span class="greeting-sub" id="greeting-sub">Ready to wind down?</span></p>
   </div>
 
   <!-- MAIN CONTENT -->
@@ -99,9 +107,19 @@
   </div>
 </div>
 
-<!-- MOON ANIMATION: once per session -->
+<!-- TIME-OF-DAY + MOON ANIMATION -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    const h = new Date().getHours();
+    const isMorning = h >= 6 && h < 18;
+
+    if (isMorning) {
+      document.body.classList.add('morning');
+      const meta = document.getElementById('theme-color-meta');
+      if (meta) meta.setAttribute('content', '#c8eeff');
+    }
+    document.documentElement.classList.remove('morning-pending');
+
     if (!sessionStorage.getItem('moon-animated')) {
       document.getElementById('moon-wrapper').classList.add('animate');
       document.getElementById('moon').classList.add('animate');
@@ -109,6 +127,10 @@
     } else {
       document.getElementById('moon').classList.add('animate');
     }
+
+    // Placeholder sub text — Firebase block will update both main + sub with real name
+    const sub = document.getElementById('greeting-sub');
+    if (sub) sub.textContent = isMorning ? 'Good to see you today' : 'Ready to wind down?';
   });
 </script>
 
@@ -245,12 +267,18 @@
 
     // ── Greeting ──
     const rawName = (user.displayName || profile?.name || '').trim();
-    const firstName = rawName ? rawName.split(' ')[0] : '';
+    const raw0 = rawName ? rawName.split(' ')[0] : '';
+    const firstName = raw0 ? raw0.charAt(0).toUpperCase() + raw0.slice(1).toLowerCase() : '';
     const hour = new Date().getHours();
-    const timeGreet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    document.getElementById('greeting-text').textContent = firstName
-      ? `${timeGreet}, ${firstName}!`
-      : `${timeGreet}!`;
+    const timeGreet = hour < 5 ? 'Still up?' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const subLine = hour < 12
+      ? 'Start your day right'
+      : hour < 18 ? 'Hope your day went well'
+      : 'Ready to wind down?';
+    const mainEl = document.getElementById('greeting-main');
+    const subEl  = document.getElementById('greeting-sub');
+    if (mainEl) mainEl.textContent = firstName ? `${timeGreet}, ${firstName}!` : `${timeGreet}!`;
+    if (subEl)  subEl.textContent  = subLine;
 
     // ── Dream hero card ──
     const heroEl = document.getElementById('dream-hero');
