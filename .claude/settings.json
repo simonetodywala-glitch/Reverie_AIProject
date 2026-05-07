@@ -1,37 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git push *)",
-      "Bash(git reflog *)",
-      "Bash(git gc *)",
-      "Bash(git reset *)",
-      "Bash(python -c \"import uvicorn, fastapi, google.generativeai\")",
-      "Bash(uvicorn backend.main:app --reload --port 8000)",
-      "Bash(curl -s http://127.0.0.1:8000/)",
-      "Bash(python -c \"import dotenv; print\\('ok'\\)\")",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was flying over mountains\"}')",
-      "Bash(python3 -c ' *)",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was flying over purple mountains\"}')",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/dreams/analyze -H 'Content-Type: application/json' -d '{\"text\": \"I was in my childhood home but the walls were made of purple velvet and I could not find my keys\"}')",
-      "Bash(git -C /Users/simonetodywala/Downloads/reverie remote -v)",
-      "WebSearch",
-      "WebFetch(domain:medium.com)",
-      "Bash(grep -E \"\\\\.\\(html|js|py\\)$\")",
-      "Bash(git pull *)",
-      "Bash(git stash *)",
-      "Bash(firebase deploy *)",
-      "Bash(git fetch *)",
-      "Bash(git merge *)",
-      "Bash(curl -s http://127.0.0.1:8000/openapi.json)",
-      "Bash(python3 -c \"import sys,json; paths=json.load\\(sys.stdin\\).get\\('paths',{}\\); print\\('\\\\n'.join\\(k for k in paths if 'soundscape' in k\\)\\)\")",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/audio/soundscape-menu -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"custom_prompt\": \"rain on a window\"}')",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/audio/soundscape-menu -H 'Content-Type: application/json' -d '{\"custom_prompt\": \"rain\"}')",
-      "Read(//Users/simonetodywala/**)",
-      "Bash(/Users/simonetodywala/PyCharmMiscProject/.venv/bin/python3 -c ' *)",
-      "Bash(/opt/anaconda3/bin/python -c ' *)"
-    ],
-    "additionalDirectories": [
-      "/Users/simonetodywala/Desktop"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

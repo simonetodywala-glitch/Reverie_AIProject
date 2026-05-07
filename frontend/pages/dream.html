@@ -568,6 +568,10 @@
       currentUser = user;
       userProfile = await getUserProfile(user.uid).catch(() => null);
 
+      if (new URLSearchParams(window.location.search).get('chat') === '1') {
+        setTimeout(() => toggleChat(), 600);
+      }
+
       if (!dreamId) {
         document.getElementById('dream-content').innerHTML =
           '<div style="text-align:center; padding:60px 20px; color:var(--text-dim);">No dream selected.</div>';
