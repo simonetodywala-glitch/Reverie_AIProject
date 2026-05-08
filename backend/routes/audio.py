@@ -180,13 +180,15 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
         raise HTTPException(status_code=501, detail="No TTS API key set (ELEVENLABS_API_KEY or GROQ_API_KEY)")
 
     voice = _pick_orpheus_voice(req.emotions)
+    # Orpheus free tier: 1200 TPM. Cap at 4000 chars (~1000 tokens) to stay under limit.
+    groq_text = req.story_text[:4000]
     async with httpx.AsyncClient(timeout=90.0) as client:
         res = await client.post(
             "https://api.groq.com/openai/v1/audio/speech",
             headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
             json={
                 "model":           "canopylabs/orpheus-v1-english",
-                "input":           req.story_text,
+                "input":           groq_text,
                 "voice":           voice,
                 "response_format": "wav",
             },
