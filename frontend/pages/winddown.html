@@ -1357,7 +1357,29 @@
 
     function _spStopAudio() {
       if (_spAudio) { _spAudio.pause(); _spAudio.src = ''; _spAudio = null; }
+      window.speechSynthesis?.cancel();
       _spPlaying = false;
+    }
+
+    async function _spSpeakFallback(text) {
+      if (!window.speechSynthesis) { _spSetUI('▶', 'Audio unavailable', false); return; }
+      window.speechSynthesis.cancel();
+      let voices = window.speechSynthesis.getVoices();
+      if (!voices.length) {
+        await new Promise(r => window.speechSynthesis.addEventListener('voiceschanged', r, { once: true }));
+        voices = window.speechSynthesis.getVoices();
+      }
+      const calm = voices.find(v => ['Samantha','Karen','Moira','Serena'].some(n => v.name.includes(n)))
+        || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('google'))
+        || voices.find(v => v.lang.startsWith('en'));
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.82; u.pitch = 0.95;
+      if (calm) u.voice = calm;
+      u.onstart = () => _spSetUI('⏸', 'Device voice · Now reading…', true);
+      u.onend   = () => _spSetUI('▶', 'Listen again', false);
+      u.onpause = () => _spSetUI('▶', 'Paused', false);
+      u.onerror = () => _spSetUI('▶', 'Audio unavailable', false);
+      window.speechSynthesis.speak(u);
     }
 
     function _spSetUI(icon, label, playing) {
@@ -1372,14 +1394,15 @@
 
     window.sp_toggleAudio = async function() {
       if (_spPlaying) {
-        if (_spAudio) _spAudio.pause();
+        if (_spAudio) _spAudio.pause(); else window.speechSynthesis?.pause();
         _spSetUI('▶', 'Paused', false);
         return;
       }
       if (_spAudio && _spAudio.paused && _spAudio.currentTime > 0) {
-        _spAudio.play();
-        _spSetUI('⏸', 'Now reading…', true);
-        return;
+        _spAudio.play(); _spSetUI('⏸', 'Now reading…', true); return;
+      }
+      if (window.speechSynthesis?.paused) {
+        window.speechSynthesis.resume(); _spSetUI('⏸', 'Device voice · Now reading…', true); return;
       }
       const btn = document.getElementById('sp-play-btn');
       btn.disabled = true;
@@ -1393,8 +1416,7 @@
         _spAudio.play();
       } catch(e) {
         console.error('SP TTS error:', e);
-        _spSetUI('▶', `Voice error: ${e.message}`, false);
-        btn.disabled = false;
+        _spSpeakFallback(_spStoryText);
       }
     };
 

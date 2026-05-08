@@ -171,9 +171,9 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
                     media_type="audio/mpeg",
                     headers={"Content-Disposition": "inline; filename=story.mp3"},
                 )
-            # Non-200 from ElevenLabs — fall through to Groq
-        except Exception:
-            pass  # network error — fall through to Groq
+            print(f"[TTS] ElevenLabs {res.status_code}: {res.text[:300]}")
+        except Exception as ex:
+            print(f"[TTS] ElevenLabs exception: {ex}")
 
     # Fallback: Groq PlayAI
     if not groq_key:
