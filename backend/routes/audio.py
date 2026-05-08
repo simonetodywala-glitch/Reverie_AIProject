@@ -123,19 +123,19 @@ def _pick_el_voice(emotions: list) -> str:
     return _EL_DEFAULT_VOICE
 
 
-# Groq PlayAI fallback
-_PLAYAI_DEFAULT = "Celeste-PlayAI"
+# Groq Orpheus fallback (replaced decommissioned playai-tts)
+_ORPHEUS_DEFAULT = "hannah"
 
-def _pick_playai_voice(emotions: list) -> str:
-    m = {"anxiety":"Celeste-PlayAI","fear":"Celeste-PlayAI","dread":"Eleanor-PlayAI",
-         "sadness":"Eleanor-PlayAI","grief":"Eleanor-PlayAI","tenderness":"Waverly-PlayAI",
-         "peaceful":"Waverly-PlayAI","joy":"Phoebe-PlayAI","wonder":"Phoebe-PlayAI",
-         "hope":"Phoebe-PlayAI"}
+def _pick_orpheus_voice(emotions: list) -> str:
+    m = {"anxiety":"hannah","fear":"hannah","dread":"diana","restlessness":"hannah",
+         "sadness":"diana","grief":"diana","tenderness":"autumn",
+         "nostalgia":"austin","wonder":"austin","awe":"austin",
+         "peaceful":"autumn","hope":"autumn","joy":"hannah","excitement":"hannah"}
     for e in emotions:
         v = m.get(e.lower())
         if v:
             return v
-    return _PLAYAI_DEFAULT
+    return _ORPHEUS_DEFAULT
 
 
 @router.post("/story-tts")
@@ -179,16 +179,16 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
     if not groq_key:
         raise HTTPException(status_code=501, detail="No TTS API key set (ELEVENLABS_API_KEY or GROQ_API_KEY)")
 
-    voice = _pick_playai_voice(req.emotions)
+    voice = _pick_orpheus_voice(req.emotions)
     async with httpx.AsyncClient(timeout=90.0) as client:
         res = await client.post(
             "https://api.groq.com/openai/v1/audio/speech",
             headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
             json={
-                "model":           "playai-tts",
+                "model":           "canopylabs/orpheus-v1-english",
                 "input":           req.story_text,
                 "voice":           voice,
-                "response_format": "mp3",
+                "response_format": "wav",
             },
         )
         if res.status_code != 200:
@@ -196,8 +196,8 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
 
     return StreamingResponse(
         iter([res.content]),
-        media_type="audio/mpeg",
-        headers={"Content-Disposition": "inline; filename=story.mp3"},
+        media_type="audio/wav",
+        headers={"Content-Disposition": "inline; filename=story.wav"},
     )
 
 
