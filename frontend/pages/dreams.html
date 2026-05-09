@@ -49,6 +49,7 @@
     .dream-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
     .dream-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
     .dream-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .nightmare-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(239,100,100,0.9); background: rgba(239,100,100,0.12); border: 1px solid rgba(239,100,100,0.2); border-radius: 20px; padding: 2px 8px; margin-left: 6px; vertical-align: middle; }
     .dream-view-btn {
       font-size: 12px; font-weight: 700; color: var(--accent-soft);
       text-decoration: none; letter-spacing: 0.03em;
@@ -335,9 +336,15 @@
           const cls = emotionTags[e.toLowerCase()] || '';
           return `<span class="tag ${cls}">${e}</span>`;
         }).join('');
+        const NIGHTMARE_EMOTIONS = ['fear','dread','anxiety','restlessness'];
+        const isNightmare = (dream.emotions || []).some(e => NIGHTMARE_EMOTIONS.includes(e.toLowerCase()));
         return `
           <div class="dream-card" onclick="window.location.href='dream.html?id=${dream.id}'">
-            <div class="dream-date">${formatDate(dream.createdAt)}</div>
+            <div style="display:flex;align-items:center;">
+              <div class="dream-date">${formatDate(dream.createdAt)}</div>
+              ${isNightmare ? '<span class="nightmare-tag">nightmare</span>' : ''}
+              ${dream.lucid ? '<span class="nightmare-tag" style="color:rgba(155,93,229,0.9);background:rgba(155,93,229,0.12);border-color:rgba(155,93,229,0.2);margin-left:4px;">lucid</span>' : ''}
+            </div>
             <div class="dream-preview">${preview}</div>
             <div class="dream-card-footer">
               <div>${tags}</div>

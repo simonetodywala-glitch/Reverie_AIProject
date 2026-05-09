@@ -276,9 +276,12 @@
       const today = new Date().toISOString().slice(0, 10);
       await saveNightmareCheckin(_checkinUid, today, hadNightmare).catch(() => {});
       const btns = document.getElementById('checkin-btns');
-      btns.innerHTML = hadNightmare
-        ? `<div class="checkin-done">Logged — keep rehearsing your rescripted dream tonight 🌙</div>`
-        : `<div class="checkin-done">Great — your IRT practice is working ✓</div>`;
+      if (hadNightmare) {
+        btns.innerHTML = `<div class="checkin-done">Let's log it — navigating to journal…</div>`;
+        setTimeout(() => { window.location.href = 'pages/journal.html?nightmare=1'; }, 900);
+      } else {
+        btns.innerHTML = `<div class="checkin-done">Great — your IRT practice is working ✓</div>`;
+      }
     };
 
     const emotionTagMap = {
@@ -372,14 +375,20 @@
         container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
         return;
       }
+      const NIGHTMARE_EMOTIONS = ['fear','dread','anxiety','restlessness'];
       container.innerHTML = dreams.slice(0, 2).map(d => {
         const tags = (d.emotions || []).slice(0, 3).map(e => {
           const cls = emotionTagMap[e.toLowerCase()] || '';
           return `<span class="tag ${cls}">${e}</span>`;
         }).join('');
         const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
+        const isNightmare = (d.emotions || []).some(e => NIGHTMARE_EMOTIONS.includes(e.toLowerCase()));
         return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
-          <div class="dream-date">${formatDate(d.createdAt)}</div>
+          <div style="display:flex;align-items:center;">
+            <div class="dream-date">${formatDate(d.createdAt)}</div>
+            ${isNightmare ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(239,100,100,0.9);background:rgba(239,100,100,0.12);border:1px solid rgba(239,100,100,0.2);border-radius:20px;padding:2px 8px;margin-left:6px;">nightmare</span>' : ''}
+            ${d.lucid ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(155,93,229,0.9);background:rgba(155,93,229,0.12);border:1px solid rgba(155,93,229,0.2);border-radius:20px;padding:2px 8px;margin-left:4px;">lucid</span>' : ''}
+          </div>
           <div class="dream-preview">${preview}</div>
           <div>${tags}</div>
         </div>`;

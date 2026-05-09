@@ -116,6 +116,10 @@
 
     <div class="main-content page-content">
 
+      <div id="nightmare-banner" style="display:none; background:linear-gradient(135deg,rgba(239,100,100,0.12),rgba(124,58,237,0.08)); border:1px solid rgba(239,100,100,0.25); border-radius:16px; padding:12px 16px; margin-bottom:14px; font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6;">
+        😰 <strong style="color:#fff;">Logging last night's nightmare.</strong> Describe what you remember — the AI will analyze it and offer to rewrite it with a calmer ending.
+      </div>
+
       <div class="section-label">What did you dream about?</div>
 
       <div class="input-mode-row">
@@ -226,6 +230,10 @@
     let currentUser = null;
     let lastAnalysis = null;
     let userProfile  = null;
+
+    if (new URLSearchParams(window.location.search).get('nightmare') === '1') {
+      document.getElementById('nightmare-banner').style.display = 'block';
+    }
 
     requireAuth(async user => {
       currentUser = user;
