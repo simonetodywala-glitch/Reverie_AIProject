@@ -17,20 +17,22 @@ GROQ_MODEL = "llama-3.3-70b-versatile"
 MAX_DREAM_CHARS = 4000
 
 
-async def _call_groq(prompt: str) -> str:
+async def _call_groq(prompt: str, json_mode: bool = True) -> str:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set in backend/.env")
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
     async with httpx.AsyncClient(timeout=30.0) as client:
         res = await client.post(
             GROQ_URL,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": GROQ_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-                "response_format": {"type": "json_object"},
-            },
+            json=payload,
         )
         if res.status_code != 200:
             detail = res.json().get("error", {}).get("message", f"Groq error {res.status_code}")
@@ -144,7 +146,7 @@ Rewrite this dream keeping the same setting, characters, and opening — but cha
 
 Write only the rescripted dream. No explanation, no preamble."""
 
-    text = await _call_groq(prompt)
+    text = await _call_groq(prompt, json_mode=False)
     return {"rescripted_text": text}
 
 
