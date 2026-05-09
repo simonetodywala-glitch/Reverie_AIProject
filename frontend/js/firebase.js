@@ -76,6 +76,11 @@ export async function updateDream(uid, dreamId, data) {
   await setDoc(doc(db, "users", uid, "dreams", dreamId), data, { merge: true });
 }
 
+export async function saveRescriptedDream(uid, dreamId, rescriptedText) {
+  await setDoc(doc(db, "users", uid, "dreams", dreamId),
+    { rescriptedText, rescriptedAt: serverTimestamp() }, { merge: true });
+}
+
 export async function saveChatHistory(uid, dreamId, history) {
   await setDoc(doc(db, "users", uid, "dreams", dreamId), { chatHistory: history }, { merge: true });
 }

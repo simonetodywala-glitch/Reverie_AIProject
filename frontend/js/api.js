@@ -111,6 +111,16 @@ async function transcribeAudio(audioBlob) {
   return res.json();
 }
 
+async function rescriptDream(dreamText, emotions = [], themes = []) {
+  const res = await fetch(`${BASE_URL}/dreams/rescript`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...await _authHeaders() },
+    body: JSON.stringify({ dream_text: dreamText, emotions, themes })
+  });
+  if (!res.ok) throw new Error('Rescript failed');
+  return res.json();
+}
+
 async function generateStoryFromPatterns(dreamSummaries, emotions = [], themes = []) {
   const res = await fetch(`${BASE_URL}/audio/story-from-patterns`, {
     method: 'POST',

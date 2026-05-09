@@ -193,6 +193,22 @@
     .sp-entry-card:hover  { background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(155,93,229,0.1)); transform: translateY(-2px); }
     .sp-entry-card:active { transform: scale(0.98); }
 
+    /* ── IRT REHEARSAL CARD ── */
+    .irt-rehearse-card {
+      border-radius: 20px; padding: 18px 20px; margin-top: 16px; cursor: pointer;
+      border: 1px solid rgba(239,100,100,0.3);
+      background: linear-gradient(135deg, rgba(239,100,100,0.08), rgba(155,93,229,0.05));
+      transition: background 0.2s, transform 0.15s;
+    }
+    .irt-rehearse-card:hover { background: linear-gradient(135deg, rgba(239,100,100,0.15), rgba(155,93,229,0.08)); transform: translateY(-2px); }
+    .irt-rehearse-header { display: flex; align-items: center; gap: 16px; }
+    .irt-badge-sm { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(239,100,100,0.85); background: rgba(239,100,100,0.1); border-radius: 20px; padding: 2px 9px; margin-left: 6px; }
+    .irt-rehearse-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; margin-top: 10px; max-height: 120px; overflow-y: auto; }
+    .irt-rehearse-text::-webkit-scrollbar { width: 3px; }
+    .irt-rehearse-text::-webkit-scrollbar-thumb { background: rgba(239,100,100,0.3); border-radius: 3px; }
+    .irt-rehearse-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .irt-rehearse-actions .btn { flex: 1; }
+
     /* The modal is always dark — use explicit rgba, never CSS vars */
     .sp-modal {
       position: fixed; inset: 0; z-index: 500;
@@ -542,6 +558,9 @@
         </div>
         <div class="routine-arrow">›</div>
       </div>
+
+      <!-- ── IRT REHEARSAL ── -->
+      <div id="irt-rehearse-wrap"></div>
 
     </div>
 
@@ -1400,6 +1419,75 @@
 
     window.openStoryPicker = openStoryPicker;
 
+    // ── IRT REHEARSAL ──────────────────────────────────────────────
+    let _irtRescripted = null;
+    let _irtAudio      = null;
+    let _irtPlaying    = false;
+
+    function renderIrtCard(dream) {
+      const wrap = document.getElementById('irt-rehearse-wrap');
+      if (!wrap || !dream?.rescriptedText) return;
+      _irtRescripted = dream;
+
+      wrap.innerHTML = `
+        <div class="irt-rehearse-card">
+          <div class="irt-rehearse-header">
+            <div class="routine-icon">🌙</div>
+            <div style="flex:1;">
+              <div class="routine-name" style="display:flex;align-items:center;gap:6px;">
+                Nightmare rehearsal <span class="irt-badge-sm">IRT</span>
+              </div>
+              <div class="routine-note">Rehearse your rescripted dream before sleep</div>
+            </div>
+          </div>
+          <div class="irt-rehearse-text" id="irt-rh-text">${dream.rescriptedText}</div>
+          <div class="irt-rehearse-actions">
+            <button class="btn btn-ghost" id="irt-rh-listen-btn" onclick="irtRehearseToggle()">🎧 Listen</button>
+            <a class="btn btn-ghost" href="dream.html?id=${dream.id}" style="text-align:center;text-decoration:none;">View dream ›</a>
+          </div>
+        </div>`;
+    }
+
+    async function irtRehearseToggle() {
+      if (!_irtRescripted) return;
+      const btn = document.getElementById('irt-rh-listen-btn');
+
+      if (_irtPlaying && _irtAudio) {
+        _irtAudio.pause();
+        _irtAudio.currentTime = 0;
+        _irtAudio = null;
+        _irtPlaying = false;
+        btn.textContent = '🎧 Listen';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(
+          _irtRescripted.rescriptedText,
+          _irtRescripted.emotions || [],
+          _irtRescripted.themes   || []
+        );
+        _irtAudio = new Audio(url);
+        _irtAudio.onended = () => {
+          _irtPlaying = false;
+          btn.textContent = '🎧 Listen';
+          btn.disabled = false;
+        };
+        _irtAudio.play();
+        _irtPlaying = true;
+        btn.textContent = '⏹ Stop';
+        btn.disabled = false;
+      } catch (e) {
+        alert(`Voice error: ${e.message}`);
+        btn.textContent = '🎧 Listen';
+        btn.disabled = false;
+      }
+    }
+
+    window.irtRehearseToggle = irtRehearseToggle;
+
     // ── INIT ─────────────────────────────────────────────────────
     requireAuth(async user => {
       const dreams = await getDreams(user.uid).catch(() => []);
@@ -1410,6 +1498,10 @@
       latestThemes    = latest?.themes   || [];
       const emotions  = latestEmotions;
       const themes    = latestThemes;
+
+      // Show rehearsal card for most recent rescripted dream
+      const irtDream = dreams.find(d => d.rescriptedText);
+      if (irtDream) renderIrtCard(irtDream);
 
       const [scResult, routineResult] = await Promise.allSettled([
         getSoundscapeMenu(emotions, themes),

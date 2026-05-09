@@ -7,7 +7,7 @@ import os
 import json
 import httpx
 from fastapi import APIRouter, HTTPException, Depends
-from backend.models.schemas import DreamRequest, DreamAnalysis
+from backend.models.schemas import DreamRequest, DreamAnalysis, DreamRescriptRequest
 from backend.auth import verify_token
 
 router = APIRouter()
@@ -123,6 +123,29 @@ Use 2-5 emotions. Themes must reference actual elements from this specific dream
         raise HTTPException(status_code=500, detail=f"AI returned invalid JSON: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.post("/rescript")
+async def rescript_dream(req: DreamRescriptRequest, _=Depends(verify_token)):
+    emotion_context = ", ".join(req.emotions) if req.emotions else "distressing"
+    prompt = f"""You are helping someone practice Imagery Rehearsal Therapy (IRT) for nightmare relief.
+
+They had this dream:
+"{req.dream_text[:3000]}"
+
+Emotions felt: {emotion_context}
+
+Rewrite this dream keeping the same setting, characters, and opening — but change the middle or ending so it resolves in an empowering, peaceful, or meaningful way. The rescripted version should:
+- Keep the dream's imagery and atmosphere (don't make it completely different)
+- Transform threatening or distressing elements into something resolved, safe, or empowering
+- End with a sense of calm, safety, or strength
+- Be written in first-person dream style
+- Be roughly the same length as the original (150–250 words)
+
+Write only the rescripted dream. No explanation, no preamble."""
+
+    text = await _call_groq(prompt)
+    return {"rescripted_text": text}
 
 
 @router.get("/{user_id}")

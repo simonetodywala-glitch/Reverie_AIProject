@@ -80,6 +80,12 @@ class StoryFromPatternsRequest(BaseModel):
     themes: List[str] = []
 
 
+class DreamRescriptRequest(BaseModel):
+    dream_text: str
+    emotions: List[str] = []
+    themes: List[str] = []
+
+
 class SoundscapeRequest(BaseModel):
     emotions: List[str]
     themes: List[str] = []
