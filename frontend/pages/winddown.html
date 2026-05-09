@@ -209,6 +209,99 @@
     .irt-rehearse-actions { display: flex; gap: 8px; margin-top: 14px; }
     .irt-rehearse-actions .btn { flex: 1; }
 
+    /* ── GUIDED ROUTINE ── */
+    .gr-start-card {
+      border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; cursor: pointer;
+      border: 1px solid rgba(155,93,229,0.45);
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(155,93,229,0.08));
+      transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .gr-start-card:hover  { background: linear-gradient(135deg, rgba(124,58,237,0.32), rgba(155,93,229,0.16)); transform: translateY(-2px); }
+    .gr-start-card:active { transform: scale(0.98); }
+    .gr-modal {
+      position: fixed; inset: 0; z-index: 600;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+    }
+    .gr-modal.open { opacity: 1; pointer-events: all; }
+    .gr-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 52px 20px 14px; flex-shrink: 0;
+      max-width: 480px; width: 100%; margin: 0 auto; box-sizing: border-box;
+    }
+    .gr-close-btn {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); border: none;
+      color: rgba(255,255,255,0.6); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gr-progress { display: flex; gap: 6px; align-items: center; }
+    .gr-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+    .gr-dot.active { width: 18px; border-radius: 3px; background: rgba(155,93,229,0.9); }
+    .gr-dot.done   { background: rgba(155,93,229,0.4); }
+    .gr-body {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px 28px; text-align: center; overflow-y: auto;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+    }
+    .gr-step-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .gr-step-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 28px; max-width: 300px; }
+    .gr-textarea {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 14px 16px; color: #fff; font-size: 15px;
+      font-family: inherit; resize: none; box-sizing: border-box; line-height: 1.6; outline: none;
+    }
+    .gr-textarea:focus { border-color: rgba(155,93,229,0.5); }
+    .gr-textarea::placeholder { color: rgba(255,255,255,0.28); }
+    .gr-irt-text {
+      font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.8; text-align: left;
+      max-height: 200px; overflow-y: auto;
+      background: rgba(124,58,237,0.08); border: 1px solid rgba(155,93,229,0.15);
+      border-radius: 14px; padding: 16px; width: 100%; box-sizing: border-box; margin-bottom: 0;
+    }
+    .gr-irt-text::-webkit-scrollbar { width: 3px; }
+    .gr-irt-text::-webkit-scrollbar-thumb { background: rgba(155,93,229,0.3); border-radius: 3px; }
+    .gr-breathe-ring {
+      width: 160px; height: 160px; border-radius: 50%;
+      border: 2px solid rgba(155,93,229,0.35); flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: transform 4s ease, border-color 1s ease, background 1s ease;
+      background: rgba(124,58,237,0.05);
+    }
+    .gr-breathe-ring.inhale { transform: scale(1.25); border-color: rgba(155,93,229,0.9); background: rgba(124,58,237,0.15); }
+    .gr-breathe-ring.hold   { transform: scale(1.25); border-color: rgba(239,197,89,0.75); background: rgba(239,197,89,0.06); }
+    .gr-breathe-ring.exhale { transform: scale(1);    border-color: rgba(99,198,155,0.7);  background: rgba(99,198,155,0.04); }
+    .gr-breathe-ring.done   { border-color: rgba(99,198,155,0.9); background: rgba(99,198,155,0.07); }
+    .gr-breathe-count { font-size: 36px; font-weight: 700; color: #fff; line-height: 1; }
+    .gr-breathe-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
+    .gr-cycle-dots { display: flex; gap: 10px; margin-top: 24px; }
+    .gr-cycle-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: 0.4s; }
+    .gr-cycle-dot.done { background: rgba(155,93,229,0.8); }
+    .gr-sc-info {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px 20px; width: 100%; box-sizing: border-box;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .gr-sc-emoji { font-size: 30px; flex-shrink: 0; }
+    .gr-sc-name { font-size: 15px; font-weight: 600; color: #fff; }
+    .gr-sc-desc { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+    .gr-story-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 16px 18px; width: 100%; box-sizing: border-box; text-align: left;
+    }
+    .gr-story-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .gr-story-preview { font-size: 12px; color: rgba(255,255,255,0.42); line-height: 1.7; }
+    .gr-story-btns { display: flex; gap: 8px; margin-top: 14px; }
+    .gr-story-btns .btn { flex: 1; }
+    .gr-footer {
+      padding: 16px 24px 40px; flex-shrink: 0;
+      max-width: 480px; margin: 0 auto; width: 100%; box-sizing: border-box;
+      display: flex; gap: 12px;
+    }
+    .gr-footer .btn { flex: 1; }
+
     /* The modal is always dark — use explicit rgba, never CSS vars */
     .sp-modal {
       position: fixed; inset: 0; z-index: 500;
@@ -513,11 +606,35 @@
     </div>
   </div>
 
+  <!-- ── GUIDED ROUTINE MODAL ── -->
+  <div class="gr-modal" id="gr-modal">
+    <div class="gr-header">
+      <button class="gr-close-btn" onclick="closeGuidedRoutine()">✕</button>
+      <div class="gr-progress" id="gr-progress"></div>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="gr-body" id="gr-body"></div>
+    <div class="gr-footer">
+      <button class="btn btn-ghost" id="gr-skip-btn" onclick="grSkip()">Skip</button>
+      <button class="btn btn-primary" id="gr-next-btn" onclick="grNext()">Continue →</button>
+    </div>
+  </div>
+
   <!-- ──────────── APP SHELL ──────────── -->
   <div class="app-frame">
     <div class="page-header">🌬️ Wind Down</div>
 
     <div class="main-content page-content">
+
+      <!-- ── START ROUTINE ── -->
+      <div class="gr-start-card" onclick="openGuidedRoutine()">
+        <div style="font-size:28px;flex-shrink:0;">✨</div>
+        <div style="flex:1;">
+          <div class="routine-name">Start tonight's routine</div>
+          <div class="routine-note">Guided · 5–10 min · Personalized to your dreams</div>
+        </div>
+        <div class="routine-arrow">›</div>
+      </div>
 
       <!-- ── SOUNDSCAPE SECTION ── -->
       <div class="section-label">Soundscape</div>
@@ -571,8 +688,8 @@
       </div>
       <a class="nav-plus" href="journal.html">+</a>
       <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
         <a class="nav-link active" href="winddown.html">Wind Down</a>
-        <a class="nav-link" href="profile.html">Profile</a>
       </div>
     </nav>
   </div>
@@ -1418,6 +1535,220 @@
     };
 
     window.openStoryPicker = openStoryPicker;
+
+    // ── GUIDED ROUTINE ────────────────────────────────────────────
+    let grSteps       = [];
+    let grIdx         = 0;
+    let grBreathTimer = null;
+    let grBreathOn    = false;
+    let grStoryPick   = null;
+    let grStoryAudio  = null;
+
+    function openGuidedRoutine() {
+      grSteps = ['intention'];
+      if (_irtRescripted) grSteps.push('irt');
+      grSteps.push('breathe', 'soundscape', 'story');
+      grIdx = 0;
+      document.getElementById('gr-modal').classList.add('open');
+      grRenderProgress();
+      grRenderStep();
+    }
+
+    function closeGuidedRoutine() {
+      grBreathOn = false;
+      clearInterval(grBreathTimer);
+      if (grStoryAudio) { grStoryAudio.pause(); grStoryAudio = null; }
+      document.getElementById('gr-modal').classList.remove('open');
+    }
+
+    function grRenderProgress() {
+      document.getElementById('gr-progress').innerHTML = grSteps.map((_, i) =>
+        `<div class="gr-dot ${i < grIdx ? 'done' : i === grIdx ? 'active' : ''}"></div>`
+      ).join('');
+    }
+
+    function grAdvance() {
+      grBreathOn = false;
+      clearInterval(grBreathTimer);
+      grIdx++;
+      if (grIdx >= grSteps.length) { closeGuidedRoutine(); return; }
+      grRenderProgress();
+      grRenderStep();
+    }
+
+    function grNext() {
+      if (grSteps[grIdx] === 'intention') {
+        const v = document.getElementById('gr-intention-input')?.value.trim();
+        if (v) localStorage.setItem('reverie_intention', v);
+      }
+      grAdvance();
+    }
+    function grSkip() { grAdvance(); }
+
+    function grRenderStep() {
+      const step    = grSteps[grIdx];
+      const body    = document.getElementById('gr-body');
+      const nextBtn = document.getElementById('gr-next-btn');
+      const skipBtn = document.getElementById('gr-skip-btn');
+      nextBtn.textContent = grIdx === grSteps.length - 1 ? 'Finish ✓' : 'Continue →';
+      nextBtn.disabled    = false;
+      skipBtn.style.display = 'flex';
+      if (step === 'intention')  grStepIntention(body);
+      else if (step === 'irt')   grStepIRT(body);
+      else if (step === 'breathe')    grStepBreathe(body, nextBtn);
+      else if (step === 'soundscape') grStepSoundscape(body);
+      else if (step === 'story')      grStepStory(body);
+    }
+
+    function grStepIntention(body) {
+      const saved = localStorage.getItem('reverie_intention') || '';
+      const hint  = latestEmotions.length
+        ? `Let go of the ${latestEmotions[0]} you've been carrying`
+        : 'Bring curiosity and openness to your dreams tonight';
+      body.innerHTML = `
+        <div class="gr-step-title">Set your intention</div>
+        <div class="gr-step-sub">A few words to carry you into sleep tonight</div>
+        <textarea class="gr-textarea" id="gr-intention-input" rows="3"
+          placeholder="${hint}">${saved}</textarea>
+        <div style="font-size:12px;color:rgba(255,255,255,0.28);margin-top:10px;">Optional — press Continue to skip</div>`;
+    }
+
+    function grStepIRT(body) {
+      const d = _irtRescripted;
+      body.innerHTML = `
+        <div class="gr-step-title">Nightmare rehearsal</div>
+        <div class="gr-step-sub">Read through your rescripted dream once before sleep</div>
+        <div class="gr-irt-text">${d.rescriptedText}</div>
+        <button class="btn btn-ghost" style="margin-top:16px;width:100%;" id="gr-irt-btn" onclick="grIrtListen()">🎧 Listen</button>`;
+    }
+
+    async function grIrtListen() {
+      const btn = document.getElementById('gr-irt-btn');
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(_irtRescripted.rescriptedText, _irtRescripted.emotions||[], _irtRescripted.themes||[]);
+        const audio = new Audio(url);
+        audio.play();
+        btn.textContent = '⏹ Stop'; btn.disabled = false;
+        btn.onclick = () => { audio.pause(); btn.textContent = '🎧 Listen'; btn.onclick = grIrtListen; };
+      } catch(e) { alert(`Voice error: ${e.message}`); btn.textContent = '🎧 Listen'; btn.disabled = false; }
+    }
+
+    const GR_PHASES = [
+      { label: 'Inhale',  secs: 4, cls: 'inhale' },
+      { label: 'Hold',    secs: 7, cls: 'hold'   },
+      { label: 'Exhale',  secs: 8, cls: 'exhale' },
+    ];
+
+    function grStepBreathe(body, nextBtn) {
+      body.innerHTML = `
+        <div class="gr-step-title">Breathe</div>
+        <div class="gr-step-sub">4 · 7 · 8 breathing — settles the nervous system</div>
+        <div class="gr-breathe-ring" id="gr-ring">
+          <div class="gr-breathe-count" id="gr-bcount">—</div>
+          <div class="gr-breathe-label" id="gr-blabel">Get ready</div>
+        </div>
+        <div class="gr-cycle-dots">
+          ${[0,1,2,3].map(i=>`<div class="gr-cycle-dot" id="gr-bcd-${i}"></div>`).join('')}
+        </div>`;
+      nextBtn.textContent = 'Skip →';
+      grBreathOn = true;
+      let cycle = 0, pIdx = 0, cd = 0;
+      const ring  = () => document.getElementById('gr-ring');
+      const count = () => document.getElementById('gr-bcount');
+      const label = () => document.getElementById('gr-blabel');
+
+      function tick() {
+        if (!grBreathOn) return;
+        if (cycle >= 4) {
+          grBreathOn = false;
+          ring().className = 'gr-breathe-ring done';
+          label().textContent = 'Done ✓'; count().textContent = '';
+          nextBtn.textContent = 'Continue →';
+          return;
+        }
+        const p = GR_PHASES[pIdx];
+        ring().className = `gr-breathe-ring ${p.cls}`;
+        label().textContent = p.label;
+        cd = p.secs; count().textContent = cd;
+        grBreathTimer = setInterval(() => {
+          if (!grBreathOn) { clearInterval(grBreathTimer); return; }
+          cd--; count().textContent = cd > 0 ? cd : '';
+          if (cd <= 0) {
+            clearInterval(grBreathTimer);
+            pIdx++;
+            if (pIdx >= GR_PHASES.length) {
+              pIdx = 0; cycle++;
+              const dot = document.getElementById(`gr-bcd-${cycle-1}`);
+              if (dot) dot.className = 'gr-cycle-dot done';
+            }
+            setTimeout(tick, 400);
+          }
+        }, 1000);
+      }
+      setTimeout(tick, 800);
+    }
+
+    function grStepSoundscape(body) {
+      const card = window._scItems && window._scItems[0];
+      if (card && !isPlaying) window._playCard(0);
+      const info = card
+        ? `<div class="gr-sc-info">
+             <div class="gr-sc-emoji">${card.emoji}</div>
+             <div><div class="gr-sc-name">${card.name}</div>
+             <div class="gr-sc-desc">${card.description}</div></div>
+           </div>
+           <div style="font-size:13px;color:rgba(155,93,229,0.8);margin-top:12px;">▶ Now playing · continues in background</div>`
+        : `<div style="color:rgba(255,255,255,0.45);font-size:14px;">Choose a soundscape below after finishing the routine.</div>`;
+      body.innerHTML = `
+        <div class="gr-step-title">Soundscape</div>
+        <div class="gr-step-sub">Ambient sound to ease you into sleep</div>
+        ${info}`;
+    }
+
+    function grStepStory(body) {
+      if (!grStoryPick) {
+        const pool = typeof CLASSIC_STORIES !== 'undefined' ? CLASSIC_STORIES : [];
+        grStoryPick = pool[Math.floor(Math.random() * pool.length)] || null;
+      }
+      const p = grStoryPick;
+      body.innerHTML = p ? `
+        <div class="gr-step-title">Drift off</div>
+        <div class="gr-step-sub">A story to carry you into sleep</div>
+        <div class="gr-story-card">
+          <div class="gr-story-name">${p.emoji} ${p.title}</div>
+          <div class="gr-story-preview">${p.text.slice(0,160)}…</div>
+          <div class="gr-story-btns">
+            <button class="btn btn-ghost" id="gr-splay-btn" onclick="grToggleStory()">🎧 Listen</button>
+            <button class="btn btn-ghost" onclick="closeGuidedRoutine();openStoryPicker()">Browse ›</button>
+          </div>
+        </div>` :
+        `<div class="gr-step-title">You're all set ✨</div>
+         <div class="gr-step-sub">Sleep well tonight.</div>`;
+    }
+
+    async function grToggleStory() {
+      const btn = document.getElementById('gr-splay-btn');
+      if (grStoryAudio) {
+        grStoryAudio.pause(); grStoryAudio = null;
+        btn.textContent = '🎧 Listen'; return;
+      }
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const url = await readStoryTTS(grStoryPick.text, latestEmotions, latestThemes);
+        grStoryAudio = new Audio(url);
+        grStoryAudio.play();
+        btn.textContent = '⏹ Stop'; btn.disabled = false;
+        grStoryAudio.onended = () => { btn.textContent = '🎧 Listen'; grStoryAudio = null; };
+      } catch(e) { alert(`Voice error: ${e.message}`); btn.textContent = '🎧 Listen'; btn.disabled = false; }
+    }
+
+    window.openGuidedRoutine  = openGuidedRoutine;
+    window.closeGuidedRoutine = closeGuidedRoutine;
+    window.grNext             = grNext;
+    window.grSkip             = grSkip;
+    window.grIrtListen        = grIrtListen;
+    window.grToggleStory      = grToggleStory;
 
     // ── IRT REHEARSAL ──────────────────────────────────────────────
     let _irtRescripted = null;

@@ -129,3 +129,44 @@ export async function getRecentSleepLogs(uid) {
   const snap = await getDocs(q);
   return snap.docs.slice(0, 7).map(d => ({ id: d.id, ...d.data() }));
 }
+
+// ─────────────────────────────────────────
+// LUCID DREAMING
+// ─────────────────────────────────────────
+
+// logData: { date (YYYY-MM-DD), realityChecks, intention }
+export async function saveLucidLog(uid, logData) {
+  await setDoc(doc(db, "users", uid, "lucidLogs", logData.date), {
+    ...logData,
+    updatedAt: serverTimestamp()
+  });
+}
+
+export async function getLucidLog(uid, date) {
+  const snap = await getDoc(doc(db, "users", uid, "lucidLogs", date));
+  return snap.exists() ? snap.data() : { date, realityChecks: 0, intention: '' };
+}
+
+export async function getLucidStreak(uid) {
+  const ref  = collection(db, "users", uid, "lucidLogs");
+  const q    = query(ref, orderBy("date", "desc"), limit(30));
+  const snap = await getDocs(q);
+  const logs = snap.docs.map(d => d.data());
+  let streak = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  let check   = today;
+  for (const log of logs) {
+    if (log.date === check && log.realityChecks > 0) {
+      streak++;
+      const d = new Date(check); d.setDate(d.getDate() - 1);
+      check = d.toISOString().slice(0, 10);
+    } else if (log.date < check) break;
+  }
+  return streak;
+}
+
+export async function getLucidDreams(uid) {
+  const ref  = collection(db, "users", uid, "dreams");
+  const snap = await getDocs(ref);
+  return snap.docs.filter(d => d.data().lucid).map(d => ({ id: d.id, ...d.data() }));
+}

@@ -101,6 +101,17 @@
       50%      { height: 20px; }
     }
 
+    /* ── LUCID TOGGLE ── */
+    .lucid-toggle { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .lucid-toggle-label { font-size: 13px; color: var(--text-dim); flex: 1; }
+    .lucid-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .lucid-switch input { opacity: 0; width: 0; height: 0; }
+    .lucid-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 24px; cursor: pointer; transition: 0.25s; }
+    .lucid-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.25s; }
+    .lucid-switch input:checked + .lucid-slider { background: rgba(155,93,229,0.75); }
+    .lucid-switch input:checked + .lucid-slider:before { transform: translateX(20px); }
+    .lucid-badge-inline { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(155,93,229,0.9); background: rgba(155,93,229,0.12); border-radius: 20px; padding: 2px 8px; margin-left: 4px; }
+
     /* ── IRT PANEL ── */
     .irt-panel { margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 20px; }
     .irt-badge {
@@ -233,8 +244,8 @@
       </div>
       <a class="nav-plus" href="journal.html">+</a>
       <div class="nav-group">
+        <a class="nav-link" href="lucid.html">Lucid</a>
         <a class="nav-link" href="winddown.html">Wind Down</a>
-        <a class="nav-link" href="profile.html">Profile</a>
       </div>
     </nav>
 
@@ -437,6 +448,17 @@
             </div>
           `}
         </div>
+
+        <div class="lucid-toggle">
+          <div class="lucid-toggle-label">
+            This was a lucid dream
+            ${dream.lucid ? '<span class="lucid-badge-inline">lucid</span>' : ''}
+          </div>
+          <label class="lucid-switch">
+            <input type="checkbox" id="lucid-check" ${dream.lucid ? 'checked' : ''} onchange="toggleLucid(this.checked)">
+            <span class="lucid-slider"></span>
+          </label>
+        </div>
       `;
 
       document.getElementById('dream-content').innerHTML = html;
@@ -583,6 +605,14 @@
     window.runRescript    = runRescript;
     window.saveRescript   = saveRescript;
     window.listenRescript = listenRescript;
+
+    // ── LUCID TOGGLE ──
+    async function toggleLucid(isLucid) {
+      if (!currentUser || !dreamId) return;
+      currentDream.lucid = isLucid;
+      await updateDream(currentUser.uid, dreamId, { lucid: isLucid }).catch(console.error);
+    }
+    window.toggleLucid = toggleLucid;
 
     // ── SOUNDSCAPE ──
     function generateSoundscape() {
