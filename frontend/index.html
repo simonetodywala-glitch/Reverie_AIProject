@@ -138,6 +138,27 @@
     body.morning .wdm-title { color: #2d1500; }
     body.morning .wdm-sub   { color: #7a4a00; }
 
+    /* ── MORNING CHECK-IN ── */
+    .checkin-card {
+      background: linear-gradient(135deg, rgba(239,100,100,0.1), rgba(124,58,237,0.08));
+      border: 1px solid rgba(239,100,100,0.25); border-radius: 20px;
+      padding: 16px 18px; margin-top: 12px;
+    }
+    .checkin-label { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(239,100,100,0.7); margin-bottom: 6px; }
+    .checkin-q { font-size: 14px; color: var(--text); margin-bottom: 14px; font-weight: 500; }
+    .checkin-btns { display: flex; gap: 8px; }
+    .checkin-btn {
+      flex: 1; padding: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, transform 0.1s; font-family: inherit;
+    }
+    .checkin-btn:active { transform: scale(0.97); }
+    .checkin-btn.yes  { border-color: rgba(239,100,100,0.4); }
+    .checkin-btn.yes:hover  { background: rgba(239,100,100,0.15); }
+    .checkin-btn.no   { border-color: rgba(99,198,155,0.4); }
+    .checkin-btn.no:hover   { background: rgba(99,198,155,0.12); }
+    .checkin-done { font-size: 13px; color: var(--text-dim); text-align: center; padding: 4px 0; }
+
     /* Sleeping banner in header */
     .sleep-active-banner {
       display: none; flex-direction: column;
@@ -205,6 +226,18 @@
         </div>
       </div>
 
+      <!-- MORNING CHECK-IN -->
+      <div id="checkin-wrap" style="display:none;">
+        <div class="checkin-card">
+          <div class="checkin-label">Morning check-in</div>
+          <div class="checkin-q">Did you have a nightmare last night?</div>
+          <div class="checkin-btns" id="checkin-btns">
+            <button class="checkin-btn yes" onclick="submitCheckin(true)">😰 Yes</button>
+            <button class="checkin-btn no"  onclick="submitCheckin(false)">😌 No, slept well</button>
+          </div>
+        </div>
+      </div>
+
       <!-- RECENT DREAMS PREVIEW -->
       <div class="section-label" style="margin-top:8px;">Recent Dreams</div>
       <div id="recent-dreams">
@@ -232,8 +265,19 @@
   <script src="js/api.js"></script>
 
   <script type="module">
-    import { requireAuth }                                      from './js/auth.js';
-    import { getDreams, getLatestSleepSchedule, getUserProfile } from './js/firebase.js';
+    import { requireAuth }                                                                    from './js/auth.js';
+    import { getDreams, getLatestSleepSchedule, getUserProfile, getTodayCheckin, saveNightmareCheckin } from './js/firebase.js';
+
+    let _checkinUid = null;
+    window.submitCheckin = async function(hadNightmare) {
+      if (!_checkinUid) return;
+      const today = new Date().toISOString().slice(0, 10);
+      await saveNightmareCheckin(_checkinUid, today, hadNightmare).catch(() => {});
+      const btns = document.getElementById('checkin-btns');
+      btns.innerHTML = hadNightmare
+        ? `<div class="checkin-done">Logged — keep rehearsing your rescripted dream tonight 🌙</div>`
+        : `<div class="checkin-done">Great — your IRT practice is working ✓</div>`;
+    };
 
     const emotionTagMap = {
       wonder: 'tag-wonder', anxiety: 'tag-anxiety', joy: 'tag-joy',
@@ -275,12 +319,20 @@
 
     requireAuth(async user => {
       document.body.style.opacity = '1';
+      _checkinUid = user.uid;
 
-      const [dreams, schedule, profile] = await Promise.all([
+      const [dreams, schedule, profile, todayCheckin] = await Promise.all([
         getDreams(user.uid).catch(() => []),
         getLatestSleepSchedule(user.uid).catch(() => null),
         getUserProfile(user.uid).catch(() => null),
+        getTodayCheckin(user.uid).catch(() => null),
       ]);
+
+      // Show check-in if user has a rescripted dream and hasn't answered today
+      const hasRescripted = dreams.some(d => d.rescriptedText);
+      if (hasRescripted && !todayCheckin) {
+        document.getElementById('checkin-wrap').style.display = 'block';
+      }
 
       // ── Greeting ──
       const raw = (user.displayName || profile?.name || '').split(' ')[0];

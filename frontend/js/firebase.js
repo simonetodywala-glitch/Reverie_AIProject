@@ -170,3 +170,26 @@ export async function getLucidDreams(uid) {
   const snap = await getDocs(ref);
   return snap.docs.filter(d => d.data().lucid).map(d => ({ id: d.id, ...d.data() }));
 }
+
+// ─────────────────────────────────────────
+// NIGHTMARE CHECK-INS
+// ─────────────────────────────────────────
+
+export async function saveNightmareCheckin(uid, date, hadNightmare) {
+  await setDoc(doc(db, "users", uid, "nightmareCheckins", date), {
+    date, hadNightmare, createdAt: serverTimestamp()
+  });
+}
+
+export async function getTodayCheckin(uid) {
+  const today = new Date().toISOString().slice(0, 10);
+  const snap  = await getDoc(doc(db, "users", uid, "nightmareCheckins", today));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function getNightmareCheckins(uid, days = 14) {
+  const ref  = collection(db, "users", uid, "nightmareCheckins");
+  const q    = query(ref, orderBy("date", "desc"), limit(days));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data());
+}
