@@ -21,8 +21,9 @@ class DreamAnalysis(BaseModel):
     summary: str
     interpretation: str
     reflections: List[str]
-    waking_connections: Optional[str] = None  # dream ↔ waking life link
-    mind_note: Optional[str] = None           # insight based on cognitive profile
+    waking_connections: Optional[str] = None
+    mind_note: Optional[str] = None
+    is_nightmare: Optional[bool] = None  # true only if genuinely distressing/frightening
 
 
 class ChatMessage(BaseModel):

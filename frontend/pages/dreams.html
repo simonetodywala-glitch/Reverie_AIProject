@@ -336,8 +336,7 @@
           const cls = emotionTags[e.toLowerCase()] || '';
           return `<span class="tag ${cls}">${e}</span>`;
         }).join('');
-        const NIGHTMARE_EMOTIONS = ['fear','dread','anxiety','restlessness'];
-        const isNightmare = (dream.emotions || []).some(e => NIGHTMARE_EMOTIONS.includes(e.toLowerCase()));
+        const isNightmare = dream.isNightmare ?? false;
         return `
           <div class="dream-card" onclick="window.location.href='dream.html?id=${dream.id}'">
             <div style="display:flex;align-items:center;">

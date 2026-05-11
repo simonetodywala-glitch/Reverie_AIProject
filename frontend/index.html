@@ -375,14 +375,13 @@
         container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted); font-size:14px; padding:20px;">No dreams logged yet.<br><a href="pages/journal.html" style="color:var(--accent-soft); text-decoration:none;">Log your first dream →</a></div>`;
         return;
       }
-      const NIGHTMARE_EMOTIONS = ['fear','dread','anxiety','restlessness'];
       container.innerHTML = dreams.slice(0, 2).map(d => {
         const tags = (d.emotions || []).slice(0, 3).map(e => {
           const cls = emotionTagMap[e.toLowerCase()] || '';
           return `<span class="tag ${cls}">${e}</span>`;
         }).join('');
         const preview = (d.text || d.summary || '').slice(0, 80) + ((d.text || '').length > 80 ? '…' : '');
-        const isNightmare = (d.emotions || []).some(e => NIGHTMARE_EMOTIONS.includes(e.toLowerCase()));
+        const isNightmare = d.isNightmare ?? false;
         return `<div class="dream-card" onclick="window.location.href='pages/dream.html?id=${d.id}'" style="cursor:pointer;">
           <div style="display:flex;align-items:center;">
             <div class="dream-date">${formatDate(d.createdAt)}</div>

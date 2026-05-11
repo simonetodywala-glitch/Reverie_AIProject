@@ -406,7 +406,8 @@
           themes:         lastAnalysis.themes,
           summary:        lastAnalysis.summary,
           interpretation: lastAnalysis.interpretation || null,
-          reflections:    lastAnalysis.reflections    || []
+          reflections:    lastAnalysis.reflections    || [],
+          isNightmare:    lastAnalysis.is_nightmare   ?? false,
         });
         window.location.href = 'dreams.html';
       } catch (err) {

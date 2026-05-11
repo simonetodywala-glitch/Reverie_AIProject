@@ -418,7 +418,7 @@
         <div class="irt-panel">
           <div style="display:flex; align-items:center; margin-bottom:8px;">
             <div class="section-label" style="margin:0;">Imagery Rehearsal</div>
-            ${(dream.emotions||[]).some(e=>['fear','dread','anxiety','restlessness'].includes(e.toLowerCase())) ? '<span class="irt-badge">nightmare</span>' : ''}
+            ${dream.isNightmare ? '<span class="irt-badge">nightmare</span>' : ''}
           </div>
           <div style="font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">
             Rewrite this dream with a calmer, more empowering ending. Rehearsing the new version nightly is proven to reduce nightmares.

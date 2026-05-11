@@ -109,11 +109,14 @@ Respond ONLY with a valid JSON object — no markdown, no extra text.
     "A calm, curious question about one specific detail or moment in the dream?",
     "A question that connects something in the dream to how they might be feeling lately?",
     "A gentle question that invites them to sit with something unresolved?"
-  ]{waking_instructions}{mind_instructions}
+  ],
+  "is_nightmare": false{waking_instructions}{mind_instructions}
 }}
 
 Emotion words: wonder, anxiety, joy, fear, sadness, excitement, nostalgia, peaceful, confusion, hope, longing, dread, awe, grief, frustration, tenderness, shame, pride, restlessness, relief.
-Use 2-5 emotions. Themes must reference actual elements from this specific dream — nothing generic."""
+Use 2-5 emotions. Themes must reference actual elements from this specific dream — nothing generic.
+
+For "is_nightmare": true ONLY if the dream was genuinely frightening or distressing in a way that would disrupt sleep — e.g. being chased, attacked, witnessing violence, helplessness, death of a loved one. Weird, funny, or anxious-but-harmless dreams are NOT nightmares even if they contain anxiety or fear emotions."""
 
     try:
         raw  = await _call_groq(prompt)
