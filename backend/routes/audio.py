@@ -25,7 +25,7 @@ async def dream_to_story(dream_text: str) -> str:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
-    prompt = f"""Rewrite this dream as a slow, peaceful, third-person bedtime story (150-200 words).
+    prompt = f"""Rewrite this dream as a slow, peaceful, third-person bedtime story (80-100 words).
 Soften any anxious or scary elements into something calming and beautiful.
 Use gentle, flowing language. End with the character falling peacefully asleep.
 
@@ -65,7 +65,7 @@ async def story_from_patterns(req: StoryFromPatternsRequest, _=Depends(verify_to
     emotions_text  = ", ".join(req.emotions[:5]) if req.emotions else "peaceful, calm"
     themes_text    = ", ".join(req.themes[:5])   if req.themes   else "rest, quiet"
 
-    prompt = f"""Based on the recurring themes and emotions from someone's dream journal, write a slow, peaceful, third-person bedtime story (180–220 words).
+    prompt = f"""Based on the recurring themes and emotions from someone's dream journal, write a slow, peaceful, third-person bedtime story (80–100 words).
 
 The story should subtly echo the emotional landscape of their dreams — using similar feelings, imagery, and motifs — but transformed into something calm and beautiful.
 
@@ -179,8 +179,8 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
         raise HTTPException(status_code=501, detail="No TTS API key configured")
 
     voice = _pick_orpheus_voice(req.emotions)
-    # Orpheus free tier: 1200 TPM. Cap at 4000 chars (~1000 tokens) to stay under limit.
-    groq_text = req.story_text[:4000]
+    # Orpheus free tier: 1200 TPM. Cap at 1500 chars to stay safely under limit.
+    groq_text = req.story_text[:1500]
     async with httpx.AsyncClient(timeout=90.0) as client:
         res = await client.post(
             "https://api.groq.com/openai/v1/audio/speech",
@@ -192,6 +192,8 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
                 "response_format": "wav",
             },
         )
+        if res.status_code == 429:
+            raise HTTPException(status_code=429, detail="Audio is cooling down — try again in about 30 seconds.")
         if res.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Groq TTS error {res.status_code}: {res.text}")
 

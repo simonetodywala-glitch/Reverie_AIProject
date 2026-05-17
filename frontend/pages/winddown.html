@@ -1695,7 +1695,7 @@
         audio.play();
         btn.textContent = '⏹ Stop'; btn.disabled = false;
         btn.onclick = () => { audio.pause(); btn.textContent = '🎧 Listen'; btn.onclick = grIrtListen; };
-      } catch(e) { alert(`Voice error: ${e.message}`); btn.textContent = '🎧 Listen'; btn.disabled = false; }
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
     }
 
     const GR_PHASES = [
@@ -1804,7 +1804,7 @@
         grStoryAudio.play();
         btn.textContent = '⏹ Stop'; btn.disabled = false;
         grStoryAudio.onended = () => { btn.textContent = '🎧 Listen'; grStoryAudio = null; };
-      } catch(e) { alert(`Voice error: ${e.message}`); btn.textContent = '🎧 Listen'; btn.disabled = false; }
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
     }
 
     window.openGuidedRoutine  = openGuidedRoutine;
@@ -1875,8 +1875,7 @@
         btn.textContent = '⏹ Stop';
         btn.disabled = false;
       } catch (e) {
-        alert(`Voice error: ${e.message}`);
-        btn.textContent = '🎧 Listen';
+        btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen';
         btn.disabled = false;
       }
     }
@@ -1950,7 +1949,7 @@
         btn.textContent = '⏹ Stop'; btn.disabled = false;
         _rtAudio.onended = () => { _rtListening = false; btn.textContent = '🎧 Listen'; _rtAudio = null; };
         if (!_rtRunning && _rtSeconds === 300) rtToggleTimer();
-      } catch(e) { alert(`Voice error: ${e.message}`); btn.textContent = '🎧 Listen'; btn.disabled = false; }
+      } catch(e) { btn.textContent = e.message.includes('cooling') ? 'Try again in 30s' : '🎧 Listen'; btn.disabled = false; }
     }
 
     window.openRehearsal   = openRehearsal;
