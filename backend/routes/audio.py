@@ -145,32 +145,35 @@ async def story_tts(req: StoryTTSRequest, _=Depends(verify_token)):
 
     if el_key:
         voice_id = _pick_el_voice(req.emotions)
-        async with httpx.AsyncClient(timeout=90.0) as client:
-            res = await client.post(
-                f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
-                headers={
-                    "xi-api-key":   el_key,
-                    "Content-Type": "application/json",
-                    "Accept":       "audio/mpeg",
-                },
-                json={
-                    "text":     req.story_text,
-                    "model_id": "eleven_multilingual_v2",
-                    "voice_settings": {
-                        "stability":        0.38,
-                        "similarity_boost": 0.80,
-                        "style":            0.42,
-                        "use_speaker_boost": True,
+        try:
+            async with httpx.AsyncClient(timeout=90.0) as client:
+                res = await client.post(
+                    f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+                    headers={
+                        "xi-api-key":   el_key,
+                        "Content-Type": "application/json",
+                        "Accept":       "audio/mpeg",
                     },
-                },
-            )
-        if res.status_code == 200:
-            return StreamingResponse(
-                iter([res.content]),
-                media_type="audio/mpeg",
-                headers={"Content-Disposition": "inline; filename=story.mp3"},
-            )
-        raise HTTPException(status_code=500, detail=f"ElevenLabs {res.status_code}: {res.text[:400]}")
+                    json={
+                        "text":     req.story_text,
+                        "model_id": "eleven_multilingual_v2",
+                        "voice_settings": {
+                            "stability":        0.38,
+                            "similarity_boost": 0.80,
+                            "style":            0.42,
+                            "use_speaker_boost": True,
+                        },
+                    },
+                )
+            if res.status_code == 200:
+                return StreamingResponse(
+                    iter([res.content]),
+                    media_type="audio/mpeg",
+                    headers={"Content-Disposition": "inline; filename=story.mp3"},
+                )
+            print(f"ElevenLabs failed ({res.status_code}), falling back to Orpheus")
+        except Exception as e:
+            print(f"ElevenLabs exception: {e}, falling back to Orpheus")
 
     if not groq_key:
         raise HTTPException(status_code=501, detail="No TTS API key configured")
