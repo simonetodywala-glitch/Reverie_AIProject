@@ -28,7 +28,7 @@ class ComboHeroPill extends Pill {
 
         this._buttons.innerHTML = '';
         data.buttons.forEach(btn => {
-            const b = el('button', `btn ${btn.style}`);
+            const b = el('button', `btn btn-${btn.style}`);
             b.textContent = btn.label;
             this._buttons.appendChild(b);
         });

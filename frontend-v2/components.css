@@ -457,16 +457,23 @@ h1, h2, h3, h4, h5, h6 {
 .btn.btn-surface { flex: 1.6; }
 .btn.btn-accent  { flex: 1; }
 
-/*
+
 @media (hover: hover){
     .btn {
         transition-duration: 200ms;
+        transition: all 200ms var(--enter-curve);
     }
     .btn:hover{
-        transition-duration: 200ms;
-        box-shadow:
-            0 0 8px 2px var(--primary),
-            0 0 16px 4px var(--secondary);
+        transform: 
+            translateY(-2px) 
+            scale(1.01);
+        font-weight: 600;
+    }
+    .btn:active{
+        transition-duration: 30ms; 
+        transform: translateY(2px) scale(0.99);
+        filter: blur(1px);
+        letter-spacing: 0.01rem;
+        font-weight: 800;
     }
 }
-*/
