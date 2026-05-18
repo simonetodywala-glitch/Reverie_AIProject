@@ -2,816 +2,559 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Reverie — Welcome</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,700;0,800;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #09000f;
-      --accent: #7c3aed;
-      --accent-soft: #9b5de5;
-      --accent-glow: rgba(124,58,237,0.4);
-      --text: #f0e8ff;
-      --text-dim: #9b88bb;
-      --surface: rgba(255,255,255,0.06);
-      --surface-hover: rgba(255,255,255,0.1);
-      --border: rgba(255,255,255,0.08);
-    }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      font-family: 'DM Sans', sans-serif;
-      color: var(--text);
+      min-height: 100%;
+      background: linear-gradient(160deg, #06001c 0%, #0d0225 100%);
+      font-family: 'Nunito', sans-serif;
+      color: #f0e8ff;
+      overflow-x: hidden;
     }
 
-    /* ── FRAME ── */
-    .frame {
-      max-width: 420px;
-      height: 100vh;
+    .story-wrap {
+      max-width: 360px;
       margin: 0 auto;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      padding: 72px 28px 180px;
+      min-height: 100vh;
     }
 
-    /* ── FLOATING BLOBS (like the reference app) ── */
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(2px);
-      pointer-events: none;
-      transition: background 0.6s ease, transform 0.6s ease;
-      z-index: 0;
-    }
-    .blob-top {
-      width: 280px; height: 280px;
-      top: -80px; left: -60px;
-    }
-    .blob-bottom {
-      width: 240px; height: 240px;
-      bottom: 60px; right: -80px;
-    }
-
-    /* ── SKIP ── */
-    .skip-btn {
-      position: absolute;
-      top: 20px; right: 24px;
-      font-family: 'Nunito', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-dim);
-      cursor: pointer;
-      z-index: 10;
-      background: none;
-      border: none;
-      padding: 8px;
-      transition: color 0.2s;
-    }
-    .skip-btn:hover { color: var(--text); }
-
-    /* ── SLIDES CONTAINER ── */
-    .slides {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      z-index: 1;
-    }
-
-    .slide {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 0 0 32px;
+    .story-block {
+      margin-bottom: 8px;
       opacity: 0;
-      transform: translateX(40px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      pointer-events: none;
+      animation: fadeUp 0.35s ease forwards;
     }
 
-    .slide.active {
-      opacity: 1;
-      transform: translateX(0);
-      pointer-events: all;
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .slide.exit {
-      opacity: 0;
-      transform: translateX(-40px);
-    }
-
-    /* ── ICON WRAP ── */
-    .slide-icon-wrap {
-      position: absolute;
-      top: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .moon-orb {
-      width: 160px;
-      height: 160px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 32% 30%, #d4cce8 0%, #8b6bbf 40%, #4a2880 75%, #1e0a40 100%);
-      box-shadow:
-        0 0 60px 20px rgba(107,79,160,0.35),
-        0 0 120px 50px rgba(80,40,140,0.15);
-      animation: iconFloat 5s ease-in-out infinite;
-    }
-
-    /* Optional: Add a little "crater" or glow effect */
-    .moon-orb::after {
-        content: '';
-        position: absolute;
-        top: 20%;
-        left: 20%;
-        width: 25%;
-        height: 25%;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        filter: blur(5px);
-    }
-    
-    /* ── FEATURE ORBS (slides 1–3) ── */
-    .feature-orb {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, var(--orb-a), var(--orb-b));
-      box-shadow: 0 0 50px 16px rgba(124,58,237,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 44px;
-      animation: iconFloat 5s ease-in-out infinite;
-    }
-
-    @keyframes iconFloat {
-      0%,100%{ transform: translateY(0); }
-      50%     { transform: translateY(-10px); }
-    }
-
-    /* ── SLIDE TEXT ── */
-    .slide-text {
-      padding: 0 28px;
-      margin-bottom: 32px;
-    }
-
-    .slide-eyebrow {
-      font-family: 'Nunito', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-dim);
-      margin-bottom: 10px;
-      letter-spacing: 0.02em;
-    }
-
-    .slide-title {
-      font-family: 'Nunito', sans-serif;
-      font-size: 36px;
-      font-weight: 400;
-      color: rgba(255,255,255,0.45);
-      line-height: 1.1;
-      margin-bottom: 2px;
-    }
-
-    .slide-title-bold {
-      font-family: 'Nunito', sans-serif;
-      font-size: 40px;
-      font-weight: 900;
-      color: #fff;
-      line-height: 1.05;
-      margin-bottom: 16px;
-      letter-spacing: -0.02em;
-    }
-
-    .slide-desc {
-      font-size: 16px;
-      font-weight: 400;
-      color: var(--text-dim);
-      line-height: 1.6;
-      max-width: 320px;
-    }
-
-    /* ── DOTS ── */
-    .dots {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
-
-    .dot {
-      height: 6px;
-      border-radius: 100px;
-      background: rgba(255,255,255,0.2);
-      transition: width 0.35s ease, background 0.35s ease;
-      width: 6px;
-    }
-
-    .dot.active {
-      width: 24px;
-      background: var(--accent-soft);
-    }
-
-    /* ── NEXT BUTTON ── */
-    .next-btn {
-      margin: 0 24px;
-      padding: 17px 24px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      color: #fff;
-      font-family: 'Nunito', sans-serif;
-      font-size: 18px;
+    .story-line {
+      font-size: 26px;
       font-weight: 800;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 6px 28px var(--accent-glow);
-      transition: transform 0.2s, box-shadow 0.2s;
+      line-height: 1.4;
+      color: #f0e8ff;
+      min-height: 1em;
       letter-spacing: -0.01em;
     }
-    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 36px var(--accent-glow); }
-    .next-btn:active { transform: translateY(0); }
 
-    /* ── QUESTION SLIDES ── */
-    .q-label {
-      font-family: 'Nunito', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--accent-soft);
-      margin-bottom: 12px;
-    }
-
-    .q-title {
-      font-family: 'Nunito', sans-serif;
-      font-size: 34px;
-      font-weight: 900;
-      color: #fff;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .q-sub {
-      font-size: 15px;
-      color: var(--text-dim);
-      margin-bottom: 28px;
-      line-height: 1.5;
-    }
-
-    /* progress bar */
-    .q-progress {
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 100px;
-      margin: 0 24px 28px;
-      overflow: hidden;
-    }
-    .q-progress-fill {
-      height: 100%;
-      background: var(--accent-soft);
-      border-radius: 100px;
-      transition: width 0.4s ease;
-    }
-
-    /* option rows */
-    .options { display: flex; flex-direction: column; gap: 12px; padding: 0 24px; }
-
-    .option {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-    .option:hover { background: var(--surface-hover); transform: translateX(4px); }
-    .option.selected {
-      background: rgba(124,58,237,0.2);
-      border-color: rgba(124,58,237,0.5);
-    }
-
-    .option-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      background: rgba(124,58,237,0.2);
-      display: flex; align-items: center; justify-content: center;
+    .story-line.dim {
+      color: rgba(240, 232, 255, 0.38);
       font-size: 20px;
-      flex-shrink: 0;
-    }
-    .option.selected .option-icon { background: rgba(124,58,237,0.4); }
-
-    .option-text {
-      font-family: 'Nunito', sans-serif;
-      font-size: 16px;
       font-weight: 700;
-      color: #fff;
-      flex: 1;
+      margin-top: 4px;
     }
 
-    .option-arrow {
-      font-size: 16px;
-      color: var(--text-dim);
-      transition: color 0.2s, transform 0.2s;
-    }
-    .option:hover .option-arrow { color: #fff; transform: translateX(3px); }
-    .option.selected .option-arrow { color: var(--accent-soft); }
+    .story-spacer { height: 20px; }
 
-    /* question text areas */
-    .q-input {
-      margin: 0 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
+    .answer-inline {
+      color: #c084fc;
+      font-weight: 900;
+    }
+
+    /* ── INPUT ── */
+    .input-area {
+      margin-top: 18px;
+      animation: fadeUp 0.3s ease forwards;
+    }
+
+    .story-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(155, 93, 229, 0.35);
+      border-radius: 14px;
+      padding: 14px 18px;
       color: #fff;
       font-family: 'Nunito', sans-serif;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
-      width: calc(100% - 48px);
+      width: 100%;
       outline: none;
       transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
     }
-    .q-input:focus { border-color: rgba(124,58,237,0.5); }
-    .q-input::placeholder { color: var(--text-dim); font-weight: 400; }
+    .story-input:focus { border-color: rgba(155, 93, 229, 0.75); }
+    .story-input::placeholder { color: rgba(255,255,255,0.22); font-weight: 400; }
 
-    /* ── SIGNUP SLIDE ── */
-    .signup-form { padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
-    .signup-input {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .continue-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 100px;
+      background: rgba(124, 58, 237, 0.22);
+      border: 1px solid rgba(155, 93, 229, 0.4);
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.2s;
+    }
+    .continue-btn:active { background: rgba(124, 58, 237, 0.42); }
+
+    /* ── CHOICES ── */
+    .choices {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: fadeUp 0.3s ease forwards;
+    }
+
+    .choice-btn {
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      padding: 15px 18px;
+      color: rgba(240, 232, 255, 0.85);
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .choice-btn:active {
+      background: rgba(124, 58, 237, 0.28);
+      border-color: rgba(155, 93, 229, 0.55);
+      transform: scale(0.98);
+    }
+
+    /* ── AUTH ── */
+    .auth-area { margin-top: 8px; }
+
+    .auth-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
       padding: 15px 18px;
       color: #fff;
       font-family: 'DM Sans', sans-serif;
       font-size: 16px;
       outline: none;
+      margin-bottom: 12px;
       transition: border-color 0.2s;
-      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
     }
-    .signup-input:focus { border-color: rgba(124,58,237,0.5); }
-    .signup-input::placeholder { color: var(--text-dim); }
+    .auth-input:focus { border-color: rgba(155, 93, 229, 0.5); }
+    .auth-input::placeholder { color: rgba(255,255,255,0.28); }
 
-    .divider-row {
-      display: flex; align-items: center; gap: 12px;
-      font-size: 13px; color: var(--text-dim);
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 100px;
+      background: linear-gradient(135deg, #7c3aed, #9b5de5);
+      border: none;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 28px rgba(124,58,237,0.4);
+      letter-spacing: -0.01em;
+      transition: transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .divider-row::before, .divider-row::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
+    .primary-btn:active { transform: scale(0.97); }
+
+    .or-divider {
+      text-align: center;
+      color: rgba(255,255,255,0.28);
+      font-size: 13px;
+      margin: 14px 0;
     }
 
     .google-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      width: 100%;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 14px;
       padding: 14px 18px;
-      color: #fff;
+      color: rgba(240,232,255,0.9);
       font-family: 'Nunito', sans-serif;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       transition: background 0.2s;
-      width: 100%;
+      -webkit-tap-highlight-color: transparent;
     }
-    .google-btn:hover { background: var(--surface-hover); }
+    .google-btn:active { background: rgba(255,255,255,0.12); }
 
-    .signin-link {
+    .switch-link {
       text-align: center;
+      color: rgba(255,255,255,0.36);
       font-size: 14px;
-      color: var(--text-dim);
-      margin-top: 4px;
+      margin-top: 18px;
     }
-    .signin-link span {
-      color: var(--accent-soft);
+    .switch-link span {
+      color: #c084fc;
       font-weight: 700;
       cursor: pointer;
     }
 
+    .error-msg {
+      color: #f87171;
+      font-size: 14px;
+      margin-top: 10px;
+      text-align: center;
+      min-height: 20px;
+    }
   </style>
 </head>
 <body>
-<div class="frame">
+<div class="story-wrap" id="story"></div>
 
-  <!-- ANIMATED BLOBS -->
-  <div class="blob blob-top" id="blob-top"></div>
-  <div class="blob blob-bottom" id="blob-bottom"></div>
-
-  <!-- SKIP -->
-  <button class="skip-btn" onclick="skipOnboarding()">Skip</button>
-
-
-  <!-- ════════════════════════════════════
-       SLIDES
-  ════════════════════════════════════ -->
-  <div class="slides" id="slides">
-
-    <!-- ── SLIDE 0: Welcome ── -->
-    <div class="slide active" data-index="0">
-      <div class="slide-icon-wrap">
-        <div class="moon-orb"></div> 
-      </div>
-      <div class="slide-text">
-        <div class="slide-title">Welcome to</div>
-        <div class="slide-title-bold">Reverie</div>
-        <div class="slide-desc">Your personal sleep companion. Understand your dreams, improve your sleep — guided by AI.</div>
-      </div>
-      <div class="dots" id="dots"></div>
-      <button class="next-btn" onclick="nextSlide()">Next →</button>
-    </div>
-
-    <!-- ── SLIDE 1: Dream Journal ── -->
-    <div class="slide" data-index="1">
-      <div class="slide-icon-wrap">
-        <div class="feature-orb" style="--orb-a:#a855f7;--orb-b:#6d28d9;">
-          <span>✍️</span>
-        </div>
-      </div>
-      <div class="slide-text">
-        <div class="slide-title">Log your dreams,</div>
-        <div class="slide-title-bold">before they fade.</div>
-        <div class="slide-desc">You forget 95% of your dreams within 10 minutes of waking. Reverie captures them and finds the meaning inside.</div>
-      </div>
-      <div class="dots" id="dots-1"></div>
-      <button class="next-btn" onclick="nextSlide()">Next →</button>
-    </div>
-
-    <!-- ── SLIDE 2: AI Analysis ── -->
-    <div class="slide" data-index="2">
-      <div class="slide-icon-wrap">
-        <div class="feature-orb" style="--orb-a:#818cf8;--orb-b:#4338ca;">
-          <span>✨</span>
-        </div>
-      </div>
-      <div class="slide-text">
-        <div class="slide-title">AI that actually</div>
-        <div class="slide-title-bold">knows you.</div>
-        <div class="slide-desc">Gemini reads your dreams and finds recurring emotions, hidden patterns, and personal insights — all from your own journal.</div>
-      </div>
-      <div class="dots" id="dots-2"></div>
-      <button class="next-btn" onclick="nextSlide()">Next →</button>
-    </div>
-
-    <!-- ── SLIDE 3: Sleep Better ── -->
-    <div class="slide" data-index="3">
-      <div class="slide-icon-wrap">
-        <div class="feature-orb" style="--orb-a:#c084fc;--orb-b:#7c3aed;">
-          <span>🚀</span>
-        </div>
-      </div>
-      <div class="slide-text">
-        <div class="slide-title">Ready to sleep</div>
-        <div class="slide-title-bold">smarter?</div>
-        <div class="slide-desc">People who journal their dreams sleep 23% better on average. Let's set up your profile so Reverie can personalize everything.</div>
-      </div>
-      <div class="dots" id="dots-3"></div>
-      <button class="next-btn" onclick="nextSlide()">Continue ✦</button>
-    </div>
-
-    <!-- ── SLIDE 4: Q1 — Sleep Type ── -->
-    <div class="slide" data-index="4">
-      <div class="q-progress" style="margin-bottom: 0;">
-        <div class="q-progress-fill" style="width: 33%;"></div>
-      </div>
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px 0;">
-        <div style="margin-bottom: 28px;">
-          <div class="q-label">Step 1 of 3</div>
-          <div class="q-title">When do you naturally wake up?</div>
-          <div class="q-sub">We'll use this to calculate your perfect bedtime.</div>
-        </div>
-        <div class="options" style="padding: 0;">
-          <div class="option" onclick="selectOption(this, 'chronotype', 'early')">
-            <div class="option-icon">🌅</div>
-            <div class="option-text">Early bird<br><span style="font-weight:400; font-size:13px; color: rgba(255,255,255,0.4);">Before 7am naturally</span></div>
-            <div class="option-arrow">›</div>
-          </div>
-          <div class="option" onclick="selectOption(this, 'chronotype', 'middle')">
-            <div class="option-icon">☀️</div>
-            <div class="option-text">In between<br><span style="font-weight:400; font-size:13px; color: rgba(255,255,255,0.4);">7am – 9am naturally</span></div>
-            <div class="option-arrow">›</div>
-          </div>
-          <div class="option" onclick="selectOption(this, 'chronotype', 'night')">
-            <div class="option-icon">🦉</div>
-            <div class="option-text">Night owl<br><span style="font-weight:400; font-size:13px; color: rgba(255,255,255,0.4);">After 9am naturally</span></div>
-            <div class="option-arrow">›</div>
-          </div>
-        </div>
-      </div>
-      <div style="padding: 24px 0 0;">
-        <button class="next-btn" onclick="nextSlide()" id="q1-next">Next →</button>
-      </div>
-    </div>
-
-    <!-- ── SLIDE 5: Q2 — Goal ── -->
-    <div class="slide" data-index="5">
-      <div class="q-progress">
-        <div class="q-progress-fill" style="width: 66%;"></div>
-      </div>
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px;">
-        <div style="margin-bottom: 28px;">
-          <div class="q-label">Step 2 of 3</div>
-          <div class="q-title">What brings you to Reverie?</div>
-          <div class="q-sub">Pick your main goal — you can change this later.</div>
-        </div>
-        <div class="options" style="padding: 0;">
-          <div class="option" onclick="selectOption(this, 'goal', 'dreams')">
-            <div class="option-icon">🌙</div>
-            <div class="option-text">Understand my dreams</div>
-            <div class="option-arrow">›</div>
-          </div>
-          <div class="option" onclick="selectOption(this, 'goal', 'sleep')">
-            <div class="option-icon">😴</div>
-            <div class="option-text">Sleep better</div>
-            <div class="option-arrow">›</div>
-          </div>
-          <div class="option" onclick="selectOption(this, 'goal', 'patterns')">
-            <div class="option-icon">🧠</div>
-            <div class="option-text">Find emotional patterns</div>
-            <div class="option-arrow">›</div>
-          </div>
-          <div class="option" onclick="selectOption(this, 'goal', 'all')">
-            <div class="option-icon">✨</div>
-            <div class="option-text">All of the above</div>
-            <div class="option-arrow">›</div>
-          </div>
-        </div>
-      </div>
-      <div style="padding: 24px 0 0;">
-        <button class="next-btn" onclick="nextSlide()">Next →</button>
-      </div>
-    </div>
-
-    <!-- ── SLIDE 6: Q3 — Wake Time ── -->
-    <div class="slide" data-index="6">
-      <div class="q-progress">
-        <div class="q-progress-fill" style="width: 100%;"></div>
-      </div>
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px;">
-        <div style="margin-bottom: 28px;">
-          <div class="q-label">Step 3 of 3</div>
-          <div class="q-title">What time do you need to wake up?</div>
-          <div class="q-sub">We'll calculate your ideal bedtime from this.</div>
-        </div>
-        <input type="time" class="q-input" id="wake-time-input" value="07:00" style="margin: 0; width: 100%;" />
-        <div style="margin-top: 14px; font-size:14px; color: var(--text-dim); padding: 0 2px;">
-          You can update this anytime in your Profile.
-        </div>
-      </div>
-      <div style="padding: 24px 0 0;">
-        <button class="next-btn" onclick="nextSlide()">Almost there ✦</button>
-      </div>
-    </div>
-
-    <!-- ── SLIDE 7: Sign Up ── -->
-    <div class="slide" data-index="7" id="signup-slide">
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px;">
-        <div style="margin-bottom: 28px;">
-          <div style="font-size: 32px; margin-bottom: 12px;">🌙</div>
-          <div class="q-title">Create your account</div>
-          <div class="q-sub">Your dreams and sleep data will sync across devices.</div>
-        </div>
-        <div class="signup-form" style="padding: 0;">
-          <input class="signup-input" type="text" placeholder="Your name" id="signup-name" />
-          <input class="signup-input" type="email" placeholder="Email address" id="signup-email" />
-          <input class="signup-input" type="password" placeholder="Password" id="signup-password" />
-        </div>
-        <div class="divider-row" style="margin: 18px 0;">or</div>
-        <button class="google-btn" id="google-signin-btn">
-          <span style="font-size:18px;">G</span> Continue with Google
-        </button>
-        <div class="signin-link" style="margin-top: 16px;">
-          Already have an account? <span onclick="goToSlide(8)">Sign in</span>
-        </div>
-      </div>
-      <div style="padding: 24px 0 0;">
-        <button class="next-btn" onclick="finishOnboarding()">Start Dreaming 🌙</button>
-      </div>
-    </div>
-
-    <!-- ── SLIDE 8: Sign In ── -->
-    <div class="slide" data-index="8" id="signin-slide">
-      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 24px;">
-        <div style="margin-bottom: 28px;">
-          <div style="font-size: 32px; margin-bottom: 12px;">🌙</div>
-          <div class="q-title">Welcome back</div>
-          <div class="q-sub">Sign in to continue your sleep journey.</div>
-        </div>
-        <div class="signup-form" style="padding: 0;">
-          <input class="signup-input" type="email" placeholder="Email address" id="signin-email" />
-          <input class="signup-input" type="password" placeholder="Password" id="signin-password" />
-        </div>
-        <div class="divider-row" style="margin: 18px 0;">or</div>
-        <button class="google-btn" id="google-signin-btn-2">
-          <span style="font-size:18px;">G</span> Continue with Google
-        </button>
-        <div class="signin-link" style="margin-top: 16px;">
-          New to Reverie? <span onclick="goToSlide(7)">Create account</span>
-        </div>
-      </div>
-      <div style="padding: 24px 0 0;">
-        <button class="next-btn" onclick="handleSignIn()">Sign In →</button>
-      </div>
-    </div>
-
-  </div><!-- /slides -->
-</div><!-- /frame -->
 <script type="module">
   import { signUp, logIn, signInWithGoogle, auth } from '../js/auth.js';
   import { saveUserProfile } from '../js/firebase.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // ── DATA ──
-  const userProfile = { chronotype: null, goal: null, wakeTime: null };
+  const collected = {};
+  const storyEl = document.getElementById('story');
 
-  // ── BLOB COLORS PER SLIDE ──
-  const blobThemes = [
-    { top: 'rgba(60,20,120,0.85)',   bottom: 'rgba(40,10,90,0.7)'   },
-    { top: 'rgba(80,20,140,0.85)',   bottom: 'rgba(100,30,160,0.6)' },
-    { top: 'rgba(50,30,130,0.85)',   bottom: 'rgba(60,20,110,0.65)' },
-    { top: 'rgba(70,20,130,0.85)',   bottom: 'rgba(90,30,150,0.6)'  },
-    { top: 'rgba(100,40,180,0.9)',   bottom: 'rgba(60,10,120,0.5)'  },
-    { top: 'rgba(80,20,160,0.9)',    bottom: 'rgba(80,30,140,0.55)' },
-    { top: 'rgba(90,30,170,0.9)',    bottom: 'rgba(50,10,110,0.5)'  },
-    { top: 'rgba(70,20,140,0.85)',   bottom: 'rgba(100,40,180,0.6)' },
-    { top: 'rgba(60,10,120,0.85)',   bottom: 'rgba(80,20,150,0.6)'  },
-  ];
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  let current = 0;
-  const slides = document.querySelectorAll('.slide');
+  function scrollDown() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
 
-  // Build dots for intro slides 0–3
-  document.querySelectorAll('.dots').forEach(dotsEl => {
-    for (let i = 0; i < 4; i++) {
-      const d = document.createElement('div');
-      d.className = 'dot' + (i === 0 ? ' active' : '');
-      dotsEl.appendChild(d);
+  function newBlock() {
+    const b = document.createElement('div');
+    b.className = 'story-block';
+    storyEl.appendChild(b);
+    return b;
+  }
+
+  async function typeLine(el, text, speed = 28) {
+    for (const ch of text) {
+      el.textContent += ch;
+      await sleep(speed);
     }
-  });
+  }
 
-  function updateDots(idx) {
-    const dotIdx = Math.min(idx, 3);
-    document.querySelectorAll('.dots').forEach(dotsEl => {
-      dotsEl.querySelectorAll('.dot').forEach((d, i) => {
-        d.classList.toggle('active', i === dotIdx);
+  async function showLines(lines) {
+    const block = newBlock();
+    for (const line of lines) {
+      if (line === '') {
+        const sp = document.createElement('div');
+        sp.className = 'story-spacer';
+        block.appendChild(sp);
+        await sleep(180);
+        continue;
+      }
+      const dim = line.startsWith('~');
+      const text = dim ? line.slice(1) : line;
+      const p = document.createElement('p');
+      p.className = 'story-line' + (dim ? ' dim' : '');
+      block.appendChild(p);
+      scrollDown();
+      await sleep(80);
+      await typeLine(p, text, dim ? 22 : 28);
+    }
+    scrollDown();
+  }
+
+  async function askText(sentence, key, placeholder, inputType = 'text', defaultVal = '') {
+    const block = newBlock();
+
+    const p = document.createElement('p');
+    p.className = 'story-line';
+    block.appendChild(p);
+    scrollDown();
+    await typeLine(p, sentence + ' ');
+
+    const blank = document.createElement('span');
+    blank.style.cssText = 'color: rgba(192,132,252,0.35); font-weight:900;';
+    blank.textContent = '___';
+    p.appendChild(blank);
+
+    const area = document.createElement('div');
+    area.className = 'input-area';
+
+    const input = document.createElement('input');
+    input.type = inputType;
+    input.className = 'story-input';
+    input.placeholder = placeholder;
+    if (defaultVal) input.value = defaultVal;
+    area.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.className = 'continue-btn';
+    btn.textContent = 'Continue →';
+    area.appendChild(btn);
+
+    block.appendChild(area);
+    await sleep(40);
+    scrollDown();
+    input.focus();
+
+    return new Promise(resolve => {
+      const submit = () => {
+        const raw = input.value.trim() || input.value;
+        if (!raw) { input.focus(); return; }
+        collected[key] = raw;
+
+        const display = inputType === 'time' ? formatTime(raw) : raw;
+        blank.textContent = display;
+        blank.style.cssText = 'color: #c084fc; font-weight:900;';
+        area.remove();
+        scrollDown();
+        resolve(raw);
+      };
+      btn.onclick = submit;
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    });
+  }
+
+  async function askChoice(sentence, key, options) {
+    const block = newBlock();
+
+    const p = document.createElement('p');
+    p.className = 'story-line';
+    block.appendChild(p);
+    scrollDown();
+    await typeLine(p, sentence + ' ');
+
+    const blank = document.createElement('span');
+    blank.style.cssText = 'color: rgba(192,132,252,0.35); font-weight:900;';
+    blank.textContent = '___';
+    p.appendChild(blank);
+
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = opt.label;
+      choices.appendChild(btn);
+    });
+    block.appendChild(choices);
+    await sleep(40);
+    scrollDown();
+
+    return new Promise(resolve => {
+      choices.querySelectorAll('.choice-btn').forEach((btn, i) => {
+        btn.onclick = () => {
+          collected[key] = options[i].value;
+          blank.textContent = options[i].label;
+          blank.style.cssText = 'color: #c084fc; font-weight:900;';
+          choices.remove();
+          scrollDown();
+          resolve(options[i].value);
+        };
       });
     });
   }
 
-  function updateBlobs(idx) {
-    const theme = blobThemes[Math.min(idx, blobThemes.length - 1)];
-    document.getElementById('blob-top').style.background =
-      `radial-gradient(circle, ${theme.top}, transparent 70%)`;
-    document.getElementById('blob-bottom').style.background =
-      `radial-gradient(circle, ${theme.bottom}, transparent 70%)`;
+  function formatTime(val) {
+    if (!val) return val;
+    const [h, m] = val.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
   }
 
-  function goToSlide(next) {
-    if (next < 0 || next >= slides.length) return;
-    slides[current].classList.remove('active');
-    slides[current].classList.add('exit');
-    const exitIdx = current;
-    setTimeout(() => slides[exitIdx].classList.remove('exit'), 400);
-    current = next;
-    slides[current].classList.add('active');
-    updateDots(current);
-    updateBlobs(current);
-    const skipBtn = document.querySelector('.skip-btn');
-    if (skipBtn) {
-      skipBtn.style.opacity = current >= 4 ? '0' : '1';
-      skipBtn.style.pointerEvents = current >= 4 ? 'none' : 'all';
+  async function showAuth(isSignIn = false) {
+    const block = newBlock();
+    block.style.marginTop = '12px';
+
+    const area = document.createElement('div');
+    area.className = 'auth-area';
+
+    const signupDiv = document.createElement('div');
+    signupDiv.innerHTML = `
+      <input class="auth-input" type="email" id="ob-email" placeholder="Email address" autocomplete="email" />
+      <input class="auth-input" type="password" id="ob-pw" placeholder="Password" autocomplete="new-password" />
+      <button class="primary-btn" id="ob-signup-btn">Start Dreaming 🌙</button>
+      <div class="or-divider">or</div>
+      <button class="google-btn" id="ob-google-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div class="switch-link">Already have an account? <span id="ob-to-signin">Sign in</span></div>
+      <div class="error-msg" id="ob-err"></div>
+    `;
+
+    const signinDiv = document.createElement('div');
+    signinDiv.style.display = 'none';
+    signinDiv.innerHTML = `
+      <input class="auth-input" type="email" id="ob-si-email" placeholder="Email address" autocomplete="email" />
+      <input class="auth-input" type="password" id="ob-si-pw" placeholder="Password" autocomplete="current-password" />
+      <button class="primary-btn" id="ob-signin-btn">Sign In →</button>
+      <div class="or-divider">or</div>
+      <button class="google-btn" id="ob-google-btn-2">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div class="switch-link">New to Reverie? <span id="ob-to-signup">Create account</span></div>
+      <div class="error-msg" id="ob-err-2"></div>
+    `;
+
+    area.appendChild(signupDiv);
+    area.appendChild(signinDiv);
+    block.appendChild(area);
+    scrollDown();
+
+    if (isSignIn) {
+      signupDiv.style.display = 'none';
+      signinDiv.style.display = 'block';
     }
-  }
 
-  function nextSlide() {
-    if (current < slides.length - 1) goToSlide(current + 1);
-  }
-
-  function skipOnboarding() {
-    goToSlide(8);
-  }
-
-  function selectOption(el, key, value) {
-    el.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    userProfile[key] = value;
-    setTimeout(nextSlide, 380);
-  }
-
-  async function finishOnboarding() {
-    userProfile.wakeTime = document.getElementById('wake-time-input').value;
-    const name     = document.getElementById('signup-name').value.trim();
-    const email    = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-
-    if (!name || !email || !password) {
-      alert('Please fill in your name, email, and password.');
-      return;
-    }
-
-    try {
-      await signUp(name, email, password, {
-        chronotype: userProfile.chronotype,
-        goal:       userProfile.goal,
-        wakeTime:   userProfile.wakeTime
-      });
+    const finish = () => {
       localStorage.setItem('reverie_onboarded', 'true');
       window.location.href = '../index.html';
-    } catch (error) {
-      console.error('Sign-up error:', error);
-      alert(`Could not create account: ${error.message}`);
-    }
+    };
+
+    document.getElementById('ob-signup-btn').onclick = async () => {
+      const email = document.getElementById('ob-email').value.trim();
+      const pw    = document.getElementById('ob-pw').value;
+      if (!email || !pw) return;
+      try {
+        await signUp(collected.name || '', email, pw, { goal: collected.goal, wakeTime: collected.bedtime });
+        finish();
+      } catch (e) { document.getElementById('ob-err').textContent = e.message; }
+    };
+
+    document.getElementById('ob-google-btn').onclick = async () => {
+      try {
+        const user = await signInWithGoogle();
+        await saveUserProfile(user.uid, { name: collected.name, goal: collected.goal, wakeTime: collected.bedtime });
+        finish();
+      } catch (e) { document.getElementById('ob-err').textContent = e.message; }
+    };
+
+    document.getElementById('ob-signin-btn').onclick = async () => {
+      const email = document.getElementById('ob-si-email').value.trim();
+      const pw    = document.getElementById('ob-si-pw').value;
+      if (!email || !pw) return;
+      try {
+        await logIn(email, pw);
+        finish();
+      } catch (e) { document.getElementById('ob-err-2').textContent = e.message; }
+    };
+
+    document.getElementById('ob-google-btn-2').onclick = async () => {
+      try {
+        await signInWithGoogle();
+        finish();
+      } catch (e) { document.getElementById('ob-err-2').textContent = e.message; }
+    };
+
+    document.getElementById('ob-to-signin').onclick = () => {
+      signupDiv.style.display = 'none';
+      signinDiv.style.display = 'block';
+    };
+
+    document.getElementById('ob-to-signup').onclick = () => {
+      signinDiv.style.display = 'none';
+      signupDiv.style.display = 'block';
+    };
   }
 
-  async function handleSignIn() {
-    const email    = document.getElementById('signin-email').value.trim();
-    const password = document.getElementById('signin-password').value;
+  // ── STORY FLOW ──
+  async function runStory() {
+    await sleep(500);
 
-    if (!email || !password) {
-      alert('Please enter your email and password.');
-      return;
-    }
+    await showLines([
+      "Some people never remember their dreams.",
+      "",
+      "You do.",
+      "",
+      "~That's why you're here."
+    ]);
 
-    try {
-      await logIn(email, password);
-      localStorage.setItem('reverie_onboarded', 'true');
-      window.location.href = '../index.html';
-    } catch (error) {
-      console.error('Sign-in error:', error);
-      alert(`Sign-in failed: ${error.message}`);
-    }
+    await sleep(700);
+
+    await askText("Your name is", 'name', 'your name');
+
+    await sleep(500);
+
+    await showLines([`Nice to meet you, ${collected.name}.`]);
+
+    await sleep(600);
+
+    await askChoice("You're here because you want to", 'goal', [
+      { value: 'understand', label: 'understand my dreams' },
+      { value: 'sleep',      label: 'sleep better' },
+      { value: 'nightmares', label: 'stop my nightmares' },
+      { value: 'lucid',      label: 'have lucid dreams' },
+    ]);
+
+    await sleep(500);
+
+    const goalResponse = {
+      understand: ["Dreams are your mind processing the world.", "", "~Let's decode them."],
+      sleep:      ["Good sleep changes everything.", "", "~We can help with that."],
+      nightmares: ["You don't have to dread closing your eyes.", "", "~There's a way through."],
+      lucid:      ["You can learn to wake up inside your dreams.", "", "~It's a real skill. Let's build it."],
+    };
+    await showLines(goalResponse[collected.goal] || ["You came to the right place."]);
+
+    await sleep(700);
+
+    await askText("You usually fall asleep around", 'bedtime', '11:00 PM', 'time', '23:00');
+
+    await sleep(500);
+
+    await askChoice("In the morning, you remember your dreams", 'recall', [
+      { value: 'never',     label: 'almost never' },
+      { value: 'sometimes', label: 'sometimes' },
+      { value: 'often',     label: 'pretty often' },
+    ]);
+
+    await sleep(400);
+
+    const recallResponse = {
+      never:     ["That's very common.", "", "~We can fix that."],
+      sometimes: ["There's more in there.", "", "~Let's find it."],
+      often:     ["You're already halfway there.", ""],
+    };
+    await showLines(recallResponse[collected.recall] || [""]);
+
+    await sleep(500);
+
+    await showLines([
+      `Reverie is ready for you, ${collected.name}.`,
+      "",
+      "~Create your account to begin."
+    ]);
+
+    await sleep(300);
+    await showAuth(false);
   }
 
-  // Expose to HTML onclick attributes
-  window.nextSlide        = nextSlide;
-  window.skipOnboarding   = skipOnboarding;
-  window.selectOption     = selectOption;
-  window.finishOnboarding = finishOnboarding;
-  window.handleSignIn     = handleSignIn;
-  window.goToSlide        = goToSlide;
+  async function runSignInOnly() {
+    await sleep(400);
+    await showLines(["Welcome back.", "", "~Sign in to continue."]);
+    await sleep(300);
+    await showAuth(true);
+  }
 
-  // Google sign-in — saves onboarding profile answers to Firestore too
-  document.getElementById('google-signin-btn').addEventListener('click', async () => {
-    try {
-      const user = await signInWithGoogle();
-      await saveUserProfile(user.uid, {
-        chronotype: userProfile.chronotype,
-        goal:       userProfile.goal,
-        wakeTime:   userProfile.wakeTime
-      });
-      localStorage.setItem('reverie_onboarded', 'true');
-      window.location.href = '../index.html';
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert(`Google sign-in failed: ${error.message}`);
-    }
-  });
-
-  // Google sign-in from the sign-in slide (returning users)
-  document.getElementById('google-signin-btn-2').addEventListener('click', async () => {
-    try {
-      await signInWithGoogle();
-      localStorage.setItem('reverie_onboarded', 'true');
-      window.location.href = '../index.html';
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      alert(`Google sign-in failed: ${error.message}`);
-    }
-  });
-
-  // Init
-  updateBlobs(0);
-
-  // Single auth state handler — fires once when Firebase resolves the session.
-  // 1. Authenticated + onboarded → go to dashboard (no flash, no sync redirect).
-  // 2. Not authenticated + ?signin=1 (bounced here from requireAuth) → show sign-in slide.
-  // 3. Everything else → stay on slide 0 (normal onboarding flow).
+  // ── INIT ──
   const isSignInMode = new URLSearchParams(window.location.search).get('signin') === '1';
+
   onAuthStateChanged(auth, user => {
     if (user && localStorage.getItem('reverie_onboarded') === 'true') {
       window.location.href = '../index.html';
-    } else if (!user && isSignInMode) {
-      goToSlide(8);
+    } else if (isSignInMode) {
+      runSignInOnly();
+    } else {
+      runStory();
     }
   });
 </script>
-
 </body>
 </html>
